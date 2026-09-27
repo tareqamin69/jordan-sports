@@ -130,13 +130,6 @@ export default async function VenuePage({ params }: Props) {
         )}
       </p>
 
-      <p
-        role="status"
-        className="mt-6 rounded-md border border-accent-500 bg-accent-300/40 px-4 py-3 text-sm"
-      >
-        {t('bookingSoon')}
-      </p>
-
       <div className="mt-6 flex flex-wrap gap-3">
         {venue.contactPhone ? (
           <a
@@ -157,7 +150,7 @@ export default async function VenuePage({ params }: Props) {
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-3">
-        <div className="flex flex-col gap-8 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-8 lg:col-span-2">
           {pick(venue.description, locale) ? (
             <section>
               <h2 className="text-xl font-bold">{t('about')}</h2>

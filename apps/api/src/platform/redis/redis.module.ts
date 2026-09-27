@@ -21,7 +21,12 @@ export const REDIS = Symbol('REDIS');
           commandTimeout: 2_000,
         }),
     },
-    { provide: RateLimiter, inject: [REDIS], useFactory: (redis: Redis) => new RateLimiter(redis) },
+    {
+      provide: RateLimiter,
+      inject: [REDIS, APP_CONFIG],
+      useFactory: (redis: Redis, config: AppConfig) =>
+        new RateLimiter(redis, config.rateLimitScale),
+    },
   ],
   exports: [REDIS, RateLimiter],
 })

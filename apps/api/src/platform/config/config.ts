@@ -40,6 +40,8 @@ const envSchema = z.object({
   OTP_CHANNEL: z.enum(['console']).default('console'),
   MEDIA_DIR: z.string().min(1).default('.data/media'),
   LOG_LEVEL: z.enum(logLevels).default('info'),
+  // Test-only: multiplies every rate limit (all end-to-end traffic comes from one IP).
+  RATE_LIMIT_SCALE: z.coerce.number().int().min(1).max(1000).default(1),
 });
 
 export type NodeEnv = 'development' | 'test' | 'production';
@@ -61,6 +63,8 @@ export interface AppConfig {
   readonly otpChannel: 'console';
   readonly mediaDir: string;
   readonly logLevel: (typeof logLevels)[number];
+  /** Multiplier for rate limits; must be 1 in production. */
+  readonly rateLimitScale: number;
 }
 
 export class ConfigError extends Error {
@@ -96,6 +100,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     otpChannel: e.OTP_CHANNEL,
     mediaDir: e.MEDIA_DIR,
     logLevel: e.LOG_LEVEL,
+    rateLimitScale: e.RATE_LIMIT_SCALE,
   };
   assertProductionSafe(config);
   return config;
@@ -112,6 +117,7 @@ export function assertProductionSafe(config: AppConfig): void {
   }
   if (!config.cookieSecure) problems.push('COOKIE_SECURE must be true in production');
   if (!config.databaseAppRole) problems.push('DATABASE_APP_ROLE must be set in production');
+  if (config.rateLimitScale !== 1) problems.push('RATE_LIMIT_SCALE is for tests only');
   for (const origin of [...config.webOrigins, ...config.adminOrigins]) {
     if (!origin.startsWith('https://')) problems.push(`origin ${origin} must use https`);
   }

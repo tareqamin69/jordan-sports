@@ -9,6 +9,7 @@ import { pick } from '@/lib/localized';
 import { useVenueSchedule } from '@/lib/manage';
 import { tabs, type Tab } from '@/lib/manage-tabs';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { BookingsPanel } from './bookings-panel';
 import { CalendarView } from './calendar-view';
 import { ClosuresEditor } from './closures-editor';
 import { HoursEditor } from './hours-editor';
@@ -58,6 +59,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
         </ul>
       </nav>
       {tab === 'calendar' ? <CalendarView schedule={s} /> : null}
+      {tab === 'bookings' ? <BookingsPanel schedule={s} /> : null}
       {tab === 'hours' ? <HoursEditor schedule={s} /> : null}
       {tab === 'rules' ? <RulesEditor schedule={s} /> : null}
       {tab === 'pricing' ? <PricingEditor schedule={s} /> : null}

@@ -29,6 +29,7 @@ describe('parseConfig', () => {
       otpChannel: 'console',
       mediaDir: '.data/media',
       logLevel: 'info',
+      rateLimitScale: 1,
     });
   });
 
@@ -76,6 +77,13 @@ describe('production safety', () => {
   it('refuses insecure cookies and http origins in production', () => {
     expect(() => parseConfig({ ...production, COOKIE_SECURE: 'false' })).toThrow(/COOKIE_SECURE/);
     expect(() => parseConfig({ ...production, WEB_ORIGINS: 'http://example.jo' })).toThrow(/https/);
+  });
+
+  it('refuses scaled rate limits in production', () => {
+    expect(() =>
+      parseConfig({ ...production, OTP_CHANNEL: undefined, RATE_LIMIT_SCALE: '20' }),
+    ).toThrow(/RATE_LIMIT_SCALE/);
+    expect(parseConfig({ ...base, RATE_LIMIT_SCALE: '20' }).rateLimitScale).toBe(20);
   });
 
   it('requires a long AUTH_SECRET', () => {

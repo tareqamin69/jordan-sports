@@ -58,7 +58,8 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
         : e.kind === 'block'
           ? ''
           : t(`calendar.kinds.${e.kind}`);
-    return e.note ? `${base} — ${e.note}` : base;
+    const who = e.customerName ? `${base}: ${e.customerName}` : base;
+    return e.note ? `${who} — ${e.note}` : who;
   };
 
   let span = { from: 16 * 60, to: 24 * 60 };

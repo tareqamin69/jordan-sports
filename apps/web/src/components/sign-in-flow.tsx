@@ -12,7 +12,12 @@ import { useErrorMessage } from '@/lib/use-error-message';
 type Step =
   { name: 'phone' } | { name: 'code'; phone: string } | { name: 'profile'; signupToken: string };
 
-export function SignInFlow({ devNotice }: { devNotice: boolean }) {
+/** Only same-site paths are accepted as a return address (no open redirects). */
+function safeNext(next: string | undefined): string {
+  return next && /^\/(?![/\\])[\w\-/?=&%.]*$/.test(next) ? next : '/account';
+}
+
+export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: string | undefined }) {
   const t = useTranslations('web.signIn');
   const tc = useTranslations('common.actions');
   const locale = useLocale() as 'ar' | 'en';
@@ -43,7 +48,7 @@ export function SignInFlow({ devNotice }: { devNotice: boolean }) {
 
   async function finish() {
     await queryClient.invalidateQueries({ queryKey: ['me'] });
-    router.replace('/account');
+    router.replace(safeNext(next));
   }
 
   const sendCode = (e?: FormEvent) => {

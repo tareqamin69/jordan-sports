@@ -9,12 +9,23 @@ export function AccountLink() {
   const me = useMe();
   if (me.isPending) return <span className="w-20" aria-hidden />;
   return (
-    <Link
-      href={me.data ? '/account' : '/sign-in'}
-      className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-50"
-      data-testid="account-link"
-    >
-      {me.data ? (me.data.displayName ?? t('account')) : t('signIn')}
-    </Link>
+    <>
+      {me.data ? (
+        <Link
+          href="/bookings"
+          className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-50"
+          data-testid="bookings-link"
+        >
+          {t('bookings')}
+        </Link>
+      ) : null}
+      <Link
+        href={me.data ? '/account' : '/sign-in'}
+        className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-50"
+        data-testid="account-link"
+      >
+        {me.data ? (me.data.displayName ?? t('account')) : t('signIn')}
+      </Link>
+    </>
   );
 }

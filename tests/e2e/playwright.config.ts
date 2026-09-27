@@ -25,6 +25,14 @@ export default defineConfig({
     {
       command: 'pnpm --filter @jordan-sports/api run start',
       url: 'http://127.0.0.1:4000/healthz',
+      // All browsers share one IP; scale rate limits so parallel sign-ins are not throttled.
+      env: { RATE_LIMIT_SCALE: '20' },
+      reuseExistingServer: !isCI,
+      timeout: 60_000,
+    },
+    {
+      command: 'pnpm --filter @jordan-sports/api run start:worker',
+      url: 'http://127.0.0.1:4001/healthz',
       reuseExistingServer: !isCI,
       timeout: 60_000,
     },

@@ -47,6 +47,9 @@ importers:
       '@jordan-sports/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@jordan-sports/money':
+        specifier: workspace:*
+        version: link:../../packages/money
       '@jordan-sports/ui':
         specifier: workspace:*
         version: link:../../packages/ui

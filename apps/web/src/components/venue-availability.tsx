@@ -1,12 +1,19 @@
 'use client';
 
-import { getVenueAvailability, type PublicResource } from '@jordan-sports/contracts';
+import {
+  createBookingHold,
+  getVenueAvailability,
+  type AvailabilitySlot,
+  type PublicResource,
+} from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
 import { Alert, Spinner, cx } from '@jordan-sports/ui';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
+import { useMe } from '@/lib/session';
 import { pick } from '@/lib/localized';
 import { addDays, businessToday, dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -17,7 +24,7 @@ interface Props {
   resources: PublicResource[];
 }
 
-/** Public, read-only availability with prices for the next 7 days. */
+/** Public availability with prices for the next 7 days; tapping a free time holds it. */
 export function VenueAvailability({ slug, timezone, resources }: Props) {
   const t = useTranslations('web.availability');
   const locale = useLocale();
@@ -28,13 +35,40 @@ export function VenueAvailability({ slug, timezone, resources }: Props) {
   const today = businessToday(timezone, 360);
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
   const [date, setDate] = useState(today);
+  const me = useMe();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [holding, setHolding] = useState<string | null>(null);
+  const [holdError, setHoldError] = useState<string | null>(null);
   const availability = useQuery({
     queryKey: ['availability', slug, date],
     queryFn: () => api(getVenueAvailability, { params: { slug }, query: { date } }),
   });
 
+  async function book(resourceId: string, slot: AvailabilitySlot) {
+    if (holding) return;
+    if (!me.data) {
+      router.push({ pathname: '/sign-in', query: { next: `/venues/${slug}` } });
+      return;
+    }
+    const key = `${resourceId}-${slot.start}-${slot.durationMinutes}`;
+    setHolding(key);
+    setHoldError(null);
+    try {
+      const booking = await api(createBookingHold, {
+        body: { resourceId, start: slot.start, durationMinutes: slot.durationMinutes },
+        idempotencyKey: crypto.randomUUID(),
+      });
+      router.push(`/bookings/${booking.id}`);
+    } catch (error) {
+      setHoldError(errorMessage(error));
+      setHolding(null);
+      await queryClient.invalidateQueries({ queryKey: ['availability', slug] });
+    }
+  }
+
   return (
-    <section aria-labelledby="availability-heading">
+    <section aria-labelledby="availability-heading" className="min-w-0">
       <h2 id="availability-heading" className="text-xl font-bold">
         {t('title')}
       </h2>
@@ -66,6 +100,16 @@ export function VenueAvailability({ slug, timezone, resources }: Props) {
           {errorMessage(availability.error)}
         </Alert>
       ) : null}
+      {holdError ? (
+        <Alert tone="error" className="mt-4">
+          {holdError}
+        </Alert>
+      ) : null}
+      {holding ? (
+        <div className="mt-4">
+          <Spinner label={t('holding')} />
+        </div>
+      ) : null}
       {availability.data ? (
         <div className="mt-4 flex flex-col gap-5">
           {availability.data.resources.every((r) => r.slots.length === 0) ? (
@@ -78,30 +122,43 @@ export function VenueAvailability({ slug, timezone, resources }: Props) {
               <div key={r.resourceId} data-testid="availability-resource">
                 <h3 className="font-bold">{pick(resource?.name, locale)}</h3>
                 <ul className="mt-2 flex flex-wrap gap-2">
-                  {r.slots.map((s) => (
-                    <li
-                      key={`${s.start}-${s.durationMinutes}`}
-                      data-testid="slot"
-                      className={cx(
-                        'rounded-md border px-3 py-2 text-sm',
-                        s.available
-                          ? 'border-brand-300 bg-brand-50 text-brand-900'
-                          : 'border-line bg-canvas text-ink-muted line-through',
-                      )}
-                    >
-                      <span dir="ltr" className="font-medium">
-                        {s.localStart}–{s.localEnd}
-                      </span>
-                      <span className="ms-2">
-                        {s.available ? formatMoney(s.price, locale) : t('taken')}
-                      </span>
-                    </li>
-                  ))}
+                  {r.slots.map((s) => {
+                    const key = `${r.resourceId}-${s.start}-${s.durationMinutes}`;
+                    const label = (
+                      <>
+                        <span dir="ltr" className="font-medium">
+                          {s.localStart}–{s.localEnd}
+                        </span>
+                        <span className="ms-2">
+                          {s.available ? formatMoney(s.price, locale) : t('taken')}
+                        </span>
+                      </>
+                    );
+                    return (
+                      <li key={key} data-testid="slot">
+                        {s.available ? (
+                          <button
+                            type="button"
+                            onClick={() => void book(r.resourceId, s)}
+                            disabled={holding !== null}
+                            aria-busy={holding === key}
+                            className="block min-h-11 rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-sm text-brand-900 hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-700 disabled:opacity-60"
+                          >
+                            {label}
+                          </button>
+                        ) : (
+                          <span className="block rounded-md border border-line bg-canvas px-3 py-2 text-sm text-ink-muted line-through">
+                            {label}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             );
           })}
-          <p className="text-sm text-ink-muted">{t('soon')}</p>
+          <p className="text-sm text-ink-muted">{t('bookHint')}</p>
         </div>
       ) : null}
     </section>

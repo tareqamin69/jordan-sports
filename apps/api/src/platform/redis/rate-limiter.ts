@@ -20,7 +20,11 @@ export interface RateLimitResult {
  * closed for the protected action (abuse and SMS cost protection).
  */
 export class RateLimiter {
-  constructor(private readonly redis: Redis) {}
+  /** `scale` multiplies every limit (tests only; the configuration refuses it in production). */
+  constructor(
+    private readonly redis: Redis,
+    private readonly scale = 1,
+  ) {}
 
   async hit(rule: RateLimitRule, subject: string, nowMs = Date.now()): Promise<RateLimitResult> {
     const window = Math.floor(nowMs / 1000 / rule.windowSeconds);
@@ -38,9 +42,10 @@ export class RateLimiter {
       throw new AppError('SERVICE_UNAVAILABLE', 503);
     }
     const windowEndsMs = (window + 1) * rule.windowSeconds * 1000;
+    const limit = rule.limit * this.scale;
     return {
-      allowed: count <= rule.limit,
-      remaining: Math.max(0, rule.limit - count),
+      allowed: count <= limit,
+      remaining: Math.max(0, limit - count),
       retryAfterSeconds: Math.max(1, Math.ceil((windowEndsMs - nowMs) / 1000)),
     };
   }

@@ -39,6 +39,18 @@ export async function signUpPlayer(
   return phone;
 }
 
+/** Signs an existing user in through the real UI (phone + code). */
+export async function signInExisting(page: Page, locale: 'ar' | 'en', phone: string) {
+  await page.goto(`http://127.0.0.1:3000/${locale}/sign-in`);
+  await page.locator('input[name="phone"]').fill(phone);
+  await page.locator('form button[type="submit"]').click();
+  // Wait for the new code to be sent (an older code for this phone may still be readable).
+  await expect(page.locator('input[name="code"]')).toBeVisible();
+  await page.locator('input[name="code"]').fill(await latestOtp(phone));
+  await page.locator('form button[type="submit"]').click();
+  await expect(page).toHaveURL(new RegExp(`/${locale}/account$`));
+}
+
 /** RFC 6238 TOTP (SHA-1, 30 s, 6 digits) for the admin authenticator. */
 export function totp(secretBase32: string, now = Date.now()): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -147,4 +159,76 @@ export async function arrangeVenue(
   });
   if (!approved.ok()) throw new Error(await approved.text());
   return { ownerPhone, venueId: venue.id, slug, resourceId: withResource.resources[0].id };
+}
+
+/** Signs a player (or venue owner) in through the API and returns a client with the session. */
+export async function userApi(phone: string, name = 'Player'): Promise<APIRequestContext> {
+  const ctx = await request.newContext({
+    baseURL: API,
+    extraHTTPHeaders: { origin: 'http://127.0.0.1:3000' },
+  });
+  const requested = await ctx.post('/v1/auth/otp/request', { data: { phone } });
+  if (!requested.ok()) throw new Error(`OTP request failed: ${await requested.text()}`);
+  const verified = await (
+    await ctx.post('/v1/auth/otp/verify', { data: { phone, code: await latestOtp(phone) } })
+  ).json();
+  if (verified.status !== 'signed_in') {
+    const done = await ctx.post('/v1/auth/signup', {
+      data: {
+        signupToken: verified.signupToken,
+        displayName: name,
+        locale: 'en',
+        ageConfirmed: true,
+      },
+    });
+    if (!done.ok()) throw new Error(`Sign-up failed: ${await done.text()}`);
+  }
+  return ctx;
+}
+
+/**
+ * Opens the venue every day 08:00–24:00 with 60/90 minute bookings every 30 minutes and a
+ * single price band (60 min: 20 JOD, 90 min: 28 JOD).
+ */
+export async function makeBookable(owner: APIRequestContext, venueId: string, resourceId: string) {
+  const steps = [
+    owner.put(`/v1/manage/resources/${resourceId}/weekly-hours`, {
+      data: {
+        windows: [1, 2, 3, 4, 5, 6, 7].map((d) => ({
+          dayOfWeek: d,
+          startMinute: 480,
+          durationMinutes: 960,
+        })),
+      },
+    }),
+    owner.put(`/v1/manage/resources/${resourceId}/policy`, {
+      data: {
+        slotDurations: [60, 90],
+        startAlignmentMinutes: 30,
+        minLeadMinutes: 0,
+        maxAdvanceDays: 30,
+        bufferBeforeMinutes: 0,
+        bufferAfterMinutes: 0,
+      },
+    }),
+    owner.post(`/v1/manage/venues/${venueId}/pricing`, {
+      data: {
+        resourceIds: [resourceId],
+        rule: {
+          daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+          startMinute: 0,
+          endMinute: 1440,
+          priority: 0,
+          amounts: [
+            { durationMinutes: 60, amount: 20000 },
+            { durationMinutes: 90, amount: 28000 },
+          ],
+        },
+      },
+    }),
+  ];
+  for (const step of steps) {
+    const res = await step;
+    if (!res.ok()) throw new Error(`Venue setup failed: ${await res.text()}`);
+  }
 }

@@ -67,6 +67,11 @@ export function AccountView() {
         </dl>
       </Card>
       <Card>
+        <Link href="/bookings" className="font-medium text-brand-800 underline">
+          {t('bookingsLink')}
+        </Link>
+      </Card>
+      <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{t('organizationsTitle')}</h2>
           {user.memberships.length > 0 ? (
