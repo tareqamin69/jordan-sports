@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHmac, randomInt } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { expect, type Page } from '@playwright/test';
+import { expect, request, type APIRequestContext, type Page } from '@playwright/test';
 import { API } from './support';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -21,8 +21,12 @@ export async function latestOtp(phone: string): Promise<string> {
 }
 
 /** Signs up a new player through the real UI and returns their phone number. */
-export async function signUpPlayer(page: Page, locale: 'ar' | 'en', name: string): Promise<string> {
-  const phone = randomPhone();
+export async function signUpPlayer(
+  page: Page,
+  locale: 'ar' | 'en',
+  name: string,
+  phone = randomPhone(),
+): Promise<string> {
   await page.goto(`http://127.0.0.1:3000/${locale}/sign-in`);
   await page.locator('input[name="phone"]').fill(phone);
   await page.locator('form button[type="submit"]').click();
@@ -83,4 +87,64 @@ export async function signInAdmin(page: Page, account: AdminAccount, locale: 'ar
   await page.locator('input[name="totpCode"]').fill(totp(account.totpSecret));
   await page.locator('form button[type="submit"]').click();
   await expect(page).toHaveURL(new RegExp(`/${locale}$`));
+}
+
+/** Admin API client (password + TOTP sign-in) for arranging test data quickly. */
+export async function adminApi(account: AdminAccount): Promise<APIRequestContext> {
+  const ctx = await request.newContext({
+    baseURL: API,
+    extraHTTPHeaders: { origin: 'http://127.0.0.1:3001' },
+  });
+  const res = await ctx.post('/v1/admin/auth/sign-in', {
+    data: { email: account.email, password: account.password, totpCode: totp(account.totpSecret) },
+  });
+  if (!res.ok()) throw new Error(`admin sign-in failed: ${await res.text()}`);
+  return ctx;
+}
+
+/** Creates an approved venue with one padel court through the admin API. */
+export async function arrangeVenue(
+  api: APIRequestContext,
+): Promise<{ ownerPhone: string; venueId: string; slug: string; resourceId: string }> {
+  const catalog = (await (await api.get('/v1/catalog')).json()) as {
+    sports: Array<{ key: string; formats: Array<{ id: string; key: string }> }>;
+    resourceTypes: Array<{ id: string; key: string }>;
+    cities: Array<{ id: string; key: string }>;
+  };
+  const suffix = `${Date.now()}-${randomInt(0, 1e6)}`;
+  const ownerPhone = randomPhone();
+  const org = await (
+    await api.post('/v1/admin/organizations', {
+      data: {
+        slug: `e2e-org-${suffix}`,
+        name: { en: `E2E Org ${suffix}`, ar: 'منشأة' },
+        owner: { phone: ownerPhone, displayName: 'Owner' },
+      },
+    })
+  ).json();
+  const slug = `e2e-venue-${suffix}`;
+  const venue = await (
+    await api.post(`/v1/admin/organizations/${org.id}/venues`, {
+      data: {
+        slug,
+        name: { en: `E2E Venue ${suffix}`, ar: 'ملعب تجريبي' },
+        cityId: catalog.cities.find((c) => c.key === 'amman')!.id,
+      },
+    })
+  ).json();
+  const padel = catalog.sports.find((s) => s.key === 'padel')!.formats[0]!.id;
+  const withResource = await (
+    await api.post(`/v1/admin/venues/${venue.id}/resources`, {
+      data: {
+        name: { en: 'Court 1', ar: 'ملعب 1' },
+        resourceTypeId: catalog.resourceTypes.find((t) => t.key === 'padel_court')!.id,
+        sportFormatIds: [padel],
+      },
+    })
+  ).json();
+  const approved = await api.post(`/v1/admin/venues/${venue.id}/status`, {
+    data: { status: 'approved', reason: 'E2E arrangement' },
+  });
+  if (!approved.ok()) throw new Error(await approved.text());
+  return { ownerPhone, venueId: venue.id, slug, resourceId: withResource.resources[0].id };
 }

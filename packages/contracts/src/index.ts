@@ -7,3 +7,4 @@ export * from './identity.js';
 export * from './openapi.js';
 export * from './tenancy.js';
 export * from './venues.js';
+export * from './scheduling.js';

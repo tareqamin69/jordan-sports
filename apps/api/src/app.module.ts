@@ -6,6 +6,7 @@ import { CatalogModule } from './modules/catalog/index.js';
 import { DirectoryModule } from './modules/directory/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { ResourcesModule } from './modules/resources/index.js';
+import { SchedulingModule } from './modules/scheduling/index.js';
 import { TenancyModule } from './modules/tenancy/index.js';
 import { VenueAdminModule } from './modules/venue-admin/venue-admin.module.js';
 import { VenuesModule } from './modules/venues/index.js';
@@ -41,6 +42,7 @@ export class AppModule {
         VenuesModule.forRoot(config),
         ResourcesModule,
         DirectoryModule,
+        SchedulingModule,
         VenueAdminModule,
       ],
       controllers: [OpenApiController],

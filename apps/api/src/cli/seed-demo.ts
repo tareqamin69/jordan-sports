@@ -11,6 +11,7 @@ import { MediaService, VenuesService, type Actor } from '../modules/venues/index
 import { loadDotEnv, parseConfig } from '../platform/config/config.js';
 import { DATABASE } from '../platform/database/database.module.js';
 import type { Db } from '../platform/database/database.js';
+import { uuidv7 } from '../platform/database/ids.js';
 
 /**
  * DEVELOPMENT ONLY: creates clearly labelled demo venues so the product can be explored locally.
@@ -143,6 +144,37 @@ async function main(): Promise<number> {
           async () => true,
         );
       console.log(`created ${demo.slug}`);
+    }
+    // Opening hours for demo resources that have none: 16:00–24:00, Friday and Saturday from 10:00.
+    const demoResources = await db
+      .selectFrom('resource.resources as r')
+      .innerJoin('venue.venues as v', 'v.id', 'r.venue_id')
+      .select('r.id')
+      .where('v.organization_id', '=', org.id)
+      .where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('scheduling.weekly_hours as h')
+              .select('h.id')
+              .whereRef('h.resource_id', '=', 'r.id'),
+          ),
+        ),
+      )
+      .execute();
+    for (const r of demoResources) {
+      await db
+        .insertInto('scheduling.weekly_hours')
+        .values(
+          [1, 2, 3, 4, 5, 6, 7].map((day) => ({
+            id: uuidv7(),
+            resource_id: r.id,
+            day_of_week: day,
+            start_minute: day === 5 || day === 6 ? 600 : 960,
+            duration_minutes: day === 5 || day === 6 ? 840 : 480,
+          })),
+        )
+        .execute();
     }
     console.log(`Demo owner phone (sign in with the dev OTP): ${DEMO_OWNER_PHONE}`);
     return 0;

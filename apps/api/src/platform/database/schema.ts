@@ -192,6 +192,61 @@ export interface ResourceUnits {
   venue_id: string;
 }
 
+export interface SchedulingBlocks {
+  cancelled_at: Timestamp | null;
+  cancelled_by: string | null;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  during: string;
+  id: string;
+  note: string | null;
+  reason: string;
+  resource_id: string;
+  venue_id: string;
+}
+
+export interface SchedulingDateOverrides {
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  date_from: string;
+  date_to: string;
+  id: string;
+  kind: string;
+  note: string | null;
+  resource_id: string | null;
+  venue_id: string;
+  windows: Generated<Json>;
+}
+
+export interface SchedulingHolidays {
+  country_code: string;
+  date: string;
+  id: string;
+  name: Json;
+}
+
+export interface SchedulingOccupancies {
+  active: Generated<boolean>;
+  block_id: string | null;
+  booking_id: string | null;
+  created_at: Generated<Timestamp>;
+  during: string;
+  expires_at: Timestamp | null;
+  id: string;
+  kind: string;
+  unit_id: string;
+  venue_id: string;
+}
+
+export interface SchedulingWeeklyHours {
+  created_at: Generated<Timestamp>;
+  day_of_week: number;
+  duration_minutes: number;
+  id: string;
+  resource_id: string;
+  start_minute: number;
+}
+
 export interface TenancyMemberships {
   created_at: Generated<Timestamp>;
   id: string;
@@ -242,6 +297,7 @@ export interface VenueVenues {
   area_id: string | null;
   business_day_start_minute: Generated<number>;
   city_id: string;
+  closed_on_public_holidays: Generated<boolean>;
   contact_phone: string | null;
   created_at: Generated<Timestamp>;
   currency: Generated<string>;
@@ -275,6 +331,11 @@ export interface DB {
   'resource.resource_units': ResourceResourceUnits;
   'resource.resources': ResourceResources;
   'resource.units': ResourceUnits;
+  'scheduling.blocks': SchedulingBlocks;
+  'scheduling.date_overrides': SchedulingDateOverrides;
+  'scheduling.holidays': SchedulingHolidays;
+  'scheduling.occupancies': SchedulingOccupancies;
+  'scheduling.weekly_hours': SchedulingWeeklyHours;
   'tenancy.memberships': TenancyMemberships;
   'tenancy.organizations': TenancyOrganizations;
   'venue.facilities': VenueFacilities;

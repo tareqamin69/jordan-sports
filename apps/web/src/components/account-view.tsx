@@ -5,7 +5,7 @@ import { Alert, Button, Card, Ltr, PageHeader, Spinner } from '@jordan-sports/ui
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useMe } from '@/lib/session';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -67,7 +67,18 @@ export function AccountView() {
         </dl>
       </Card>
       <Card>
-        <h2 className="text-lg font-bold">{t('organizationsTitle')}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">{t('organizationsTitle')}</h2>
+          {user.memberships.length > 0 ? (
+            <Link
+              href="/manage"
+              className="font-medium text-brand-800 underline"
+              data-testid="manage-link"
+            >
+              {t('manageLink')}
+            </Link>
+          ) : null}
+        </div>
         {user.memberships.length === 0 ? (
           <p className="mt-2 text-ink-muted">{t('organizationsEmpty')}</p>
         ) : (
