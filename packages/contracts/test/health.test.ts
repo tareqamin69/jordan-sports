@@ -8,14 +8,20 @@ describe('health contracts', () => {
   });
 
   it('accepts ready and not-ready readiness responses', () => {
-    const ready = { status: 'ready', checks: { database: 'ok', migrations: 'ok' } };
-    const notReady = { status: 'not_ready', checks: { database: 'ok', migrations: 'failed' } };
+    const ready = { status: 'ready', checks: { database: 'ok', migrations: 'ok', redis: 'ok' } };
+    const notReady = {
+      status: 'not_ready',
+      checks: { database: 'ok', migrations: 'failed', redis: 'ok' },
+    };
     expect(readinessResponseSchema.parse(ready)).toEqual(ready);
     expect(readinessResponseSchema.parse(notReady)).toEqual(notReady);
   });
 
   it('rejects unknown check values', () => {
-    const invalid = { status: 'ready', checks: { database: 'maybe', migrations: 'ok' } };
+    const invalid = {
+      status: 'ready',
+      checks: { database: 'maybe', migrations: 'ok', redis: 'ok' },
+    };
     expect(readinessResponseSchema.safeParse(invalid).success).toBe(false);
   });
 });

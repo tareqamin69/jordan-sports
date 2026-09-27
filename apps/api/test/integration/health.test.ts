@@ -3,7 +3,7 @@ import pg from 'pg';
 import { pino } from 'pino';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createHttpApp } from '../../src/http-app.js';
-import { parseConfig } from '../../src/platform/config/config.js';
+import { testConfig } from '../support/app.js';
 import { createPool } from '../../src/platform/database/database.js';
 import { Migrator } from '../../src/platform/database/migrator.js';
 import { createTestDatabase, type TestDatabase } from '../support/database.js';
@@ -11,11 +11,7 @@ import { createTestDatabase, type TestDatabase } from '../support/database.js';
 const silent = pino({ level: 'silent' });
 
 async function appFor(databaseUrl: string): Promise<NestFastifyApplication> {
-  const config = parseConfig({
-    NODE_ENV: 'test',
-    DATABASE_URL: databaseUrl,
-    DATABASE_POOL_MAX: '2',
-  });
+  const config = testConfig(databaseUrl, { DATABASE_POOL_MAX: '2' });
   const app = await createHttpApp(config, silent);
   await app.getHttpAdapter().getInstance().ready();
   return app;
@@ -53,7 +49,10 @@ describe('health endpoints', () => {
     it('GET /readyz reports ready', async () => {
       const res = await app.inject({ method: 'GET', url: '/readyz' });
       expect(res.statusCode).toBe(200);
-      expect(res.json()).toEqual({ status: 'ready', checks: { database: 'ok', migrations: 'ok' } });
+      expect(res.json()).toEqual({
+        status: 'ready',
+        checks: { database: 'ok', migrations: 'ok', redis: 'ok' },
+      });
     });
 
     it('returns 404 for unknown routes', async () => {
@@ -81,7 +80,7 @@ describe('health endpoints', () => {
       expect(res.statusCode).toBe(503);
       expect(res.json()).toEqual({
         status: 'not_ready',
-        checks: { database: 'ok', migrations: 'failed' },
+        checks: { database: 'ok', migrations: 'failed', redis: 'ok' },
       });
     });
   });
@@ -108,7 +107,7 @@ describe('health endpoints', () => {
       expect(res.statusCode).toBe(503);
       expect(res.json()).toEqual({
         status: 'not_ready',
-        checks: { database: 'failed', migrations: 'failed' },
+        checks: { database: 'failed', migrations: 'failed', redis: 'ok' },
       });
       expect(res.body).not.toContain('127.0.0.1');
     });

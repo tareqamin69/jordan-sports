@@ -1,6 +1,6 @@
 # 0009. Better Auth, phone OTP for players, mandatory 2FA for admins
 
-- **Status:** Accepted (library choice subject to the M1 spike)
+- **Status:** Accepted; library choice superseded by [ADR-0017](./0017-in-house-authentication.md) after the M1 spike
 - **Date:** 2026-09-27
 - **Related:** [architecture §L](../architecture.md#l-authentication-and-authorization)
 

@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { AccountLink } from './account-link';
 import { LocaleSwitcher } from './locale-switcher';
 
 export function SiteHeader() {
@@ -10,7 +11,8 @@ export function SiteHeader() {
         <Link href="/" className="text-lg font-bold text-brand-700" data-testid="brand">
           {t('appName')}
         </Link>
-        <div className="ms-auto">
+        <div className="ms-auto flex items-center gap-1">
+          <AccountLink />
           <LocaleSwitcher />
         </div>
       </div>

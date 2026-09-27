@@ -12,6 +12,7 @@
     "@jordan-sports/config": "workspace:*",
     "@playwright/test": "1.56.1",
     "@types/node": "^22.20.4",
+    "ioredis": "6.0.0",
     "typescript": "~6.0.3"
   }
 }

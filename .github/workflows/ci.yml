@@ -32,10 +32,22 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     env:
       # CI-only credentials for the throwaway service container above.
       DATABASE_URL: postgres://jordan_sports:jordan_sports@127.0.0.1:5432/jordan_sports
+      REDIS_URL: redis://127.0.0.1:6379
+      # CI-only secret for throwaway test data.
+      AUTH_SECRET: ci-only-auth-secret-not-used-anywhere-else-000
       TURBO_TELEMETRY_DISABLED: '1'
       NEXT_TELEMETRY_DISABLED: '1'
 
@@ -72,6 +84,11 @@ jobs:
 
       - name: Apply migrations
         run: pnpm db:migrate
+
+      - name: Generated database types match the migrations
+        run: |
+          pnpm --filter @jordan-sports/api run db:codegen
+          git diff --exit-code -- apps/api/src/platform/database/schema.ts
 
       - name: Integration tests
         run: pnpm test:integration

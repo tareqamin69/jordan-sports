@@ -1,19 +1,45 @@
 import { type DynamicModule, Module } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { AccountModule } from './modules/account/account.module.js';
+import { AuditModule } from './modules/audit/index.js';
+import { IdentityModule } from './modules/identity/index.js';
+import { TenancyModule } from './modules/tenancy/index.js';
+import { AuthGuard } from './platform/auth/auth.guard.js';
 import type { AppConfig } from './platform/config/config.js';
 import { ConfigModule } from './platform/config/config.module.js';
 import { DatabaseModule } from './platform/database/database.module.js';
 import { HealthModule } from './platform/health/health.module.js';
+import { OriginGuard } from './platform/http/origin.guard.js';
+import { ProblemDetailsFilter } from './platform/http/problem-details.filter.js';
+import { OpenApiController } from './platform/openapi/openapi.controller.js';
+import { RedisModule } from './platform/redis/redis.module.js';
 
 /**
- * Root module. Domain modules (identity, tenancy, catalog, …) are added under
- * src/modules/ from M1 onwards; platform concerns live under src/platform/.
+ * Root module. Domain modules live under src/modules/ and talk to each other only through their
+ * public index.ts; platform concerns live under src/platform/.
  */
 @Module({})
 export class AppModule {
   static forRoot(config: AppConfig): DynamicModule {
     return {
       module: AppModule,
-      imports: [ConfigModule.forRoot(config), DatabaseModule, HealthModule],
+      imports: [
+        ConfigModule.forRoot(config),
+        DatabaseModule,
+        RedisModule,
+        HealthModule,
+        AuditModule,
+        IdentityModule.forRoot(config),
+        TenancyModule,
+        AccountModule,
+      ],
+      controllers: [OpenApiController],
+      providers: [
+        { provide: APP_FILTER, useClass: ProblemDetailsFilter },
+        // Order matters: reject foreign origins before touching sessions.
+        { provide: APP_GUARD, useClass: OriginGuard },
+        { provide: APP_GUARD, useClass: AuthGuard },
+      ],
     };
   }
 }

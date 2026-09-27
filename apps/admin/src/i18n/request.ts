@@ -1,4 +1,4 @@
-import { messages } from '@jordan-sports/i18n';
+import { intlFormats, messages } from '@jordan-sports/i18n';
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
 import { routing } from './routing';
@@ -9,6 +9,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   return {
     locale,
     messages: messages[locale],
+    formats: intlFormats,
     // Default display zone for the initial market. Venue-specific times always use the
     // venue's own IANA zone (docs/architecture.md §H).
     timeZone: 'Asia/Amman',

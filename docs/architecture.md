@@ -171,7 +171,7 @@ domain logic must stay out of UI code. The cost is one extra deployable.
 | Contracts | zod → OpenAPI → generated client ([ADR-0010](./adr/0010-rest-openapi-zod-contracts.md)) | One source of truth for web, admin and mobile | tRPC; GraphQL |
 | Jobs | graphile-worker (queue in Postgres) + transactional outbox ([ADR-0007](./adr/0007-postgres-jobs-outbox-redis-cache.md)) | Jobs enqueued in the same transaction as state changes | BullMQ on Redis |
 | Cache / rate limiting | Redis 7 | Rate limits across instances, short-lived caches | — |
-| Auth | Better Auth, subject to an M1 spike ([ADR-0009](./adr/0009-authentication.md)) | Self-hosted, TypeScript, Postgres sessions, phone OTP, bearer tokens | Custom session module |
+| Auth | In-house module ([ADR-0017](./adr/0017-in-house-authentication.md), after the M1 spike of Better Auth in [ADR-0009](./adr/0009-authentication.md)) | Phone-first without fake emails; fits the SQL-first schema | Better Auth; hosted identity |
 | Web | Next.js App Router, Tailwind CSS (logical properties), Radix-based components, TanStack Query, react-hook-form + zod, next-intl | SSR/ISR for SEO; RTL support | — |
 | Time | Luxon (IANA zones) in the domain; `Intl` for formatting | Mature time-zone arithmetic | Temporal once native in Node |
 | Testing | Vitest, fast-check, real Postgres, Playwright | — | — |
@@ -241,8 +241,9 @@ I/O) → `application` (use cases, transaction boundaries, authorization checks)
 **Sport-agnostic core:**
 - `Sport` → `SportFormat` (e.g. "football 5v5", "padel doubles") with min/max players, default
   durations and a level scale.
-- `ResourceType` (e.g. "padel court", "football pitch") with a JSON Schema for its attributes
-  (surface, indoor/outdoor, lighting, size), validated by the database.
+- `ResourceType` (e.g. "padel court", "football pitch") with an attribute schema (surface,
+  indoor/outdoor, lighting, size), validated by the application (PostgreSQL has no built-in JSON
+  Schema validation).
 - A compatibility table links resource types to sport formats; each resource is linked to the formats
   it supports.
 - Football, Padel and Tennis exist **only as seed data and translations**. A CI check
@@ -263,8 +264,11 @@ I/O) → `application` (use cases, transaction boundaries, authorization checks)
 - **Deletion:** venues/resources are archived, never deleted; bookings, payments, ledger and audit rows
   are never deleted; users are anonymized.
 - **Concurrent edits:** editable aggregates (venue, schedule, price rules) carry a `version` column.
-- **Database roles:** `migrator` (DDL), `app` (DML; no UPDATE/DELETE on audit, ledger, provider
-  events), `readonly` (analytics).
+- **Database roles:** the login role runs migrations; the API connects with the same login but
+  switches to the non-login role `js_app` via the connection startup parameter `role` (the
+  connection fails if the role cannot be assumed). `js_app` has only explicitly granted DML (no DDL,
+  no UPDATE/DELETE on append-only tables) and is subject to row-level security. A `readonly`
+  analytics role comes later.
 
 **Core tables (MVP)**
 - **identity:** `users` (E.164 phone with partial unique index, `email citext`, locale, status, birth
@@ -510,11 +514,11 @@ completed, no-show, no-show contested). No score is shown until an explicit rule
 
 ## L. Authentication and authorization
 
-([ADR-0009](./adr/0009-authentication.md))
+([ADR-0009](./adr/0009-authentication.md), implemented in-house per [ADR-0017](./adr/0017-in-house-authentication.md))
 - **Players:** phone OTP (E.164, +962 default). SMS/WhatsApp provider TBD, built behind an OTP
   delivery abstraction; a **development console channel** logs codes locally and is refused in
-  production. Optional email for receipts later. Minimum age **16** (captured at sign-up; exact
-  mechanism in M1).
+  production. Optional email for receipts later. Minimum age **16**, captured at sign-up as an
+  explicit self-attestation (no date of birth is stored — data minimization).
 - **Venue staff:** phone or email sign-in; TOTP 2FA strongly recommended for owners/managers.
 - **Admins:** email + password (Argon2id) + **mandatory** TOTP, on the separate admin origin, short
   sessions.

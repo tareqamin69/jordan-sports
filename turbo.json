@@ -1,7 +1,13 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [".nvmrc"],
-  "globalPassThroughEnv": ["DATABASE_URL", "PLAYWRIGHT_BROWSERS_PATH"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "REDIS_URL",
+    "AUTH_SECRET",
+    "API_INTERNAL_URL",
+    "PLAYWRIGHT_BROWSERS_PATH"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

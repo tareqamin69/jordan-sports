@@ -5,3 +5,6 @@
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
+
+/* Let Tailwind find the utility classes used by the shared components. */
+@source './components';

@@ -29,7 +29,9 @@ describe('Migrator (real PostgreSQL)', () => {
   describe('shipped migrations', () => {
     it('apply cleanly to an empty database and enable the required extensions', async () => {
       const migrator = new Migrator({ pool });
-      expect(await migrator.migrate()).toEqual(['0001_extensions.sql']);
+      expect(await migrator.migrate()).toEqual(
+        expect.arrayContaining(['0001_extensions.sql', '0002_identity_tenancy_audit.sql']),
+      );
 
       const { rows } = await pool.query<{ extname: string }>(
         'SELECT extname FROM pg_extension ORDER BY extname',

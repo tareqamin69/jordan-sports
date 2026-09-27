@@ -4,6 +4,7 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Providers } from '@/components/providers';
 import { SiteHeader } from '@/components/site-header';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
@@ -37,8 +38,10 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} dir={getDirection(locale)}>
       <body className="flex min-h-dvh flex-col antialiased">
         <NextIntlClientProvider>
-          <SiteHeader />
-          {children}
+          <Providers>
+            <SiteHeader />
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

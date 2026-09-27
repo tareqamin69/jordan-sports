@@ -8,3 +8,4 @@ export {
   type TextDirection,
 } from './locales.js';
 export { messages, type MessageCatalog } from './messages/index.js';
+export { intlFormats } from './formats.js';

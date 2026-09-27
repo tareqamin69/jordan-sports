@@ -8,6 +8,7 @@ const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: './specs',
+  globalSetup: './global-setup.ts',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: 0,
@@ -28,7 +29,7 @@ export default defineConfig({
     },
     {
       command: 'pnpm --filter @jordan-sports/admin run start',
-      url: 'http://127.0.0.1:3001/ar',
+      url: 'http://127.0.0.1:3001/ar/sign-in',
       reuseExistingServer: !isCI,
       timeout: 60_000,
     },

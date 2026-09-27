@@ -31,6 +31,8 @@ pnpm db:migrate           # applies apps/api/migrations to DATABASE_URL
 | `pnpm e2e` | Playwright tests against production builds (needs `pnpm build` and `pnpm db:migrate`) |
 | `pnpm db:migrate` / `pnpm db:status` | Apply / inspect SQL migrations (status exits 1 if anything is pending) |
 | `pnpm infra:up` / `pnpm infra:down` | Start / stop local infrastructure |
+| `pnpm --filter @jordan-sports/api db:codegen` | Regenerate Kysely types from the migrated database (commit the result) |
+| `ADMIN_PASSWORD=… pnpm --filter @jordan-sports/api admin:create -- --email … --name …` | Create a platform staff account; prints the authenticator secret once |
 
 CI (`.github/workflows/ci.yml`) runs the same steps in this order: format, repository checks,
 lint, build, typecheck, unit tests, migrations, integration tests, e2e.
@@ -53,6 +55,15 @@ lint, build, typecheck, unit tests, migrations, integration tests, e2e.
   refuses new files numbered below the latest applied one. Fix mistakes with a new migration.
 - Integration tests create a throwaway database per test suite on the server in `DATABASE_URL`
   and drop it afterwards (the database user needs `CREATEDB`, which the local compose user has).
+
+## Signing in locally
+
+- **Players / venue staff:** open http://localhost:3000/ar/sign-in and enter any Jordanian mobile
+  number. No SMS is sent yet: the code is printed in the API log (`DEV ONLY — sign-in code…`) and
+  can also be read from `GET http://localhost:4000/v1/dev/otp?phone=…` (development only).
+- **Platform admin:** create an account with the `admin:create` command above, add the printed
+  secret to an authenticator app (or compute codes from it), then sign in at
+  http://localhost:3001/ar/sign-in.
 
 ## Conventions
 

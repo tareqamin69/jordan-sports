@@ -5,6 +5,18 @@ import { z } from 'zod';
 
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
+const origins = z
+  .string()
+  .transform((value) =>
+    value
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  )
+  .pipe(z.array(z.string().regex(/^https?:\/\/[^/\s]+$/, 'must be origins like https://host')));
+
+const booleanString = z.enum(['true', 'false']).transform((v) => v === 'true');
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_HOST: z.string().min(1).default('127.0.0.1'),
@@ -13,15 +25,38 @@ const envSchema = z.object({
     .string()
     .refine((value) => /^postgres(ql)?:\/\/.+/.test(value), 'must be a postgres:// URL'),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  // Role the API switches to on every connection (SET ROLE). Empty disables (not recommended).
+  DATABASE_APP_ROLE: z
+    .string()
+    .regex(/^[a-z_][a-z0-9_]*$/, 'must be a simple role name')
+    .or(z.literal(''))
+    .default('js_app'),
+  REDIS_URL: z.string().refine((v) => /^rediss?:\/\/.+/.test(v), 'must be a redis:// URL'),
+  AUTH_SECRET: z.string().min(32, 'must be at least 32 characters'),
+  WEB_ORIGINS: origins.default(['http://localhost:3000', 'http://127.0.0.1:3000']),
+  ADMIN_ORIGINS: origins.default(['http://localhost:3001', 'http://127.0.0.1:3001']),
+  COOKIE_SECURE: booleanString.optional(),
+  OTP_CHANNEL: z.enum(['console']).default('console'),
+  MEDIA_DIR: z.string().min(1).default('.data/media'),
   LOG_LEVEL: z.enum(logLevels).default('info'),
 });
 
+export type NodeEnv = 'development' | 'test' | 'production';
+
 export interface AppConfig {
-  readonly nodeEnv: 'development' | 'test' | 'production';
+  readonly nodeEnv: NodeEnv;
   readonly host: string;
   readonly port: number;
   readonly databaseUrl: string;
   readonly databasePoolMax: number;
+  readonly databaseAppRole: string;
+  readonly redisUrl: string;
+  readonly authSecret: string;
+  readonly webOrigins: readonly string[];
+  readonly adminOrigins: readonly string[];
+  readonly cookieSecure: boolean;
+  readonly otpChannel: 'console';
+  readonly mediaDir: string;
   readonly logLevel: (typeof logLevels)[number];
 }
 
@@ -42,14 +77,43 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     throw new ConfigError(`Invalid configuration: ${issues}`);
   }
   const e = result.data;
-  return {
+  const config: AppConfig = {
     nodeEnv: e.NODE_ENV,
     host: e.API_HOST,
     port: e.API_PORT,
     databaseUrl: e.DATABASE_URL,
     databasePoolMax: e.DATABASE_POOL_MAX,
+    databaseAppRole: e.DATABASE_APP_ROLE,
+    redisUrl: e.REDIS_URL,
+    authSecret: e.AUTH_SECRET,
+    webOrigins: e.WEB_ORIGINS,
+    adminOrigins: e.ADMIN_ORIGINS,
+    cookieSecure: e.COOKIE_SECURE ?? e.NODE_ENV === 'production',
+    otpChannel: e.OTP_CHANNEL,
+    mediaDir: e.MEDIA_DIR,
     logLevel: e.LOG_LEVEL,
   };
+  assertProductionSafe(config);
+  return config;
+}
+
+/**
+ * Refuses configurations that are only acceptable for development (ADR-0009, ADR-0013).
+ */
+export function assertProductionSafe(config: AppConfig): void {
+  if (config.nodeEnv !== 'production') return;
+  const problems: string[] = [];
+  if (config.otpChannel === 'console') {
+    problems.push('OTP_CHANNEL=console is for development only; configure a real OTP provider');
+  }
+  if (!config.cookieSecure) problems.push('COOKIE_SECURE must be true in production');
+  if (!config.databaseAppRole) problems.push('DATABASE_APP_ROLE must be set in production');
+  for (const origin of [...config.webOrigins, ...config.adminOrigins]) {
+    if (!origin.startsWith('https://')) problems.push(`origin ${origin} must use https`);
+  }
+  if (problems.length > 0) {
+    throw new ConfigError(`Unsafe production configuration: ${problems.join('; ')}`);
+  }
 }
 
 /**

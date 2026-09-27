@@ -1,6 +1,9 @@
 import type { LivenessResponse, ReadinessResponse } from '@jordan-sports/contracts';
 import { Controller, Get, Inject, Logger, Res } from '@nestjs/common';
+import type { Redis } from 'ioredis';
 import type { FastifyReply } from 'fastify';
+import { Public } from '../auth/decorators.js';
+import { REDIS } from '../redis/redis.module.js';
 import { sql, type Kysely } from 'kysely';
 import type { Database } from '../database/database.js';
 import { DATABASE, MIGRATOR } from '../database/database.module.js';
@@ -11,12 +14,14 @@ import type { Migrator } from '../database/migrator.js';
  * Responses never include error details, versions or hostnames; failures are logged instead.
  */
 @Controller()
+@Public()
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
   constructor(
     @Inject(DATABASE) private readonly db: Kysely<Database>,
     @Inject(MIGRATOR) private readonly migrator: Migrator,
+    @Inject(REDIS) private readonly redis: Redis,
   ) {}
 
   /** Liveness: the process is serving HTTP. Checks no dependencies. */
@@ -25,11 +30,12 @@ export class HealthController {
     return { status: 'ok' };
   }
 
-  /** Readiness: the database is reachable and all migrations of this build are applied. */
+  /** Readiness: database reachable, all migrations of this build applied, Redis reachable. */
   @Get('readyz')
   async readiness(@Res({ passthrough: true }) reply: FastifyReply): Promise<ReadinessResponse> {
     let database: 'ok' | 'failed' = 'ok';
     let migrations: 'ok' | 'failed' = 'failed';
+    let redis: 'ok' | 'failed' = 'ok';
 
     try {
       await sql`SELECT 1`.execute(this.db);
@@ -55,8 +61,15 @@ export class HealthController {
       }
     }
 
-    const ready = database === 'ok' && migrations === 'ok';
+    try {
+      if ((await this.redis.ping()) !== 'PONG') redis = 'failed';
+    } catch (error) {
+      redis = 'failed';
+      this.logger.error(error);
+    }
+
+    const ready = database === 'ok' && migrations === 'ok' && redis === 'ok';
     reply.status(ready ? 200 : 503);
-    return { status: ready ? 'ready' : 'not_ready', checks: { database, migrations } };
+    return { status: ready ? 'ready' : 'not_ready', checks: { database, migrations, redis } };
   }
 }

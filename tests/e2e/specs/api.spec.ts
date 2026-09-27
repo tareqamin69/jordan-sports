@@ -13,7 +13,7 @@ test.describe('api operational endpoints', () => {
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual({
       status: 'ready',
-      checks: { database: 'ok', migrations: 'ok' },
+      checks: { database: 'ok', migrations: 'ok', redis: 'ok' },
     });
   });
 });

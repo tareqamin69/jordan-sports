@@ -1,9 +1,8 @@
 import { Global, Inject, Logger, Module, type OnApplicationShutdown } from '@nestjs/common';
-import type { Kysely } from 'kysely';
 import type pg from 'pg';
 import type { AppConfig } from '../config/config.js';
 import { APP_CONFIG } from '../config/config.module.js';
-import { createDatabase, createPool, type Database } from './database.js';
+import { createDatabase, createPool, type Db } from './database.js';
 import { Migrator } from './migrator.js';
 
 export const PG_POOL = Symbol('PG_POOL');
@@ -20,6 +19,7 @@ export const MIGRATOR = Symbol('MIGRATOR');
         const pool = createPool({
           connectionString: config.databaseUrl,
           max: config.databasePoolMax,
+          appRole: config.databaseAppRole,
         });
         const logger = new Logger('Database');
         // Errors on idle clients (e.g. the server restarting) must not crash the process.
@@ -30,7 +30,7 @@ export const MIGRATOR = Symbol('MIGRATOR');
     {
       provide: DATABASE,
       inject: [PG_POOL],
-      useFactory: (pool: pg.Pool): Kysely<Database> => createDatabase(pool),
+      useFactory: (pool: pg.Pool): Db => createDatabase(pool),
     },
     {
       provide: MIGRATOR,
@@ -41,7 +41,7 @@ export const MIGRATOR = Symbol('MIGRATOR');
   exports: [PG_POOL, DATABASE, MIGRATOR],
 })
 export class DatabaseModule implements OnApplicationShutdown {
-  constructor(@Inject(DATABASE) private readonly db: Kysely<Database>) {}
+  constructor(@Inject(DATABASE) private readonly db: Db) {}
 
   async onApplicationShutdown(): Promise<void> {
     // Destroying Kysely ends the underlying pool.

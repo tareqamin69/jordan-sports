@@ -17,7 +17,7 @@ To add a decision, copy [`template.md`](./template.md) to `NNNN-short-title.md` 
 | [0006](./0006-money-and-ledger.md) | Money as integer minor units with a double-entry ledger | Accepted |
 | [0007](./0007-postgres-jobs-outbox-redis-cache.md) | Postgres job queue and transactional outbox; Redis only for cache and rate limits | Accepted |
 | [0008](./0008-tenancy-and-row-level-security.md) | Organization as tenant; application enforcement plus row-level security | Accepted |
-| [0009](./0009-authentication.md) | Better Auth, phone OTP for players, mandatory 2FA for admins | Accepted |
+| [0009](./0009-authentication.md) | Better Auth, phone OTP for players, mandatory 2FA for admins | Accepted (library superseded by 0017) |
 | [0010](./0010-rest-openapi-zod-contracts.md) | REST with OpenAPI generated from zod contracts | Accepted |
 | [0011](./0011-locale-urls-and-translated-content.md) | Locale-prefixed URLs and translated content in jsonb | Accepted |
 | [0012](./0012-pnpm-turborepo.md) | pnpm workspaces and Turborepo | Accepted |
@@ -25,3 +25,4 @@ To add a decision, copy [`template.md`](./template.md) to `NNNN-short-title.md` 
 | [0014](./0014-price-by-start-band.md) | Price a slot by the band in which it starts | Accepted |
 | [0015](./0015-manual-payouts.md) | Manual payouts in the MVP | Accepted |
 | [0016](./0016-custom-resource-calendar.md) | Custom day/week resource calendar | Accepted |
+| [0017](./0017-in-house-authentication.md) | In-house authentication module instead of Better Auth | Accepted |
