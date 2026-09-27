@@ -10,7 +10,9 @@ import { DevOtpController } from './http/dev-otp.controller.js';
 @Module({})
 export class IdentityModule {
   static forRoot(config: AppConfig): DynamicModule {
-    const devOnly = config.otpChannel === 'console' && config.nodeEnv !== 'production';
+    // Development, tests and staging only (staging shows codes on screen; see docs/staging.md).
+    const devOnly =
+      config.otpChannel === 'console' && (config.nodeEnv !== 'production' || config.staging);
     return {
       module: IdentityModule,
       global: true,
