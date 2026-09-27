@@ -1,0 +1,26 @@
+# HTTPS certificates are obtained automatically for the sslip.io host names.
+(common) {
+	encode gzip
+	header X-Robots-Tag "noindex, nofollow"
+	# Deployment progress (no secrets are written to these logs).
+	handle_path /_staging/* {
+		root * /srv/logs
+		file_server
+	}
+	# While the apps are still building or restarting, show a friendly page instead of an error.
+	handle_errors 502 503 504 {
+		rewrite * /preparing.html
+		root * /srv
+		file_server
+	}
+}
+
+{$WEB_HOST} {
+	import common
+	reverse_proxy web:3000
+}
+
+{$ADMIN_HOST} {
+	import common
+	reverse_proxy admin:3001
+}

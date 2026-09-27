@@ -5,6 +5,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
 import { AuthService } from '../modules/identity/index.js';
 import { loadDotEnv, parseConfig } from '../platform/config/config.js';
+import { DATABASE } from '../platform/database/database.module.js';
+import type { Db } from '../platform/database/database.js';
 import { otpauthUri } from '../platform/security/totp.js';
 
 /**
@@ -22,6 +24,8 @@ async function main(): Promise<number> {
       name: { type: 'string' },
       role: { type: 'string', default: 'super_admin' },
       json: { type: 'boolean', default: false },
+      // Do nothing if a user with this email exists (idempotent provisioning).
+      'if-missing': { type: 'boolean', default: false },
     },
   });
   const password = process.env.ADMIN_PASSWORD;
@@ -39,11 +43,25 @@ async function main(): Promise<number> {
     logger: false,
   });
   try {
+    if (values['if-missing']) {
+      const db = app.get<Db>(DATABASE);
+      const existing = await db
+        .selectFrom('identity.users')
+        .select('id')
+        .where('email', '=', values.email.trim().toLowerCase())
+        .executeTakeFirst();
+      if (existing) {
+        console.log(`Staff account ${values.email} already exists; nothing to do.`);
+        return 0;
+      }
+    }
     const { userId, totpSecret } = await app.get(AuthService).createPlatformUser({
       email: values.email,
       displayName: values.name,
       password,
       role,
+      // Staging bootstrap may provide the secret so testers can be given it in advance.
+      ...(process.env.ADMIN_TOTP_SECRET ? { totpSecret: process.env.ADMIN_TOTP_SECRET } : {}),
     });
     if (values.json) {
       console.log(JSON.stringify({ userId, totpSecret }));

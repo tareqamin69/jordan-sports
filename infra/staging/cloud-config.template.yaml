@@ -1,0 +1,15 @@
+#cloud-config
+# Paste into Hetzner "Cloud config" when creating the server (docs/staging.md).
+# Replace the three values; never commit a filled-in copy.
+write_files:
+  - path: /opt/jordan-sports/admin.env
+    permissions: '0600'
+    content: |
+      ADMIN_EMAIL=admin@staging.example
+      ADMIN_PASSWORD=CHANGE-ME-long-password
+      ADMIN_TOTP_SECRET=BASE32SECRETWITH32ORMORECHARACTERS
+runcmd:
+  - mkdir -p /var/log/jordan-sports
+  - apt-get update -q && apt-get install -y -q git curl openssl
+  - git clone --branch claude/inspect-repo-environment-c0iptd https://github.com/tareqamin69/jordan-sports.git /opt/jordan-sports/app
+  - bash /opt/jordan-sports/app/infra/staging/bootstrap.sh > /var/log/jordan-sports/bootstrap.log 2>&1

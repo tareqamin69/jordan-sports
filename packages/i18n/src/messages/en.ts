@@ -116,7 +116,9 @@ export const en = {
       nameHint: 'Venues see this name on your bookings.',
       ageConfirm: 'I confirm that I am 16 years old or older.',
       createAccount: 'Create account',
-      devNotice: 'Development build: codes are not sent by SMS yet; they appear in the server log.',
+      devNotice: 'Test version: codes are not sent by SMS yet. The code appears on this screen.',
+      testCode: 'Your test code:',
+      useTestCode: 'Fill it in',
     },
     venues: {
       title: 'Sports venues',

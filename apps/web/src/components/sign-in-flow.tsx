@@ -33,6 +33,8 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Test builds only (no SMS provider yet): the code is shown on screen.
+  const [testCode, setTestCode] = useState<string | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -56,7 +58,12 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
     return run(async () => {
       const result = await api(requestOtp, { body: { phone } });
       setCode('');
+      setTestCode(null);
       setStep({ name: 'code', phone: result.phone });
+      if (devNotice) {
+        const res = await fetch(`/api/v1/dev/otp?phone=${encodeURIComponent(result.phone)}`);
+        if (res.ok) setTestCode(((await res.json()) as { code: string }).code);
+      }
     });
   };
 
@@ -121,6 +128,18 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
           <p className="text-ink-muted">
             {t.rich('codeSentTo', { phone: () => <Ltr>{step.phone}</Ltr> })}
           </p>
+          {testCode ? (
+            <Alert tone="info">
+              <span className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {t('testCode')} <Ltr>{testCode}</Ltr>
+                </span>
+                <Button variant="secondary" size="sm" onClick={() => setCode(testCode)}>
+                  {t('useTestCode')}
+                </Button>
+              </span>
+            </Alert>
+          ) : null}
           <TextField
             label={t('codeLabel')}
             inputMode="numeric"

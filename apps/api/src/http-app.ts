@@ -18,8 +18,9 @@ export async function createHttpApp(
     loggerInstance: logger,
     // Request IDs are always generated server-side; client-supplied IDs are not trusted.
     genReqId: () => randomUUID(),
-    // The API sits behind the web/admin same-site proxy; trust only loopback hops for client IPs.
-    trustProxy: ['127.0.0.1', '::1'],
+    // The API sits behind the web/admin same-site proxy; only configured hops are trusted for
+    // client IPs (loopback by default; the private Docker network on staging).
+    trustProxy: [...config.trustProxy],
     bodyLimit: 1024 * 1024,
   });
 

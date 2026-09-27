@@ -55,7 +55,7 @@ async function banner(color: string): Promise<Buffer> {
 async function main(): Promise<number> {
   loadDotEnv();
   const config = parseConfig(process.env);
-  if (config.nodeEnv === 'production') {
+  if (config.nodeEnv === 'production' && !config.staging) {
     console.error('Refusing to seed demo data in production.');
     return 1;
   }

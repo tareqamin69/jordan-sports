@@ -1,0 +1,84 @@
+# Staging (test) deployment: everything on one small server. See docs/staging.md.
+# Secrets and host names come from the env file created by bootstrap.sh (never committed).
+name: jordan-sports-staging
+
+x-app: &app
+  image: jordan-sports-app:latest
+  env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jordan_sports']
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # Runs on every deploy: migrations, demo data (idempotent), the staging admin account.
+  init:
+    <<: *app
+    build: { context: ../.., dockerfile: infra/staging/Dockerfile }
+    restart: 'no'
+    working_dir: /app/apps/api
+    command:
+      - sh
+      - -c
+      - >-
+        node dist/platform/database/cli.js migrate &&
+        node dist/cli/seed-demo.js &&
+        node dist/cli/admin.js create --if-missing --email "$$ADMIN_EMAIL" --name "مدير التجربة"
+    volumes: [media:/data/media]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+
+  api:
+    <<: *app
+    working_dir: /app/apps/api
+    command: node dist/main.http.js
+    volumes: [media:/data/media]
+    depends_on:
+      init: { condition: service_completed_successfully }
+
+  worker:
+    <<: *app
+    working_dir: /app/apps/api
+    command: node dist/main.worker.js
+    depends_on:
+      init: { condition: service_completed_successfully }
+
+  web:
+    <<: *app
+    working_dir: /app/apps/web
+    command: node_modules/.bin/next start --port 3000 --hostname 0.0.0.0
+    depends_on: [api]
+
+  admin:
+    <<: *app
+    working_dir: /app/apps/admin
+    command: node_modules/.bin/next start --port 3001 --hostname 0.0.0.0
+    depends_on: [api]
+
+  caddy:
+    image: caddy:2-alpine
+    env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./preparing.html:/srv/preparing.html:ro
+      - /var/log/jordan-sports:/srv/logs:ro
+      - caddy_data:/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:

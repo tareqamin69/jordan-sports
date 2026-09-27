@@ -41,6 +41,19 @@ const envSchema = z.object({
   MEDIA_DIR: z.string().min(1).default('.data/media'),
   LOG_LEVEL: z.enum(logLevels).default('info'),
   // Test-only: multiplies every rate limit (all end-to-end traffic comes from one IP).
+  // Staging: a production build for testers with demo data only. Allows the console OTP channel
+  // (sign-in codes are shown on screen). Never set this for real customers.
+  STAGING: booleanString.default(false),
+  // Proxies trusted for the client IP (X-Forwarded-For), e.g. private network ranges in Docker.
+  TRUST_PROXY: z
+    .string()
+    .default('127.0.0.1,::1')
+    .transform((v) =>
+      v
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
   RATE_LIMIT_SCALE: z.coerce.number().int().min(1).max(1000).default(1),
 });
 
@@ -65,6 +78,9 @@ export interface AppConfig {
   readonly logLevel: (typeof logLevels)[number];
   /** Multiplier for rate limits; must be 1 in production. */
   readonly rateLimitScale: number;
+  /** Test deployment with demo data (see STAGING). */
+  readonly staging: boolean;
+  readonly trustProxy: readonly string[];
 }
 
 export class ConfigError extends Error {
@@ -101,6 +117,8 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     mediaDir: e.MEDIA_DIR,
     logLevel: e.LOG_LEVEL,
     rateLimitScale: e.RATE_LIMIT_SCALE,
+    staging: e.STAGING,
+    trustProxy: e.TRUST_PROXY,
   };
   assertProductionSafe(config);
   return config;
@@ -112,7 +130,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
 export function assertProductionSafe(config: AppConfig): void {
   if (config.nodeEnv !== 'production') return;
   const problems: string[] = [];
-  if (config.otpChannel === 'console') {
+  if (config.otpChannel === 'console' && !config.staging) {
     problems.push('OTP_CHANNEL=console is for development only; configure a real OTP provider');
   }
   if (!config.cookieSecure) problems.push('COOKIE_SECURE must be true in production');

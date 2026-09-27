@@ -1,0 +1,73 @@
+# Builds the staging image and starts the full staging stack (as on the server) to catch
+# deployment breakage before the staging server pulls it. Plain HTTP host names for CI.
+name: Staging smoke test
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: staging-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write a throwaway staging env file
+        run: |
+          cat > "$RUNNER_TEMP/staging.env" <<ENV
+          NODE_ENV=production
+          STAGING=true
+          WEB_HOST=http://web.localhost
+          ADMIN_HOST=http://admin.localhost
+          WEB_BASE_URL=http://web.localhost
+          WEB_ORIGINS=http://web.localhost
+          ADMIN_ORIGINS=http://admin.localhost
+          COOKIE_SECURE=false
+          OTP_CHANNEL=console
+          API_HOST=0.0.0.0
+          API_INTERNAL_URL=http://api:4000
+          TRUST_PROXY=127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+          POSTGRES_USER=jordan_sports
+          POSTGRES_DB=jordan_sports
+          POSTGRES_PASSWORD=ci-password
+          DATABASE_URL=postgres://jordan_sports:ci-password@postgres:5432/jordan_sports
+          REDIS_URL=redis://redis:6379
+          AUTH_SECRET=$(openssl rand -hex 32)
+          MEDIA_DIR=/data/media
+          ADMIN_EMAIL=admin@staging.test
+          ADMIN_PASSWORD=ci-staging-admin-password
+          ADMIN_TOTP_SECRET=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP
+          ENV
+          sudo mkdir -p /var/log/jordan-sports && echo ok | sudo tee /var/log/jordan-sports/bootstrap.log
+      - name: Build and start the stack
+        working-directory: infra/staging
+        env:
+          STAGING_ENV_FILE: ${{ runner.temp }}/staging.env
+        run: docker compose up -d --build api worker web admin caddy
+      - name: Smoke checks through Caddy
+        run: |
+          set -e
+          web() { curl -fsS -H 'Host: web.localhost' "http://127.0.0.1$1"; }
+          admin() { curl -fsS -H 'Host: admin.localhost' "http://127.0.0.1$1"; }
+          for i in $(seq 1 100); do web /ar >/dev/null 2>&1 && break; sleep 3; done
+          web /ar | grep -q 'lang="ar"'
+          web /api/readyz | grep -q '"ok"'
+          web '/api/v1/venues?limit=10' | grep -q 'demo-padel-club'
+          web /ar/venues/demo-padel-club | grep -q 'demo-padel-club'
+          admin /ar/sign-in | grep -q 'lang="ar"'
+          web /_staging/bootstrap.log | grep -q ok
+          # Sign-in codes are readable on staging (shown on screen to testers).
+          curl -fsS -H 'Host: web.localhost' -H 'Origin: http://web.localhost' -H 'content-type: application/json' \
+            -d '{"phone":"0790000002"}' http://127.0.0.1/api/v1/auth/otp/request | grep -q phone
+          web '/api/v1/dev/otp?phone=0790000002' | grep -q code
+          echo "staging smoke: ok"
+      - name: Logs on failure
+        if: failure()
+        working-directory: infra/staging
+        env:
+          STAGING_ENV_FILE: ${{ runner.temp }}/staging.env
+        run: docker compose logs --tail=200

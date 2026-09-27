@@ -395,11 +395,16 @@ export class AuthService {
     displayName: string;
     password: string;
     role: PlatformRole;
+    /** Provisioning only (e.g. staging bootstrap); generated when omitted. */
+    totpSecret?: string;
   }): Promise<{ userId: string; totpSecret: string }> {
     if (!isAcceptablePassword(input.password)) {
       throw new AppError('VALIDATION_FAILED', 400, 'Password must be 12–200 characters');
     }
-    const totpSecret = generateTotpSecret();
+    if (input.totpSecret !== undefined && !/^[A-Z2-7]{32,}$/.test(input.totpSecret)) {
+      throw new AppError('VALIDATION_FAILED', 400, 'TOTP secret must be base32 (32+ characters)');
+    }
+    const totpSecret = input.totpSecret ?? generateTotpSecret();
     const userId = uuidv7();
     const passwordHash = await hashPassword(input.password);
     await this.db.transaction().execute(async (tx) => {

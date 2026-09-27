@@ -30,6 +30,8 @@ describe('parseConfig', () => {
       mediaDir: '.data/media',
       logLevel: 'info',
       rateLimitScale: 1,
+      staging: false,
+      trustProxy: ['127.0.0.1', '::1'],
     });
   });
 
@@ -77,6 +79,10 @@ describe('production safety', () => {
   it('refuses insecure cookies and http origins in production', () => {
     expect(() => parseConfig({ ...production, COOKIE_SECURE: 'false' })).toThrow(/COOKIE_SECURE/);
     expect(() => parseConfig({ ...production, WEB_ORIGINS: 'http://example.jo' })).toThrow(/https/);
+  });
+
+  it('allows the console OTP channel on staging only', () => {
+    expect(parseConfig({ ...production, STAGING: 'true' }).staging).toBe(true);
   });
 
   it('refuses scaled rate limits in production', () => {
