@@ -62,5 +62,29 @@ docker compose up -d --build
 docker image prune -f >/dev/null
 
 log "6/6 automatic updates every 5 minutes"
-echo "*/5 * * * * root $APP/infra/staging/update.sh >> /var/log/jordan-sports/update.log 2>&1" > /etc/cron.d/jordan-sports
+# systemd timer, not cron: some minimal Ubuntu cloud images don't ship a cron daemon at all,
+# which silently leaves /etc/cron.d files never executed. systemd is always present.
+cat > /etc/systemd/system/jordan-sports-update.service <<UNIT
+[Unit]
+Description=Jordan Sports staging update
+
+[Service]
+Type=oneshot
+ExecStart=$APP/infra/staging/update.sh
+StandardOutput=append:/var/log/jordan-sports/update.log
+StandardError=append:/var/log/jordan-sports/update.log
+UNIT
+cat > /etc/systemd/system/jordan-sports-update.timer <<UNIT
+[Unit]
+Description=Run the Jordan Sports staging update every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now jordan-sports-update.timer
 log "done: https://$(grep ^WEB_HOST "$BASE/staging.env" | cut -d= -f2)"

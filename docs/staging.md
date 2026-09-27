@@ -13,7 +13,7 @@ data on staging.
 | Processes | Docker Compose (`infra/staging/compose.yml`): PostGIS, Redis, `init` (migrations, demo seed, staff account), `api`, `worker`, `web`, `admin`, Caddy |
 | HTTPS | Caddy obtains certificates automatically for `<ip-with-dashes>.sslip.io` (web) and `admin.<ip-with-dashes>.sslip.io` (admin). No domain needed |
 | Image | Built on the server from `infra/staging/Dockerfile` (one image for every Node process) |
-| Updates | `infra/staging/update.sh` runs every 5 minutes (cron): when the staging branch moved, it pulls and runs `docker compose up -d --build` (migrations and idempotent seeding run in `init`) |
+| Updates | `infra/staging/update.sh` runs every 5 minutes (systemd timer `jordan-sports-update.timer`): when the staging branch moved, it pulls and runs `docker compose up -d --build` (migrations and idempotent seeding run in `init`) |
 | Secrets | Generated on the server (`/opt/jordan-sports/staging.env`, mode 600): database password, `AUTH_SECRET`. The staff account (email, password, TOTP secret) comes from the cloud-config, written to `/opt/jordan-sports/admin.env` |
 | Progress | `https://<web host>/_staging/bootstrap.log` and `/_staging/update.log` (no secrets are logged). A "preparing" page is shown while apps build or restart |
 
