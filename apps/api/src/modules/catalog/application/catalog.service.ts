@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { attributeFieldSchema, type AttributeField, type Catalog } from '@jordan-sports/contracts';
+import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
@@ -49,7 +50,13 @@ export class CatalogService {
         this.db.selectFrom('catalog.resource_type_formats').selectAll().execute(),
         this.db.selectFrom('catalog.amenities').selectAll().orderBy('sort_order').execute(),
         this.db.selectFrom('catalog.cities').selectAll().orderBy('sort_order').execute(),
-        this.db.selectFrom('catalog.areas').selectAll().orderBy('sort_order').execute(),
+        // Areas are shown alphabetically by Arabic name (governorates and everything else keep
+        // sort_order — only areas need this because the list per governorate is long).
+        this.db
+          .selectFrom('catalog.areas')
+          .selectAll()
+          .orderBy(sql`name->>'ar'`)
+          .execute(),
         this.db
           .selectFrom('catalog.sport_formats as sf')
           .innerJoin('resource.resource_formats as rf', 'rf.sport_format_id', 'sf.id')
