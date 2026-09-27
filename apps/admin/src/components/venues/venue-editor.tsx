@@ -197,7 +197,7 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
           save.mutate(undefined);
         }}
       >
-        <h2 className="text-lg font-bold sm:col-span-2">{t('venues.profile')}</h2>
+        <h2 className="font-display text-2xl leading-tight sm:col-span-2">{t('venues.profile')}</h2>
         {save.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
@@ -341,7 +341,7 @@ function ResourcesPanel({ venue, catalog }: { venue: AdminVenue; catalog: Catalo
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">{t('resources')}</h2>
+        <h2 className="font-display text-2xl leading-tight">{t('resources')}</h2>
         <Button size="sm" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
           {t('addResource')}
         </Button>
@@ -603,7 +603,7 @@ function FacilitiesPanel({ venue }: { venue: AdminVenue }) {
   );
   return (
     <Card>
-      <h2 className="text-lg font-bold">{t('venues.facilities')}</h2>
+      <h2 className="font-display text-2xl leading-tight">{t('venues.facilities')}</h2>
       <ul className="mt-2 flex flex-wrap gap-2">
         {venue.facilities.map((fa) => (
           <li key={fa.id}>
@@ -665,7 +665,7 @@ function PhotosPanel({ venue }: { venue: AdminVenue }) {
 
   return (
     <Card>
-      <h2 className="text-lg font-bold">{t('photos')}</h2>
+      <h2 className="font-display text-2xl leading-tight">{t('photos')}</h2>
       {error ? (
         <Alert tone="error" className="mt-3">
           {errorMessage(error)}
@@ -680,7 +680,7 @@ function PhotosPanel({ venue }: { venue: AdminVenue }) {
               alt={pick(venue.name, locale)}
               width={m.width}
               height={m.height}
-              className="aspect-video w-full rounded-md object-cover"
+              className="aspect-video w-full rounded-tile object-cover"
             />
             <Button
               size="sm"

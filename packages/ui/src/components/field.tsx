@@ -7,8 +7,29 @@ import {
 } from 'react';
 import { cx } from './cx.js';
 
-const control =
-  'w-full rounded-md border border-line bg-surface px-3 py-2.5 text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none aria-[invalid=true]:border-danger';
+export const fieldControlClass =
+  'w-full min-h-12 rounded-field border border-line bg-surface px-4 py-3 text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted hover:border-line-strong focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted aria-[invalid=true]:border-danger';
+
+const control = fieldControlClass;
+
+/** Chevron for native selects (the select itself uses `appearance-none`). */
+export function SelectChevron() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      focusable="false"
+      className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-ink-muted"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
 
 interface FieldShellProps {
   id: string;
@@ -20,8 +41,8 @@ interface FieldShellProps {
 
 function FieldShell({ id, label, hint, error, children }: FieldShellProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-sm font-semibold text-ink">
         {label}
       </label>
       {children}
@@ -105,15 +126,18 @@ export function SelectField({
   const id = useId();
   return (
     <FieldShell id={id} label={label} hint={hint} error={error}>
-      <select
-        id={id}
-        {...rest}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, hint, error)}
-        className={cx(control, className)}
-      >
-        {children}
-      </select>
+      <div className="relative">
+        <select
+          id={id}
+          {...rest}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(id, hint, error)}
+          className={cx(control, 'appearance-none pe-11', className)}
+        >
+          {children}
+        </select>
+        <SelectChevron />
+      </div>
     </FieldShell>
   );
 }
@@ -129,8 +153,13 @@ export function CheckboxField({ label, className, ...rest }: CheckboxFieldProps)
   const id = useId();
   return (
     <div className={cx('flex items-start gap-3', className)}>
-      <input id={id} type="checkbox" {...rest} className="mt-1 size-4 accent-brand-700" />
-      <label htmlFor={id} className="text-sm text-ink">
+      <input
+        id={id}
+        type="checkbox"
+        {...rest}
+        className="mt-1 size-5 shrink-0 cursor-pointer rounded accent-brand-700"
+      />
+      <label htmlFor={id} className="cursor-pointer text-sm leading-relaxed text-ink">
         {label}
       </label>
     </div>

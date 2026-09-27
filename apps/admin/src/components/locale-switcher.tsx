@@ -19,7 +19,7 @@ export function LocaleSwitcher() {
         lang={target}
         hrefLang={target}
         dir={getDirection(target)}
-        className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-50"
+        className="flex h-10 items-center rounded-full border border-line-strong px-4 text-sm font-medium text-ink transition-colors hover:bg-surface"
         data-testid="locale-switcher"
       >
         {t('switchTo')}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, PageHeader, Spinner, cx } from '@jordan-sports/ui';
+import { Alert, PageHeader, Spinner, chipClass } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -34,9 +34,9 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
 
   return (
     <>
-      <PageHeader title={pick(s.venue.name, locale)} description={t('title')} />
-      <nav aria-label={t('tabs.label')} className="mb-6 border-b border-line">
-        <ul className="flex flex-wrap gap-x-1">
+      <PageHeader eyebrow={t('title')} title={pick(s.venue.name, locale)} />
+      <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
+        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
           {tabs.map((key) => (
             <li key={key}>
               <Link
@@ -45,12 +45,10 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
                   query: key === 'calendar' ? {} : { tab: key },
                 }}
                 aria-current={tab === key ? 'page' : undefined}
-                className={cx(
-                  'block whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium',
-                  tab === key
-                    ? 'border-brand-700 text-brand-900'
-                    : 'border-transparent text-ink-muted hover:text-ink',
-                )}
+                className={chipClass(tab === key, {
+                  tone: 'night',
+                  className: 'whitespace-nowrap',
+                })}
               >
                 {t(`tabs.${key}`)}
               </Link>

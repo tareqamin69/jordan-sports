@@ -84,7 +84,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold">{t('governorates')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-tight">{t('governorates')}</h2>
       <Card className="mb-4 p-0">
         <ul className="divide-y divide-line">
           {catalog.governorates.map((g) =>
@@ -222,7 +222,7 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold">{t('areas')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-tight">{t('areas')}</h2>
       <div className="mb-3 max-w-xs">
         <SelectField
           label={t('governorate')}
@@ -359,9 +359,12 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [form, setForm] = useState(defaultSportForm);
-  const [renaming, setRenaming] = useState<{ id: string; nameAr: string; nameEn: string; icon: string } | null>(
-    null,
-  );
+  const [renaming, setRenaming] = useState<{
+    id: string;
+    nameAr: string;
+    nameEn: string;
+    icon: string;
+  } | null>(null);
 
   const create = useMutation({
     mutationFn: () =>
@@ -402,7 +405,7 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold">{t('sports')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-tight">{t('sports')}</h2>
       <p className="mb-3 text-sm text-ink-muted">{t('sportsHint')}</p>
       <Card className="mb-4 p-0">
         <ul className="divide-y divide-line">

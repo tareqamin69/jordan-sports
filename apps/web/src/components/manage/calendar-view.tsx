@@ -111,7 +111,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
         >
           {t('calendar.next')}
         </Button>
-        <h2 className="ms-2 text-lg font-bold" data-testid="calendar-date">
+        <h2 className="ms-2 font-display text-2xl leading-tight" data-testid="calendar-date">
           {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
         </h2>
       </div>
@@ -209,12 +209,12 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
                         key={e.id}
                         data-testid="calendar-entry"
                         className={cx(
-                          'absolute inset-x-1 overflow-hidden rounded-md border px-2 py-1 text-xs',
+                          'absolute inset-x-1 overflow-hidden rounded-xl border px-2 py-1 text-xs',
                           e.viaResourceId
                             ? 'border-line bg-canvas text-ink-muted'
                             : e.kind === 'block'
-                              ? 'border-accent-500 bg-accent-300/60 text-ink'
-                              : 'border-brand-600 bg-brand-100 text-brand-900',
+                              ? 'border-accent-400 bg-accent-300 text-ink'
+                              : 'border-primary bg-primary text-on-primary',
                         )}
                         style={{
                           top: (e.offsetMinutes - span.from) * PX_PER_MINUTE + 1,
@@ -232,7 +232,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
                         {removable ? (
                           <button
                             type="button"
-                            className="mt-0.5 inline-flex min-h-6 items-center text-xs font-medium text-danger underline"
+                            className="mt-0.5 inline-flex min-h-6 items-center text-xs font-semibold text-danger underline"
                             onClick={() => {
                               if (window.confirm(t('calendar.confirmRemove')))
                                 remove.mutate(e.blockId!);
@@ -313,7 +313,7 @@ function BlockForm({ schedule, date }: { schedule: VenueSchedule; date: string }
         }}
       >
         <div className="sm:col-span-2 lg:col-span-3">
-          <h2 className="text-lg font-bold">{t('calendar.blockTitle')}</h2>
+          <h2 className="font-display text-2xl leading-tight">{t('calendar.blockTitle')}</h2>
           <p className="mt-1 text-sm text-ink-muted">{t('calendar.blockHint')}</p>
         </div>
         {create.isError ? (

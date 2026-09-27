@@ -9,7 +9,7 @@ export default function ManagePage({ params }: { params: Promise<{ locale: Local
   const { locale } = use(params);
   setRequestLocale(locale);
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <ManageHome />
     </main>
   );

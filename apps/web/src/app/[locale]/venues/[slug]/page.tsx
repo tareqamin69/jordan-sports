@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { formatMoney } from '@jordan-sports/money';
+import { SectionHeading, buttonClass } from '@jordan-sports/ui';
+import { CourtArt } from '@/components/court-art';
 import { Icon } from '@/components/icons';
 import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
@@ -111,212 +113,233 @@ export default async function VenuePage({ params, searchParams }: Props) {
   const address = joinList(place, locale);
   const directions = directionsUrl(venue.location, `${name} ${address}`);
 
+  const priceFrom = venue.priceFrom;
+  const pill =
+    'flex h-11 items-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-ink/30';
+
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-6 sm:pb-10">
+    <main className="flex-1">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(venue, locale, url) }}
       />
 
-      <VenueGallery media={venue.media} name={name} />
+      <VenueGallery media={venue.media} name={name} icon={venue.sports[0]?.icon}>
+        <span className="text-xs font-medium ltr:tracking-[0.12em] text-canvas/85">
+          {joinList(
+            venue.sports.map((s) => pick(s.name, locale)),
+            locale,
+          )}
+        </span>
+        <h1 className="font-display text-[2.5rem] leading-[1.15] text-balance sm:text-[3.5rem]">
+          {name}
+        </h1>
+        <p className="flex items-center gap-1.5 text-sm text-canvas/85">
+          <Icon name="pin" className="size-4 shrink-0" />
+          {joinList(
+            [
+              venue.area ? pick(venue.area.name, locale) : '',
+              pick(venue.governorate.name, locale),
+            ].filter(Boolean),
+            locale,
+          )}
+        </p>
+      </VenueGallery>
 
-      <div className="mt-5 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold sm:text-4xl">{name}</h1>
-          <p className="mt-1 flex items-center gap-1 text-ink-muted">
-            <Icon name="pin" className="size-4 shrink-0" />
-            {joinList(
-              [
-                venue.area ? pick(venue.area.name, locale) : '',
-                pick(venue.governorate.name, locale),
-              ].filter(Boolean),
-              locale,
-            )}
-          </p>
-          <ul className="mt-2 flex flex-wrap gap-2">
-            {venue.sports.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-sm text-brand-900"
-              >
-                <Icon name={s.icon} className="size-4" />
-                {pick(s.name, locale)}
-              </li>
-            ))}
-          </ul>
-        </div>
-        {venue.priceFrom ? (
-          <p className="rounded-xl bg-brand-50 px-4 py-2 text-center">
-            <span className="block text-xs text-ink-muted">{t('from')}</span>
-            <span className="text-xl font-bold text-brand-900">
-              {formatMoney(venue.priceFrom, locale)}
-            </span>
-            <span className="block text-xs text-ink-muted">
-              {t('perDuration', { minutes: String(venue.priceFrom.durationMinutes) })}
-            </span>
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        {venue.contactPhone ? (
-          <a
-            href={`tel:${venue.contactPhone}`}
-            className="hidden items-center gap-2 rounded-md bg-brand-700 sm:flex px-4 py-2.5 font-medium text-white hover:bg-brand-800"
-          >
-            <Icon name="phone" />
-            {t('contact')}
-          </a>
-        ) : null}
-        <a
-          href={directions}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 font-medium text-ink hover:bg-canvas sm:flex"
-        >
-          <Icon name="pin" />
-          {t('directions')}
-        </a>
-        <a
-          href={whatsapp}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-2.5 font-medium text-ink hover:bg-canvas"
-        >
-          <Icon name="share" />
-          {t('share')}
-        </a>
-      </div>
-
-      <div className="mt-8 grid gap-8 lg:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-8 lg:col-span-2">
-          <div id="book" className="scroll-mt-4">
-            <VenueAvailability
-              slug={venue.slug}
-              timezone={venue.timezone}
-              resources={venue.resources}
-              initialDate={date}
-              initialTime={time}
-            />
-          </div>
-          {pick(venue.description, locale) ? (
-            <section>
-              <h2 className="text-xl font-bold">{t('about')}</h2>
-              <p className="mt-3 whitespace-pre-line text-ink">{pick(venue.description, locale)}</p>
-            </section>
-          ) : null}
-          <section>
-            <h2 className="text-xl font-bold">{t('resources')}</h2>
-            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-              {venue.resources.map((r) => (
-                <li
-                  key={r.id}
-                  className="rounded-lg border border-line bg-surface p-4"
-                  data-testid="venue-resource"
-                >
-                  <p className="font-bold">{pick(r.name, locale)}</p>
-                  <p className="text-sm text-ink-muted">
-                    {pick(r.type.name, locale)} ·{' '}
-                    {joinList(
-                      r.formats.map((f) => pick(f.name, locale)),
-                      locale,
-                    )}
+      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+        <div className="mt-6 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+          <div className="flex min-w-0 flex-col gap-10">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-end justify-between gap-4 lg:hidden">
+                {priceFrom ? (
+                  <p className="flex flex-col">
+                    <span className="text-xs text-ink-muted">{t('from')}</span>
+                    <span className="text-2xl font-bold leading-tight text-primary">
+                      {formatMoney(priceFrom, locale)}
+                    </span>
+                    <span className="text-xs text-ink-muted">
+                      {t('perDuration', { minutes: String(priceFrom.durationMinutes) })}
+                    </span>
                   </p>
-                  {r.features.length > 0 ? (
-                    <p className="mt-1 text-sm text-ink-muted">
-                      {joinList(
-                        r.features.map((f) =>
-                          f.value
-                            ? `${pick(f.label, locale)}: ${pick(f.value, locale)}`
-                            : pick(f.label, locale),
-                        ),
-                        locale,
-                      )}
-                    </p>
-                  ) : null}
-                  {r.unitCount > 1 ? (
-                    <p className="mt-1 text-sm text-brand-800">
-                      {t('combines', { count: String(r.unitCount) })}
-                    </p>
-                  ) : null}
+                ) : (
+                  <span />
+                )}
+                <a href="#book" className={buttonClass({ className: 'px-8' })}>
+                  {t('book')}
+                </a>
+              </div>
+              <ul className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 lg:hidden">
+                {venue.contactPhone ? (
+                  <li className="shrink-0">
+                    <a href={`tel:${venue.contactPhone}`} className={pill}>
+                      <Icon name="phone" className="size-4" />
+                      {t('call')}
+                    </a>
+                  </li>
+                ) : null}
+                <li className="shrink-0">
+                  <a href={directions} target="_blank" rel="noopener noreferrer" className={pill}>
+                    <Icon name="pin" className="size-4" />
+                    {t('directions')}
+                  </a>
                 </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-        <aside className="flex flex-col gap-6">
-          {place.length > 0 || venue.location ? (
+                <li className="shrink-0">
+                  <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={pill}>
+                    <Icon name="share" className="size-4" />
+                    {t('share')}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div
+              id="book"
+              className="scroll-mt-24 rounded-card border border-line bg-surface p-5 sm:p-7"
+            >
+              <VenueAvailability
+                slug={venue.slug}
+                timezone={venue.timezone}
+                resources={venue.resources}
+                initialDate={date}
+                initialTime={time}
+              />
+            </div>
+
+            {pick(venue.description, locale) ? (
+              <section>
+                <SectionHeading title={t('about')} />
+                <p className="mt-3 max-w-prose whitespace-pre-line leading-8 text-ink">
+                  {pick(venue.description, locale)}
+                </p>
+              </section>
+            ) : null}
+
             <section>
-              <h2 className="text-lg font-bold">{t('address')}</h2>
-              <p className="mt-2 text-ink">{address}</p>
-              {venue.location ? (
-                <iframe
-                  title={t('mapTitle', { name })}
-                  src={mapEmbedUrl(venue.location)}
-                  loading="lazy"
-                  className="mt-3 aspect-[4/3] w-full rounded-lg border border-line"
-                />
-              ) : null}
-              <a
-                href={directions}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 font-medium text-brand-800 underline"
-              >
-                <Icon name="pin" className="size-4" />
-                {t('directions')}
-              </a>
-            </section>
-          ) : null}
-          {venue.amenities.length > 0 ? (
-            <section>
-              <h2 className="text-lg font-bold">{t('amenities')}</h2>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {venue.amenities.map((a) => (
+              <SectionHeading title={t('resources')} />
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {venue.resources.map((r, i) => (
                   <li
-                    key={a.id}
-                    className="rounded-full bg-brand-50 px-3 py-1 text-sm text-brand-900"
+                    key={r.id}
+                    className="flex gap-4 rounded-tile border border-line bg-surface p-4"
+                    data-testid="venue-resource"
                   >
-                    {pick(a.name, locale)}
+                    <span className="relative size-16 shrink-0 overflow-hidden rounded-[0.875rem] bg-night">
+                      <CourtArt icon={venue.sports[0]?.icon} variant="top" />
+                    </span>
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="font-bold">{pick(r.name, locale)}</span>
+                      <span className="text-sm text-ink-muted">
+                        {pick(r.type.name, locale)} ·{' '}
+                        {joinList(
+                          r.formats.map((f) => pick(f.name, locale)),
+                          locale,
+                        )}
+                      </span>
+                      {r.features.length > 0 ? (
+                        <span className="text-sm text-ink-muted">
+                          {joinList(
+                            r.features.map((f) =>
+                              f.value
+                                ? `${pick(f.label, locale)}: ${pick(f.value, locale)}`
+                                : pick(f.label, locale),
+                            ),
+                            locale,
+                          )}
+                        </span>
+                      ) : null}
+                      {r.unitCount > 1 ? (
+                        <span className="text-sm text-primary">
+                          {t('combines', { count: String(r.unitCount) })}
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
             </section>
-          ) : null}
-        </aside>
-      </div>
+          </div>
 
-      <nav
-        aria-label={t('quickActions')}
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 gap-2 border-t border-line bg-surface p-3 sm:hidden"
-      >
-        <a
-          href="#book"
-          className="flex min-h-11 items-center justify-center rounded-md bg-brand-700 font-bold text-white"
-        >
-          {t('book')}
-        </a>
-        {venue.contactPhone ? (
-          <a
-            href={`tel:${venue.contactPhone}`}
-            className="flex min-h-11 items-center justify-center gap-1 rounded-md border border-line font-medium"
-          >
-            <Icon name="phone" className="size-4" />
-            {t('call')}
-          </a>
-        ) : (
-          <span />
-        )}
-        <a
-          href={directions}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-11 items-center justify-center gap-1 rounded-md border border-line font-medium"
-        >
-          <Icon name="pin" className="size-4" />
-          {t('directions')}
-        </a>
-      </nav>
+          <aside className="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start">
+            <div className="hidden flex-col gap-4 rounded-card border border-line bg-surface p-6 lg:flex">
+              {priceFrom ? (
+                <p className="flex flex-col">
+                  <span className="text-xs text-ink-muted">{t('from')}</span>
+                  <span className="text-3xl font-bold leading-tight text-primary">
+                    {formatMoney(priceFrom, locale)}
+                  </span>
+                  <span className="text-sm text-ink-muted">
+                    {t('perDuration', { minutes: String(priceFrom.durationMinutes) })}
+                  </span>
+                </p>
+              ) : null}
+              <a href="#book" className={buttonClass({ size: 'lg', className: 'w-full' })}>
+                {t('book')}
+              </a>
+              <div className="flex flex-col gap-2">
+                {venue.contactPhone ? (
+                  <a
+                    href={`tel:${venue.contactPhone}`}
+                    className={buttonClass({ variant: 'secondary', className: 'w-full' })}
+                  >
+                    <Icon name="phone" className="size-4" />
+                    {t('contact')}
+                  </a>
+                ) : null}
+                <a
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonClass({ variant: 'secondary', className: 'w-full' })}
+                >
+                  <Icon name="share" className="size-4" />
+                  {t('share')}
+                </a>
+              </div>
+            </div>
+
+            {place.length > 0 || venue.location ? (
+              <section>
+                <h2 className="font-display text-2xl">{t('address')}</h2>
+                <p className="mt-2 text-ink">{address}</p>
+                {venue.location ? (
+                  <iframe
+                    title={t('mapTitle', { name })}
+                    src={mapEmbedUrl(venue.location)}
+                    loading="lazy"
+                    className="mt-4 aspect-[4/3] w-full rounded-card border border-line bg-canvas-deep"
+                  />
+                ) : null}
+                <a
+                  href={directions}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonClass({ variant: 'secondary', size: 'sm', className: 'mt-3' })}
+                >
+                  <Icon name="pin" className="size-4" />
+                  {t('directions')}
+                </a>
+              </section>
+            ) : null}
+            {venue.amenities.length > 0 ? (
+              <section>
+                <h2 className="font-display text-2xl">{t('amenities')}</h2>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {venue.amenities.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex h-9 items-center gap-1.5 rounded-full bg-surface px-4 text-sm text-ink ring-1 ring-line"
+                    >
+                      <Icon name="check" className="size-4 text-primary" />
+                      {pick(a.name, locale)}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </aside>
+        </div>
+      </div>
     </main>
   );
 }

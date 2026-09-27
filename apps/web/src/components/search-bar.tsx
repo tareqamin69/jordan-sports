@@ -3,7 +3,7 @@
 import type { Catalog } from '@jordan-sports/contracts';
 import { cx } from '@jordan-sports/ui';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { addDays, businessToday, dateForLabel } from '@/lib/time';
@@ -18,20 +18,48 @@ export interface SearchValues {
 }
 
 const TIMES = Array.from({ length: 16 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`);
-const field =
-  'w-full rounded-md border border-line bg-surface px-3 py-2.5 text-ink focus:border-brand-600 focus:outline-none';
+
+/** One "label over value" cell of the search card; the native select covers the whole cell. */
+function Cell({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: (id: string) => ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className={cx('relative h-[62px] min-w-0', className)}>
+      <label
+        htmlFor={id}
+        className="pointer-events-none absolute inset-x-3 top-2.5 z-10 truncate text-[11px] leading-4 text-ink-muted"
+      >
+        {label}
+      </label>
+      {children(id)}
+    </div>
+  );
+}
+
+const select =
+  'absolute inset-0 w-full cursor-pointer appearance-none truncate rounded-2xl bg-transparent px-3 pb-2.5 pt-[26px] text-sm font-semibold text-ink transition-colors duration-200 hover:bg-canvas/70 focus:outline-none focus-visible:bg-canvas focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:text-ink-muted';
 
 /**
  * Venue search: sport, governorate → area (Jordan-wide, no city hardcoded), day, time. A plain GET
- * form to `/venues`; the governorate→area cascade is the only client state.
+ * form to `/venues`; the governorate→area cascade is the only client state. `floating` is the
+ * white card that overlaps the home hero.
  */
 export function SearchBar({
   catalog,
   values = {},
+  floating = false,
   className,
 }: {
   catalog: Catalog;
   values?: SearchValues;
+  floating?: boolean;
   className?: string;
 }) {
   const t = useTranslations('web.search');
@@ -57,81 +85,94 @@ export function SearchBar({
       action={`/${locale}/venues`}
       role="search"
       className={cx(
-        'grid grid-cols-2 gap-3 rounded-xl border border-line bg-surface p-4 shadow-md sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] lg:items-end',
+        'flex flex-col gap-1 rounded-[1.625rem] bg-surface p-2.5 lg:flex-row lg:items-center',
+        floating ? 'shadow-float' : 'border border-line',
         className,
       )}
     >
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {t('sport')}
-        <select name="sport" defaultValue={values.sport ?? ''} className={field}>
-          <option value="">{t('anySport')}</option>
-          {offeredSports.map((s) => (
-            <option key={s.id} value={s.key}>
-              {pick(s.name, locale)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {t('governorate')}
-        <select
-          name="governorate"
-          value={governorateKey}
-          onChange={(e) => setGovernorateKey(e.target.value)}
-          className={field}
+      <div className="grid min-w-0 flex-1 grid-cols-3 lg:grid-cols-5">
+        <Cell label={t('sport')}>
+          {(id) => (
+            <select id={id} name="sport" defaultValue={values.sport ?? ''} className={select}>
+              <option value="">{t('anySport')}</option>
+              {offeredSports.map((s) => (
+                <option key={s.id} value={s.key}>
+                  {pick(s.name, locale)}
+                </option>
+              ))}
+            </select>
+          )}
+        </Cell>
+        <Cell label={t('governorate')} className="border-s border-line">
+          {(id) => (
+            <select
+              id={id}
+              name="governorate"
+              value={governorateKey}
+              onChange={(e) => setGovernorateKey(e.target.value)}
+              className={select}
+            >
+              <option value="">{t('anyGovernorate')}</option>
+              {catalog.governorates.map((g) => (
+                <option key={g.id} value={g.key}>
+                  {pick(g.name, locale)}
+                </option>
+              ))}
+            </select>
+          )}
+        </Cell>
+        <Cell label={t('date')} className="border-s border-line">
+          {(id) => (
+            <select id={id} name="date" defaultValue={values.date ?? ''} className={select}>
+              <option value="">{t('anyDate')}</option>
+              {days.map((d, i) => (
+                <option key={d} value={d}>
+                  {dayLabel(d, i)}
+                </option>
+              ))}
+            </select>
+          )}
+        </Cell>
+        <Cell
+          label={t('area')}
+          className="col-span-2 border-t border-line lg:col-span-1 lg:border-s lg:border-t-0"
         >
-          <option value="">{t('anyGovernorate')}</option>
-          {catalog.governorates.map((g) => (
-            <option key={g.id} value={g.key}>
-              {pick(g.name, locale)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {t('area')}
-        <select
-          name="area"
-          key={governorateKey}
-          defaultValue={values.area ?? ''}
-          disabled={!governorate}
-          className={cx(field, !governorate && 'opacity-60')}
-        >
-          <option value="">{t('anyArea')}</option>
-          {areas.map((a) => (
-            <option key={a.id} value={a.key}>
-              {pick(a.name, locale)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {t('date')}
-        <select name="date" defaultValue={values.date ?? ''} className={field}>
-          <option value="">{t('anyDate')}</option>
-          {days.map((d, i) => (
-            <option key={d} value={d}>
-              {dayLabel(d, i)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {t('time')}
-        <select name="time" defaultValue={values.time ?? ''} className={field}>
-          <option value="">{t('anyTime')}</option>
-          {TIMES.map((time) => (
-            <option key={time} value={time}>
-              {time}
-            </option>
-          ))}
-        </select>
-      </label>
+          {(id) => (
+            <select
+              id={id}
+              name="area"
+              key={governorateKey}
+              defaultValue={values.area ?? ''}
+              disabled={!governorate}
+              className={select}
+            >
+              <option value="">{t('anyArea')}</option>
+              {areas.map((a) => (
+                <option key={a.id} value={a.key}>
+                  {pick(a.name, locale)}
+                </option>
+              ))}
+            </select>
+          )}
+        </Cell>
+        <Cell label={t('time')} className="border-s border-t border-line lg:border-t-0">
+          {(id) => (
+            <select id={id} name="time" defaultValue={values.time ?? ''} className={select}>
+              <option value="">{t('anyTime')}</option>
+              {TIMES.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
+          )}
+        </Cell>
+      </div>
       <button
         type="submit"
-        className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-md bg-brand-700 px-5 py-2.5 font-bold text-white hover:bg-brand-800 sm:col-span-3 lg:col-span-1"
+        className="flex h-[54px] shrink-0 items-center justify-center gap-2.5 rounded-[1.125rem] bg-primary px-8 text-base font-semibold text-on-primary transition-[background-color,transform] duration-200 hover:bg-primary-hover active:scale-[0.99]"
       >
-        <Icon name="search" />
+        <Icon name="search" className="size-[19px]" strokeWidth={2.2} />
         {t('submit')}
       </button>
     </form>

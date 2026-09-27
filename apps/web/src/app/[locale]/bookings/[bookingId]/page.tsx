@@ -15,7 +15,7 @@ export default function BookingPage({ params }: Props) {
   setRequestLocale(locale);
   if (!UUID.test(bookingId)) notFound();
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <BookingView bookingId={bookingId} />
     </main>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut } from '@jordan-sports/contracts';
-import { Alert, Button, Card, Ltr, PageHeader, Spinner } from '@jordan-sports/ui';
+import { Alert, Button, Card, Ltr, PageHeader, Spinner, buttonClass } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
@@ -9,6 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useMe } from '@/lib/session';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { Icon } from './icons';
 
 export function AccountView() {
   const t = useTranslations('web.account');
@@ -43,7 +44,7 @@ export function AccountView() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-rise flex-col gap-4">
       <PageHeader
         title={t('title')}
         actions={
@@ -66,20 +67,23 @@ export function AccountView() {
           </div>
         </dl>
       </Card>
-      <Card>
-        <Link href="/bookings" className="font-medium text-brand-800 underline">
+      <Link
+        href="/bookings"
+        className="group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 font-semibold transition-colors hover:border-line-strong"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
+            <Icon name="calendar" className="size-5" />
+          </span>
           {t('bookingsLink')}
-        </Link>
-      </Card>
+        </span>
+        <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
+      </Link>
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-bold">{t('organizationsTitle')}</h2>
+          <h2 className="font-display text-2xl">{t('organizationsTitle')}</h2>
           {user.memberships.length > 0 ? (
-            <Link
-              href="/manage"
-              className="font-medium text-brand-800 underline"
-              data-testid="manage-link"
-            >
+            <Link href="/manage" className={buttonClass({ size: 'sm' })} data-testid="manage-link">
               {t('manageLink')}
             </Link>
           ) : null}

@@ -37,14 +37,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   if (me.isError) {
     return (
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 sm:px-8">
         <Alert tone="error">{errorMessage(me.error)}</Alert>
       </main>
     );
   }
   if (me.isPending || me.data === null) {
     return (
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 sm:px-8">
         <Spinner label={tc('loading')} />
       </main>
     );
@@ -57,9 +57,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 md:flex-row">
-      <nav aria-label={t('label')} className="md:w-52 md:shrink-0">
-        <ul className="flex gap-1 overflow-x-auto md:flex-col">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-5 py-8 sm:px-8 md:flex-row">
+      <nav aria-label={t('label')} className="md:w-56 md:shrink-0">
+        <ul className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto px-5 md:sticky md:top-24 md:mx-0 md:flex-col md:px-0">
           {sections.map((s) => {
             const active = s.href === '/' ? pathname === '/' : pathname.startsWith(s.href);
             return (
@@ -68,8 +68,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   href={s.href}
                   aria-current={active ? 'page' : undefined}
                   className={cx(
-                    'block whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium',
-                    active ? 'bg-brand-50 text-brand-900' : 'text-ink hover:bg-canvas',
+                    'flex min-h-10 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors duration-200',
+                    active ? 'bg-night text-canvas' : 'text-ink hover:bg-canvas-deep',
                   )}
                 >
                   {t(s.key)}

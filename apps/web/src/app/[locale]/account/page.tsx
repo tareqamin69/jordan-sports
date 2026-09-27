@@ -11,7 +11,7 @@ export default function AccountPage({ params }: Props) {
   const { locale } = use(params);
   setRequestLocale(locale);
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <AccountView />
     </main>
   );

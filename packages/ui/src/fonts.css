@@ -1,7 +1,10 @@
 /*
  * Self-hosted fonts (no runtime request to a third-party font CDN).
- * IBM Plex Sans Arabic is used first for Arabic, IBM Plex Sans first for English.
+ * Display: Amiri Bold (Arabic + Latin). Body/UI: IBM Plex Sans Arabic first for Arabic,
+ * IBM Plex Sans first for English.
  */
+@import '@fontsource/amiri/arabic-700.css';
+@import '@fontsource/amiri/latin-700.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';

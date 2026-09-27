@@ -1,2 +1,9 @@
 @import 'tailwindcss';
 @import '@jordan-sports/ui/styles.css';
+
+/* A page with its own sticky bottom action (checkout) replaces the floating nav on mobile. */
+@media (width < 48rem) {
+  body:has([data-sticky-cta]) [data-bottom-nav] {
+    display: none;
+  }
+}

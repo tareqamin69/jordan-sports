@@ -100,7 +100,7 @@ function DayGroup({
   const format = useFormatter();
   return (
     <section>
-      <h2 className="mb-2 text-lg font-bold">
+      <h2 className="mb-3 font-display text-2xl leading-tight">
         {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
       </h2>
       <ul className="flex flex-col gap-2">
@@ -134,7 +134,7 @@ function BookingRow({ booking: b, schedule }: { booking: VenueBooking; schedule:
   return (
     <li
       data-testid="venue-booking"
-      className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4"
+      className="flex flex-col gap-3 rounded-tile border border-line bg-surface p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
@@ -255,7 +255,9 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
           create.mutate();
         }}
       >
-        <h2 className="text-lg font-bold sm:col-span-2 lg:col-span-3">{t('newTitle')}</h2>
+        <h2 className="font-display text-2xl leading-tight sm:col-span-2 lg:col-span-3">
+          {t('newTitle')}
+        </h2>
         {create.isError ? (
           <Alert tone="error" className="sm:col-span-2 lg:col-span-3">
             {errorMessage(create.error)}
@@ -392,7 +394,7 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
           save.mutate();
         }}
       >
-        <h2 className="text-lg font-bold">{t('cutoffTitle')}</h2>
+        <h2 className="font-display text-2xl leading-tight">{t('cutoffTitle')}</h2>
         <p className="text-sm text-ink-muted">{t('cutoffHint')}</p>
         {save.isError ? <Alert tone="error">{errorMessage(save.error)}</Alert> : null}
         {save.isSuccess ? <Alert tone="success">{t('saved')}</Alert> : null}

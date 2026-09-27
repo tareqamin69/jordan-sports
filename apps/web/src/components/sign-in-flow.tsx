@@ -8,6 +8,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { HeroArt } from './court-art';
 
 type Step =
   { name: 'phone' } | { name: 'code'; phone: string } | { name: 'profile'; signupToken: string };
@@ -89,110 +90,116 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
   };
 
   return (
-    <Card className="mx-auto w-full max-w-md">
-      {devNotice ? (
-        <Alert tone="warning" className="mb-5">
-          {t('devNotice')}
-        </Alert>
-      ) : null}
-      {error ? (
-        <Alert tone="error" className="mb-5">
-          {error}
-        </Alert>
-      ) : null}
+    <Card className="mx-auto w-full max-w-md animate-rise overflow-hidden p-0">
+      <div className="relative h-32 bg-night">
+        <HeroArt className="absolute inset-0" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-night/0 to-night/70" />
+      </div>
+      <div className="p-6 sm:p-8">
+        {devNotice ? (
+          <Alert tone="warning" className="mb-5">
+            {t('devNotice')}
+          </Alert>
+        ) : null}
+        {error ? (
+          <Alert tone="error" className="mb-5">
+            {error}
+          </Alert>
+        ) : null}
 
-      {step.name === 'phone' ? (
-        <form onSubmit={sendCode} className="flex flex-col gap-5">
-          <h1 className="text-xl font-bold">{t('title')}</h1>
-          <TextField
-            label={t('phoneLabel')}
-            hint={t('phoneHint')}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            dir="ltr"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            name="phone"
-          />
-          <Button type="submit" busy={busy}>
-            {t('sendCode')}
-          </Button>
-        </form>
-      ) : null}
+        {step.name === 'phone' ? (
+          <form onSubmit={sendCode} className="flex flex-col gap-5">
+            <h1 className="font-display text-[2rem] leading-[1.2]">{t('title')}</h1>
+            <TextField
+              label={t('phoneLabel')}
+              hint={t('phoneHint')}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              dir="ltr"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              name="phone"
+            />
+            <Button type="submit" busy={busy}>
+              {t('sendCode')}
+            </Button>
+          </form>
+        ) : null}
 
-      {step.name === 'code' ? (
-        <form onSubmit={verify} className="flex flex-col gap-5">
-          <h1 className="text-xl font-bold">{t('codeTitle')}</h1>
-          <p className="text-ink-muted">
-            {t.rich('codeSentTo', { phone: () => <Ltr>{step.phone}</Ltr> })}
-          </p>
-          {testCode ? (
-            <Alert tone="info">
-              <span className="flex flex-wrap items-center justify-between gap-2">
-                <span>
-                  {t('testCode')} <Ltr>{testCode}</Ltr>
+        {step.name === 'code' ? (
+          <form onSubmit={verify} className="flex flex-col gap-5">
+            <h1 className="font-display text-[2rem] leading-[1.2]">{t('codeTitle')}</h1>
+            <p className="text-ink-muted">
+              {t.rich('codeSentTo', { phone: () => <Ltr>{step.phone}</Ltr> })}
+            </p>
+            {testCode ? (
+              <Alert tone="info">
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    {t('testCode')} <Ltr>{testCode}</Ltr>
+                  </span>
+                  <Button variant="secondary" size="sm" onClick={() => setCode(testCode)}>
+                    {t('useTestCode')}
+                  </Button>
                 </span>
-                <Button variant="secondary" size="sm" onClick={() => setCode(testCode)}>
-                  {t('useTestCode')}
-                </Button>
-              </span>
-            </Alert>
-          ) : null}
-          <TextField
-            label={t('codeLabel')}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            dir="ltr"
-            required
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-            name="code"
-          />
-          <Button type="submit" busy={busy}>
-            {t('verify')}
-          </Button>
-          <div className="flex flex-wrap justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>
-              {t('changeNumber')}
+              </Alert>
+            ) : null}
+            <TextField
+              label={t('codeLabel')}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              dir="ltr"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              name="code"
+            />
+            <Button type="submit" busy={busy}>
+              {t('verify')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => void sendCode()} disabled={busy}>
-              {t('resend')}
-            </Button>
-          </div>
-        </form>
-      ) : null}
+            <div className="-mx-2 flex flex-wrap justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>
+                {t('changeNumber')}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => void sendCode()} disabled={busy}>
+                {t('resend')}
+              </Button>
+            </div>
+          </form>
+        ) : null}
 
-      {step.name === 'profile' ? (
-        <form onSubmit={createAccount} className="flex flex-col gap-5">
-          <h1 className="text-xl font-bold">{t('profileTitle')}</h1>
-          <TextField
-            label={t('nameLabel')}
-            hint={t('nameHint')}
-            autoComplete="name"
-            required
-            maxLength={80}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            name="displayName"
-          />
-          <CheckboxField
-            label={t('ageConfirm')}
-            checked={ageConfirmed}
-            onChange={(e) => setAgeConfirmed(e.target.checked)}
-            name="ageConfirmed"
-          />
-          <Button type="submit" busy={busy} disabled={!ageConfirmed || name.trim() === ''}>
-            {t('createAccount')}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>
-            {tc('back')}
-          </Button>
-        </form>
-      ) : null}
+        {step.name === 'profile' ? (
+          <form onSubmit={createAccount} className="flex flex-col gap-5">
+            <h1 className="font-display text-[2rem] leading-[1.2]">{t('profileTitle')}</h1>
+            <TextField
+              label={t('nameLabel')}
+              hint={t('nameHint')}
+              autoComplete="name"
+              required
+              maxLength={80}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              name="displayName"
+            />
+            <CheckboxField
+              label={t('ageConfirm')}
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              name="ageConfirmed"
+            />
+            <Button type="submit" busy={busy} disabled={!ageConfirmed || name.trim() === ''}>
+              {t('createAccount')}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>
+              {tc('back')}
+            </Button>
+          </form>
+        ) : null}
+      </div>
     </Card>
   );
 }

@@ -2,8 +2,11 @@ import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { PageHeader, chipClass } from '@jordan-sports/ui';
+import { Icon } from '@/components/icons';
 import { SearchBar } from '@/components/search-bar';
 import { VenueCard } from '@/components/venue-card';
+import { Link } from '@/i18n/navigation';
 import { pick } from '@/lib/localized';
 import { serverApi } from '@/lib/server-api';
 
@@ -63,21 +66,62 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   ]);
   const sportName = catalog.sports.find((s) => s.key === sport)?.name;
 
-  return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-      <h1 className="text-2xl font-bold sm:text-3xl">
-        {sportName ? t('titleForSport', { sport: pick(sportName, locale) }) : t('title')}
-      </h1>
-      <p className="mt-1 text-ink-muted">{date ? t('searchDescription') : t('description')}</p>
+  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
+  const keep = {
+    ...(governorate ? { governorate } : {}),
+    ...(area ? { area } : {}),
+    ...(date ? { date } : {}),
+    ...(time ? { time } : {}),
+  };
 
-      <SearchBar catalog={catalog} values={{ sport, governorate, area, date, time }} className="mt-5" />
+  return (
+    <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
+      <PageHeader
+        eyebrow={t('count', { count: venues.items.length, n: String(venues.items.length) })}
+        title={sportName ? t('titleForSport', { sport: pick(sportName, locale) }) : t('title')}
+        description={date ? t('searchDescription') : t('description')}
+      />
+
+      <SearchBar
+        catalog={catalog}
+        values={{ sport, governorate, area, date, time }}
+        className="-mt-2"
+      />
+
+      <nav aria-label={t('filterSport')} className="-mx-5 mt-4 sm:mx-0">
+        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
+          <li className="shrink-0">
+            <Link
+              href={{ pathname: '/venues', query: keep }}
+              aria-current={!sport ? 'page' : undefined}
+              className={chipClass(!sport)}
+            >
+              {t('allSports')}
+            </Link>
+          </li>
+          {offeredSports.map((s) => (
+            <li key={s.id} className="shrink-0">
+              <Link
+                href={{ pathname: '/venues', query: { ...keep, sport: s.key } }}
+                aria-current={s.key === sport ? 'page' : undefined}
+                className={chipClass(s.key === sport)}
+              >
+                <Icon name={s.icon} className="size-4" />
+                {pick(s.name, locale)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       {venues.items.length === 0 ? (
-        <p className="mt-10 text-ink-muted">{date ? t('emptySearch') : t('empty')}</p>
+        <div className="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-ink-muted">
+          {date ? t('emptySearch') : t('empty')}
+        </div>
       ) : (
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {venues.items.map((v) => (
-            <li key={v.id}>
+            <li key={v.id} className="animate-rise">
               <VenueCard venue={v} locale={locale} date={date} />
             </li>
           ))}

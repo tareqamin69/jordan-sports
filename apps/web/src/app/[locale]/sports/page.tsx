@@ -2,6 +2,7 @@ import { getCatalog } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { PageHeader, tileClass } from '@jordan-sports/ui';
 import { Icon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/lib/localized';
@@ -17,7 +18,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    alternates: { canonical: `/${locale}/sports`, languages: { ar: '/ar/sports', en: '/en/sports' } },
+    alternates: {
+      canonical: `/${locale}/sports`,
+      languages: { ar: '/ar/sports', en: '/en/sports' },
+    },
   };
 }
 
@@ -30,21 +34,21 @@ export default async function SportsPage({ params }: Props) {
   const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-      <h1 className="text-2xl font-bold sm:text-3xl">{t('title')}</h1>
-      <p className="mt-1 text-ink-muted">{t('description')}</p>
+    <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
+      <PageHeader title={t('title')} description={t('description')} />
 
-      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
         {offeredSports.map((sport) => (
-          <li key={sport.id}>
+          <li key={sport.id} className="animate-rise">
             <Link
               href={{ pathname: '/venues', query: { sport: sport.key } }}
-              className="flex flex-col items-center gap-2 rounded-xl border border-line bg-surface p-5 text-center font-bold text-brand-900 shadow-sm hover:border-brand-300"
+              className={tileClass(
+                false,
+                'h-28 hover:border-primary hover:bg-primary hover:text-on-primary',
+              )}
             >
-              <span className="grid size-14 place-items-center rounded-full bg-brand-50 text-brand-800">
-                <Icon name={sport.icon} className="size-8" />
-              </span>
-              {pick(sport.name, locale)}
+              <Icon name={sport.icon} className="size-7" strokeWidth={1.5} />
+              <span className="text-sm font-semibold leading-5">{pick(sport.name, locale)}</span>
             </Link>
           </li>
         ))}

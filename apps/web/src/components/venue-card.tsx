@@ -4,8 +4,16 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { joinList, pick } from '@/lib/localized';
 import { Icon } from './icons';
+import { VenuePhoto } from './venue-photo';
 
-/** Photo card: name, area, sports, "from" price, and free times when searching by date. */
+export function venuePlace(venue: VenueSummary, locale: string): string {
+  return joinList(
+    [venue.area ? pick(venue.area.name, locale) : '', pick(venue.governorate.name, locale)],
+    locale,
+  );
+}
+
+/** Photo-first card: big photo, name, place, sports, "from" price, and free times when searching. */
 export function VenueCard({
   venue,
   locale,
@@ -19,72 +27,69 @@ export function VenueCard({
 }) {
   const t = useTranslations('web.venues');
   const href = `/venues/${venue.slug}`;
-  const place = [
-    venue.area ? pick(venue.area.name, locale) : null,
-    pick(venue.governorate.name, locale),
-  ].filter(Boolean) as string[];
   return (
     <article
-      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-brand-300"
+      className="group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface transition-[border-color,box-shadow,transform] duration-300 ease-soft hover:-translate-y-0.5 hover:shadow-lift has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus"
       data-testid="venue-card"
     >
-      <div className="relative">
-        {venue.cover ? (
-          // eslint-disable-next-line @next/next/no-img-element -- images are served by our API (already optimized WebP)
-          <img
-            src={`/api${venue.cover.url}`}
-            alt=""
-            width={venue.cover.width}
-            height={venue.cover.height}
-            loading="lazy"
-            className="aspect-[16/10] w-full object-cover"
-          />
-        ) : (
-          <div className="aspect-[16/10] w-full bg-brand-50" aria-hidden />
-        )}
-        {venue.priceFrom ? (
-          <span className="absolute bottom-2 start-2 rounded-full bg-surface/95 px-3 py-1 text-sm font-bold text-brand-900 shadow">
-            {t('priceFrom', { price: formatMoney(venue.priceFrom, locale) })}
-          </span>
-        ) : null}
-        <span className="absolute end-2 top-2 flex gap-1">
+      <div className="relative h-56 overflow-hidden bg-night">
+        <VenuePhoto
+          venue={venue}
+          className="transition-transform duration-500 ease-soft group-hover:scale-[1.03]"
+        />
+        <span className="absolute end-4 top-4 flex gap-1.5">
           {venue.sports.map((s) => (
             <span
               key={s.id}
               title={pick(s.name, locale)}
-              className="grid size-8 place-items-center rounded-full bg-surface/95 text-brand-800 shadow"
+              className="grid size-9 place-items-center rounded-full bg-surface/95 text-ink"
             >
               <Icon name={s.icon} className="size-5" />
             </span>
           ))}
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <h2 className="text-lg font-bold text-ink">
-          <Link href={href} className="after:absolute after:inset-0 group-hover:text-brand-800">
-            {pick(venue.name, locale)}
-          </Link>
-        </h2>
-        <p className="flex items-center gap-1 text-sm text-ink-muted">
-          <Icon name="pin" className="size-4 shrink-0" />
-          {joinList(place, locale)}
-          {distanceKm !== undefined ? (
-            <span className="ms-1">· {t('distance', { km: distanceKm.toFixed(1) })}</span>
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="text-lg font-bold leading-snug text-ink">
+              <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none">
+                {pick(venue.name, locale)}
+              </Link>
+            </h2>
+            <p className="text-[13px] text-ink-muted">
+              {venuePlace(venue, locale)}
+              {distanceKm !== undefined ? (
+                <span> · {t('distance', { km: distanceKm.toFixed(1) })}</span>
+              ) : null}
+            </p>
+          </div>
+          {venue.priceFrom ? (
+            <p className="flex shrink-0 flex-col items-end text-end">
+              <span className="text-[11px] text-ink-muted">{t('from')}</span>
+              <span className="text-lg font-bold leading-tight text-primary">
+                {formatMoney(venue.priceFrom, locale)}
+              </span>
+            </p>
           ) : null}
-        </p>
-        <p className="text-sm text-brand-800">
-          {joinList(
-            venue.sports.map((s) => pick(s.name, locale)),
-            locale,
-          )}
-        </p>
+        </div>
+        <ul className="flex flex-wrap gap-1.5">
+          {venue.sports.map((s) => (
+            <li
+              key={s.id}
+              className="flex h-7 items-center rounded-full bg-canvas px-3 text-xs text-ink"
+            >
+              {pick(s.name, locale)}
+            </li>
+          ))}
+        </ul>
         {venue.freeTimes && venue.freeTimes.length > 0 ? (
-          <ul className="relative z-10 mt-2 flex flex-wrap gap-2">
+          <ul className="relative z-10 mt-1 flex flex-wrap gap-2">
             {venue.freeTimes.map((f) => (
               <li key={f.start}>
                 <Link
                   href={{ pathname: href, query: { date, time: f.localStart } }}
-                  className="block rounded-md border border-brand-300 bg-brand-50 px-2.5 py-1 text-sm font-medium text-brand-900 hover:bg-brand-100"
+                  className="flex h-9 items-center rounded-full border border-primary/30 bg-brand-50 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary"
                   dir="ltr"
                 >
                   {f.localStart}

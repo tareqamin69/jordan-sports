@@ -9,6 +9,11 @@
     font-family: var(--font-sans);
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-canvas);
   }
 
   /* Arabic script needs more line height than Latin to avoid clipped diacritics. */
@@ -16,8 +21,53 @@
     line-height: 1.8;
   }
 
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-ink);
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Serif display headline (Amiri Bold). Amiri's tall ascenders need a looser leading in Arabic. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  /* Small clay label above a heading ("eyebrow"). */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-clay);
+  }
+
+  /* Tracking only for Latin: letter-spacing breaks Arabic letter joining. */
+  :lang(en) .eyebrow {
+    letter-spacing: 0.08em;
+  }
+
+  /* Hide a scroller's scrollbar while keeping it scrollable (chip rows, carousels). */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

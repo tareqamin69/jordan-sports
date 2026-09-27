@@ -2,7 +2,16 @@
 
 import { cancelBooking, confirmBooking, getBooking, type Booking } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Button, Card, CheckboxField, Ltr, Spinner, cx } from '@jordan-sports/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CheckboxField,
+  Ltr,
+  Spinner,
+  buttonClass,
+  cx,
+} from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
@@ -21,6 +30,8 @@ import {
 import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { CourtArt } from './court-art';
+import { Icon } from './icons';
 
 function useNow(active: boolean): number {
   const [now, setNow] = useState(() => Date.now());
@@ -39,16 +50,16 @@ function remaining(ms: number): string {
 }
 
 const statusTone: Record<Booking['status'], string> = {
-  HELD: 'bg-accent-300/50 text-ink',
+  HELD: 'bg-accent-300/70 text-ink',
   CONFIRMED: 'bg-brand-100 text-brand-900',
   CANCELLED: 'bg-danger/10 text-danger',
-  EXPIRED: 'bg-canvas text-ink-muted',
-  COMPLETED: 'bg-canvas text-ink',
-  NO_SHOW: 'bg-canvas text-ink-muted',
+  EXPIRED: 'bg-canvas-deep text-ink',
+  COMPLETED: 'bg-canvas-deep text-ink',
+  NO_SHOW: 'bg-canvas-deep text-ink',
 };
 
 const actionClass =
-  'flex min-h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-center text-sm font-medium text-brand-900 hover:bg-canvas';
+  'flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-center text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-canvas';
 
 export function BookingView({ bookingId }: { bookingId: string }) {
   const t = useTranslations('web.booking');
@@ -156,19 +167,35 @@ export function BookingView({ bookingId }: { bookingId: string }) {
     link: venueUrl,
   });
 
+  const cell = 'flex min-w-0 flex-col gap-0.5 px-4 py-3';
+
   return (
-    <div className={cx('flex flex-col gap-4', holding && 'pb-28 sm:pb-0')}>
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{holding ? t('heldTitle') : t('title')}</h1>
+    <div className={cx('flex animate-rise flex-col gap-4', holding && 'pb-36 md:pb-0')}>
+      <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[2.25rem] leading-[1.2] sm:text-[2.75rem]">
+            {holding ? t('heldTitle') : t('title')}
+          </h1>
+        </div>
         <span
           data-testid="booking-status"
-          className={cx('rounded-full px-3 py-1 text-sm font-medium', statusTone[status])}
+          className={cx('mb-2 rounded-full px-4 py-1.5 text-sm font-semibold', statusTone[status])}
         >
           {t(`statuses.${status}`)}
         </span>
       </div>
 
-      {b.status === 'CONFIRMED' ? <Alert tone="success">{t('confirmed')}</Alert> : null}
+      {b.status === 'CONFIRMED' ? (
+        <div
+          role="status"
+          className="flex items-center gap-4 rounded-card bg-primary p-5 text-on-primary"
+        >
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-on-primary/15">
+            <Icon name="check" className="size-6" strokeWidth={2.4} />
+          </span>
+          <p className="font-medium leading-7">{t('confirmed')}</p>
+        </div>
+      ) : null}
       {expired ? <Alert tone="warning">{t('expired')}</Alert> : null}
       {b.status === 'CANCELLED' && b.cancelledBy === 'venue' ? (
         <Alert tone="warning">{t('cancelledByVenue', { reason: b.cancelReason ?? '' })}</Alert>
@@ -176,70 +203,111 @@ export function BookingView({ bookingId }: { bookingId: string }) {
       {notice ? <Alert tone="info">{notice}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
-      <Card className="flex flex-col gap-3 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <Link href={`/venues/${b.venue.slug}`} className="font-bold underline">
-              {venueName}
-            </Link>
-            <p className="text-sm text-ink-muted">{resourceName}</p>
+      <article className="overflow-hidden rounded-card border border-line bg-surface">
+        <div className="relative h-28 bg-night">
+          <CourtArt className="absolute inset-0 opacity-90" />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-b from-night/10 to-night/80"
+          />
+          <div className="absolute inset-x-5 bottom-3 flex items-end justify-between gap-3 text-canvas">
+            <div className="min-w-0">
+              <Link
+                href={`/venues/${b.venue.slug}`}
+                className="block truncate text-lg font-bold hover:underline focus-visible:outline-canvas"
+              >
+                {venueName}
+              </Link>
+              <p className="truncate text-sm text-canvas/85">{resourceName}</p>
+            </div>
           </div>
-          <p className="shrink-0 text-lg font-bold" data-testid="booking-price">
-            {b.price ? formatMoney(b.price, locale) : null}
-          </p>
         </div>
-        <p className="flex flex-wrap items-center gap-x-2 text-sm">
-          <span className="font-medium">{weekday}</span>
-          <Ltr>{dmy(b.businessDate)}</Ltr>
-          <span aria-hidden>·</span>
-          <Ltr>
-            {b.localStart}–{b.localEnd}
-          </Ltr>
-        </p>
-        <p className="text-xs text-ink-muted">
-          {t('reference')}:{' '}
-          <span className="font-mono text-sm text-ink" data-testid="booking-reference">
+        <dl className="grid grid-cols-3 divide-x divide-line border-b border-line">
+          <div className={cell}>
+            <dt className="text-[11px] text-ink-muted">{t('date')}</dt>
+            <dd className="truncate text-sm font-semibold">
+              {weekday} <Ltr>{dmy(b.businessDate).slice(0, 5)}</Ltr>
+            </dd>
+          </div>
+          <div className={cell}>
+            <dt className="text-[11px] text-ink-muted">{t('time')}</dt>
+            <dd className="text-sm font-semibold">
+              <Ltr>
+                {b.localStart}–{b.localEnd}
+              </Ltr>
+            </dd>
+          </div>
+          <div className={cell}>
+            <dt className="text-[11px] text-ink-muted">{t('price')}</dt>
+            <dd className="text-sm font-bold text-primary" data-testid="booking-price">
+              {b.price ? formatMoney(b.price, locale) : null}
+            </dd>
+          </div>
+        </dl>
+        <p className="flex items-center justify-between gap-3 px-5 py-4 text-sm">
+          <span className="text-ink-muted">{t('reference')}</span>
+          <span
+            className="rounded-full bg-canvas px-3 py-1 font-mono text-sm font-semibold tracking-wider text-ink"
+            data-testid="booking-reference"
+          >
             <Ltr>{b.reference}</Ltr>
           </span>
         </p>
-      </Card>
+      </article>
 
       {holding ? (
-        <Card className="flex flex-col gap-3 p-4">
-          <p className="text-sm">
-            {t('payAtVenue')} · {t('freeUntil', { date: freeUntilText })}
-          </p>
-          <details className="text-sm text-ink-muted">
-            <summary className="cursor-pointer">{t('termsDetails')}</summary>
-            <p className="mt-1">{t('lateNote')}</p>
+        <Card className="flex flex-col gap-4 p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
+              <Icon name="pin" className="size-5" />
+            </span>
+            <p className="flex flex-col text-sm">
+              <span className="font-semibold text-ink">{t('payAtVenue')}</span>
+              <span className="text-ink-muted">{t('freeUntil', { date: freeUntilText })}</span>
+            </p>
+          </div>
+          <details className="group rounded-2xl bg-canvas px-4 py-3 text-sm text-ink-muted">
+            <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink [&::-webkit-details-marker]:hidden">
+              {t('termsDetails')}
+              <Icon
+                name="chevron"
+                className="size-4 rotate-90 transition-transform group-open:-rotate-90"
+              />
+            </summary>
+            <p className="mt-2 leading-7">{t('lateNote')}</p>
           </details>
           <CheckboxField
             label={t('accept')}
             checked={accepted}
             onChange={(e) => setAccepted(e.target.checked)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface p-3 sm:static sm:border-0 sm:bg-transparent sm:p-0">
-            <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <div
+            data-sticky-cta
+            className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 rounded-card border border-line bg-surface p-2.5 shadow-float md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                data-testid="hold-countdown"
+                className="flex h-12 shrink-0 items-center gap-1.5 rounded-full bg-accent-300/60 px-4 text-sm font-medium text-ink"
+              >
+                <Icon name="clock" className="size-4 text-clay" />
+                {t('countdown', { time: remaining(holdLeft) })}
+              </span>
               <Button
-                className="flex-1 sm:flex-none"
+                size="lg"
+                className="flex-1 md:flex-none md:px-10"
                 onClick={confirm}
                 disabled={!accepted}
                 busy={busy === 'confirm'}
               >
                 {t('confirm')}
               </Button>
-              <span
-                data-testid="hold-countdown"
-                className="shrink-0 rounded-full bg-accent-300/50 px-3 py-1.5 text-sm"
-              >
-                {t('countdown', { time: remaining(holdLeft) })}
-              </span>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="self-start"
+            className="-ms-2 self-start"
             onClick={() => void cancel(t('released'))}
             busy={busy === 'cancel'}
           >
@@ -251,6 +319,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
       {b.status === 'CONFIRMED' ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <button type="button" className={actionClass} onClick={() => setCalendarOpen((o) => !o)}>
+            <Icon name="calendar" className="size-4" />
             {t('addToCalendar')}
           </button>
           <a
@@ -259,6 +328,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             target="_blank"
             rel="noreferrer"
           >
+            <Icon name="pin" className="size-4" />
             {t('directions')}
           </a>
           <a
@@ -267,17 +337,19 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             target="_blank"
             rel="noreferrer"
           >
+            <Icon name="share" className="size-4" />
             {t('inviteFriends')}
           </a>
           {b.venue.contactPhone ? (
             <a className={actionClass} href={`tel:${b.venue.contactPhone}`}>
+              <Icon name="phone" className="size-4" />
               {t('callVenue')}
             </a>
           ) : null}
           {calendarOpen ? (
-            <div className="col-span-2 flex flex-col gap-2 rounded-md border border-line bg-surface p-3 sm:col-span-4">
+            <div className="col-span-2 flex flex-col gap-1 rounded-tile border border-line bg-surface p-2 sm:col-span-4">
               <a
-                className="font-medium text-brand-800 underline"
+                className="rounded-2xl px-3 py-2.5 font-medium text-primary hover:bg-canvas"
                 href={googleCalendarUrl(event)}
                 target="_blank"
                 rel="noreferrer"
@@ -286,7 +358,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
               </a>
               <button
                 type="button"
-                className="text-start font-medium text-brand-800 underline"
+                className="rounded-2xl px-3 py-2.5 text-start font-medium text-primary hover:bg-canvas"
                 onClick={downloadIcs}
               >
                 {t('otherCalendar')}
@@ -300,9 +372,9 @@ export function BookingView({ bookingId }: { bookingId: string }) {
         <div className="flex flex-col gap-2">
           <p className="text-sm text-ink-muted">{t('freeUntil', { date: freeUntilText })}</p>
           {asking ? (
-            <Card className="flex flex-col gap-3 p-4">
+            <Card className="flex flex-col gap-4 p-5">
               <p className="font-medium">{late ? t('lateQuestion') : t('cancelQuestion')}</p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="danger"
                   onClick={() => void cancel(t('statuses.CANCELLED'))}
@@ -317,9 +389,9 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             </Card>
           ) : (
             <Button
-              variant="ghost"
+              variant="ghostDanger"
               size="sm"
-              className="self-start text-danger"
+              className="-ms-2 self-start"
               onClick={() => setAsking(true)}
             >
               {t('cancel')}
@@ -333,10 +405,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
       ) : null}
 
       {expired || b.status === 'CANCELLED' ? (
-        <Link
-          href={`/venues/${b.venue.slug}`}
-          className="self-start rounded-md bg-brand-700 px-4 py-2.5 font-medium text-white hover:bg-brand-800"
-        >
+        <Link href={`/venues/${b.venue.slug}`} className={buttonClass({ className: 'self-start' })}>
           {t('chooseAgain')}
         </Link>
       ) : null}

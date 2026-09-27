@@ -40,7 +40,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} dir={getDirection(locale)}>
-      <body className="flex min-h-dvh flex-col antialiased">
+      <body className="flex min-h-dvh flex-col pb-28 antialiased md:pb-0">
         <NextIntlClientProvider>
           <Providers>
             <SiteHeader />

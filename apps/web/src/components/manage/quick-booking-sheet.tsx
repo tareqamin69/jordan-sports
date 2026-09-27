@@ -72,17 +72,17 @@ export function QuickBookingSheet({
       ref={dialog}
       onClose={onClose}
       aria-labelledby="quick-booking-title"
-      className="m-0 mt-auto w-full max-w-none rounded-t-2xl bg-surface p-0 text-ink backdrop:bg-black/40 sm:m-auto sm:max-w-md sm:rounded-2xl"
+      className="m-0 mt-auto w-full max-w-none rounded-t-card bg-surface p-0 text-ink shadow-float backdrop:bg-night/50 sm:m-auto sm:max-w-md sm:rounded-card"
     >
       <form
-        className="flex flex-col gap-4 p-5"
+        className="flex flex-col gap-4 p-6"
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           create.mutate();
         }}
       >
         <div>
-          <h2 id="quick-booking-title" className="text-lg font-bold">
+          <h2 id="quick-booking-title" className="font-display text-2xl leading-tight">
             {t('calendar.newBookingTitle', { time: startTime })}
           </h2>
           <p className="text-sm text-ink-muted">{pick(resource?.name, locale)}</p>

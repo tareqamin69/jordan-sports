@@ -5,9 +5,13 @@ import { LocaleSwitcher } from './locale-switcher';
 export function SiteHeader() {
   const t = useTranslations();
   return (
-    <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
-        <Link href="/" className="text-lg font-bold text-brand-700" data-testid="brand">
+    <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5 sm:px-8">
+        <Link
+          href="/"
+          className="font-display text-[1.625rem] leading-none text-primary"
+          data-testid="brand"
+        >
           {t('admin.metadata.title')}
         </Link>
         <div className="ms-auto">

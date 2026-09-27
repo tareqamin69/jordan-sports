@@ -2,7 +2,16 @@
 
 import { listMyBookings } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Badge, Card, Ltr, PageHeader, Spinner, cx } from '@jordan-sports/ui';
+import {
+  Alert,
+  Badge,
+  Card,
+  Ltr,
+  PageHeader,
+  Spinner,
+  buttonClass,
+  chipClass,
+} from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -37,21 +46,16 @@ export function MyBookings() {
   }, [bookings.error, router]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-rise flex-col gap-6">
       <PageHeader title={t('title')} />
-      <div role="group" aria-label={t('title')} className="flex gap-2">
+      <div role="group" aria-label={t('title')} className="-mt-4 flex gap-2">
         {(['upcoming', 'past'] as const).map((s) => (
           <button
             key={s}
             type="button"
             aria-pressed={scope === s}
             onClick={() => setScope(s)}
-            className={cx(
-              'rounded-md border px-4 py-2 text-sm font-medium',
-              scope === s
-                ? 'border-brand-700 bg-brand-700 text-white'
-                : 'border-line bg-surface text-ink hover:bg-canvas',
-            )}
+            className={chipClass(scope === s, { tone: 'night' })}
           >
             {t(s)}
           </button>
@@ -62,36 +66,51 @@ export function MyBookings() {
         <Alert tone="error">{errorMessage(bookings.error)}</Alert>
       ) : null}
       {bookings.data?.items.length === 0 ? (
-        <Card>
+        <Card className="flex flex-col items-start gap-4">
           <p className="text-ink-muted">{t('empty')}</p>
-          <Link href="/venues" className="mt-3 inline-block font-medium text-brand-800 underline">
+          <Link href="/venues" className={buttonClass({ size: 'sm' })}>
             {t('browse')}
           </Link>
         </Card>
       ) : null}
-      <ul className="flex flex-col gap-3">
+      <ul className="grid gap-3 lg:grid-cols-2">
         {bookings.data?.items.map((b) => (
-          <li key={b.id}>
+          <li key={b.id} className="min-w-0">
             <Link
               href={`/bookings/${b.id}`}
               data-testid="my-booking"
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-4 hover:bg-canvas"
+              className="group flex items-center gap-4 rounded-tile border border-line bg-surface p-3 pe-4 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-lift"
             >
-              <span className="flex flex-col gap-1">
-                <span className="font-bold">
-                  {pick(b.venue.name, locale)} · {pick(b.resource.name, locale)}
+              <span className="flex size-[76px] shrink-0 flex-col items-center justify-center rounded-[1.125rem] bg-primary text-on-primary">
+                <span className="text-[11px] leading-4 opacity-80">
+                  {format.dateTime(dateForLabel(b.businessDate), { weekday: 'short' })}
                 </span>
-                <span className="text-sm text-ink-muted">
-                  {format.dateTime(dateForLabel(b.businessDate), { weekday: 'long' })}{' '}
-                  {dmy(b.businessDate)}{' '}
-                  <Ltr>
-                    {b.localStart}–{b.localEnd}
-                  </Ltr>
+                <span className="font-display text-[1.75rem] leading-8">
+                  {format.dateTime(dateForLabel(b.businessDate), {
+                    day: 'numeric',
+                    numberingSystem: 'latn',
+                  })}
                 </span>
               </span>
-              <span className="flex items-center gap-3">
-                {b.price ? <span className="text-sm">{formatMoney(b.price, locale)}</span> : null}
-                <Badge>{tb(`statuses.${b.status}`)}</Badge>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate font-semibold text-ink group-hover:text-primary">
+                  {pick(b.venue.name, locale)}
+                </span>
+                <span className="truncate text-sm text-ink-muted">
+                  {pick(b.resource.name, locale)} ·{' '}
+                  <Ltr>
+                    {b.localStart}–{b.localEnd}
+                  </Ltr>{' '}
+                  · {dmy(b.businessDate)}
+                </span>
+                <span className="mt-1 flex items-center gap-2">
+                  <Badge>{tb(`statuses.${b.status}`)}</Badge>
+                  {b.price ? (
+                    <span className="text-sm font-semibold text-primary">
+                      {formatMoney(b.price, locale)}
+                    </span>
+                  ) : null}
+                </span>
               </span>
             </Link>
           </li>

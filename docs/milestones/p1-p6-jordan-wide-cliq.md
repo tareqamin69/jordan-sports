@@ -83,8 +83,29 @@ account).
 - **New `/sports` page** ("كل الرياضات"): lists every sport with at least one approved venue,
   each tile linking to `/venues?sport=<key>`. Linked from the site header nav. Added to
   `sitemap.ts`.
-- **Not done in this pass**: the "Design B — Clubhouse" visual redesign the owner asked for was
-  interrupted before any work started (replaced by this sports-catalog request) — still
-  outstanding, reference file was `fca7a71a-design-B-clubhouse-reference.html`.
+- The "Design B — Clubhouse" redesign was deferred here; it has since shipped (see below).
 - Verification: API unit+integration 169/169, full Playwright e2e 68/68, `pnpm lint` clean, full
   typecheck clean.
+
+## Clubhouse redesign (2026-09-27)
+
+Every screen re-skinned to design direction B ("Clubhouse"); full spec in
+`docs/design-system.md`. Tokens/fonts/components live in `packages/ui` (Amiri added via
+`@fontsource/amiri`). Web: new header + single `MainNav` (floating dark pill on mobile), hero +
+floating search card home with sport tiles, editorial picks, governorate chips and owner block;
+photo-first venue page (full-bleed swipe gallery, title over the photo); restyled slot picker,
+checkout (floating sticky confirm bar), confirmation, My bookings, sign-in, account, search
+results (sport chip filter), all-sports, 404, owner dashboard (pill tabs), admin (same tokens,
+simpler).
+
+- Home hero copy changed to the reference voice ("العب أحلى، احجز أسهل." / "Play better. Book
+  easier."); `web.spec.ts` updated accordingly.
+- Venue page: the old fixed mobile quick-action bar was removed (it collided with the bottom nav);
+  Book / Call / Directions / Share are now inline pills under the price.
+- Owner block CTA links to `/manage` (not "register your venue") because self-registration is P3.
+  Switch it to the registration wizard when P3 lands.
+- **Deferred / open:** real venue photos (illustrated placeholders until uploaded); no "favourites"
+  button (reference had one, feature doesn't exist); desktop hero art is illustrative only — swap
+  for a real photo when the owner provides one.
+- Verification: lint, typecheck, `check:repo`, unit, integration 79/79, Playwright e2e 68/68
+  (mobile + desktop, incl. axe AA checks).

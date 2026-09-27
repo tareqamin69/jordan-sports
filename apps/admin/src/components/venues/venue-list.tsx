@@ -24,7 +24,7 @@ export function VenueList({ organizationId }: { organizationId: string }) {
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">{t('title')}</h2>
+        <h2 className="font-display text-2xl leading-tight">{t('title')}</h2>
         <Button size="sm" onClick={() => setCreating((v) => !v)} aria-expanded={creating}>
           {t('create')}
         </Button>

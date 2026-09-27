@@ -7,7 +7,7 @@ import {
   type PublicResource,
 } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Spinner, cx } from '@jordan-sports/ui';
+import { Alert, Spinner, chipClass, cx } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -36,13 +36,16 @@ interface Choice {
 
 const WEEKS = 4;
 
-const chip = (active: boolean) =>
+const dayTile = (active: boolean) =>
   cx(
-    'rounded-md border text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand-700',
+    'flex flex-col items-center gap-0.5 rounded-[1.125rem] border py-2 transition-colors duration-200',
     active
-      ? 'border-brand-700 bg-brand-700 text-white'
-      : 'border-line bg-surface text-ink hover:bg-canvas',
+      ? 'border-primary bg-primary text-on-primary'
+      : 'border-line bg-canvas text-ink hover:border-line-strong hover:bg-surface',
   );
+
+const arrow =
+  'grid size-10 shrink-0 place-items-center rounded-full border border-line text-ink transition-colors hover:bg-canvas disabled:opacity-30 disabled:hover:bg-transparent';
 
 /**
  * Public booking picker: length first, then day, then start time — across any free court (the
@@ -151,35 +154,71 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
           price: formatMoney(slot.price, locale),
         })}
         className={cx(
-          'flex w-full flex-col items-center rounded-md border px-2 py-2 disabled:opacity-60',
-          'border-brand-300 bg-brand-50 text-brand-900 hover:bg-brand-100',
-          'focus-visible:outline-2 focus-visible:outline-brand-700',
-          initialTime === slot.localStart && 'ring-2 ring-brand-700',
+          'group flex w-full flex-col items-center gap-0.5 rounded-2xl border border-line bg-surface px-2 py-3 transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60',
+          'hover:border-primary hover:bg-primary hover:text-on-primary',
+          initialTime === slot.localStart && 'border-primary ring-2 ring-primary/25',
+          holding === key && 'border-primary bg-primary text-on-primary',
         )}
       >
-        <span dir="ltr" className="text-base font-bold">
+        <span dir="ltr" className="text-base font-bold leading-6">
           {slot.localStart}
         </span>
-        <span className="text-xs">{formatMoney(slot.price, locale)}</span>
+        <span className="text-xs text-ink-muted transition-colors group-hover:text-on-primary/80">
+          {formatMoney(slot.price, locale)}
+        </span>
       </button>
     </li>
   );
 
   return (
     <section aria-labelledby="availability-heading" className="min-w-0">
-      <h2 id="availability-heading" className="text-xl font-bold">
-        {t('title')}
-      </h2>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 id="availability-heading" className="font-display text-[1.75rem] leading-[1.25]">
+            {t('title')}
+          </h2>
+          <p className="text-sm text-ink-muted">
+            {format.dateTime(dateForLabel(days[0]!), {
+              month: 'long',
+              year: 'numeric',
+              numberingSystem: 'latn',
+            })}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setWeek((w) => w - 1)}
+            disabled={week === 0}
+            aria-label={t('previousWeek')}
+            className={arrow}
+          >
+            <Icon name="chevron" className="size-5 rotate-180 rtl:rotate-0" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeek((w) => w + 1)}
+            disabled={week === WEEKS - 1}
+            aria-label={t('nextWeek')}
+            className={arrow}
+          >
+            <Icon name="chevron" className="size-5 rtl:rotate-180" />
+          </button>
+        </div>
+      </div>
 
       {durations.length > 0 ? (
-        <div role="group" aria-label={t('durationLabel')} className="mt-3 flex gap-2">
+        <div role="group" aria-label={t('durationLabel')} className="mt-4 flex flex-wrap gap-2">
           {durations.map((d) => (
             <button
               key={d}
               type="button"
               aria-pressed={d === activeDuration}
               onClick={() => setDuration(d)}
-              className={cx(chip(d === activeDuration), 'min-h-11 flex-1 px-3')}
+              className={chipClass(d === activeDuration, {
+                tone: 'night',
+                className: 'min-h-11 px-5',
+              })}
             >
               {t('duration', { duration: String(d) })}
             </button>
@@ -187,52 +226,34 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
         </div>
       ) : null}
 
-      <div className="mt-3 flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => setWeek((w) => w - 1)}
-          disabled={week === 0}
-          aria-label={t('previousWeek')}
-          className="grid size-9 shrink-0 place-items-center rounded-md text-lg text-ink-muted hover:bg-canvas disabled:opacity-30"
-        >
-          <Icon name="chevron" className="size-5 rotate-180 rtl:rotate-0" />
-        </button>
-        <div role="group" aria-label={t('date')} className="grid flex-1 grid-cols-7 gap-1">
+      <div className="mt-5">
+        <div role="group" aria-label={t('date')} className="grid grid-cols-7 gap-1.5">
           {days.map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => setDate(d)}
               aria-pressed={d === date}
-              className={cx(chip(d === date), 'flex flex-col items-center px-0 py-1.5')}
+              className={dayTile(d === date)}
             >
-              <span className="text-[11px] leading-tight">
+              <span className="text-[11px] leading-4 opacity-80">
                 {format.dateTime(dateForLabel(d), { weekday: 'short' })}
               </span>
-              <span className="text-base font-bold leading-tight">
+              <span className="text-lg font-bold leading-6">
                 {format.dateTime(dateForLabel(d), { day: 'numeric', numberingSystem: 'latn' })}
               </span>
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => setWeek((w) => w + 1)}
-          disabled={week === WEEKS - 1}
-          aria-label={t('nextWeek')}
-          className="grid size-9 shrink-0 place-items-center rounded-md text-lg text-ink-muted hover:bg-canvas disabled:opacity-30"
-        >
-          <Icon name="chevron" className="size-5 rtl:rotate-180" />
-        </button>
       </div>
 
       {multipleCourts ? (
-        <div role="group" aria-label={t('courtMode')} className="mt-3 flex gap-2 text-sm">
+        <div role="group" aria-label={t('courtMode')} className="mt-4 flex gap-2">
           <button
             type="button"
             aria-pressed={!byCourt}
             onClick={() => setByCourt(false)}
-            className={cx(chip(!byCourt), 'px-3 py-1.5')}
+            className={chipClass(!byCourt)}
           >
             {t('anyCourt')}
           </button>
@@ -240,7 +261,7 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
             type="button"
             aria-pressed={byCourt}
             onClick={() => setByCourt(true)}
-            className={cx(chip(byCourt), 'px-3 py-1.5')}
+            className={chipClass(byCourt)}
           >
             {t('chooseCourt')}
           </button>
@@ -269,10 +290,10 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
       ) : null}
 
       {data ? (
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="mt-5 flex flex-col gap-4">
           {times.length === 0 ? <p className="text-ink-muted">{t('noSlots')}</p> : null}
           {times.length > 0 && !byCourt ? (
-            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5">
               {times.map(({ start, choices }) =>
                 timeButton(`any-${start}`, choices[0]!.slot, choices),
               )}
@@ -284,15 +305,15 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
                   key={r.resourceId}
                   open={index === 0}
                   data-testid="availability-resource"
-                  className="rounded-lg border border-line bg-surface"
+                  className="rounded-tile border border-line bg-canvas"
                 >
-                  <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 font-bold">
+                  <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 py-3 font-bold">
                     <span>{nameOf(r.resourceId)}</span>
                     <span className="text-sm font-normal text-ink-muted">
                       {t('freeCount', { count: r.slots.length, n: String(r.slots.length) })}
                     </span>
                   </summary>
-                  <ul className="grid grid-cols-3 gap-2 px-4 pb-4 sm:grid-cols-5">
+                  <ul className="grid grid-cols-3 gap-2 px-3 pb-3 sm:grid-cols-4 xl:grid-cols-5">
                     {r.slots.map((s) =>
                       timeButton(`${r.resourceId}-${s.start}`, s, [
                         { resourceId: r.resourceId, slot: s },

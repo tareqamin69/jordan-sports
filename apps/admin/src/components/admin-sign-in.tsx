@@ -41,7 +41,7 @@ export function AdminSignIn() {
   return (
     <Card className="mx-auto w-full max-w-md">
       <form onSubmit={submit} className="flex flex-col gap-5">
-        <h1 className="text-xl font-bold">{t('title')}</h1>
+        <h1 className="font-display text-[2rem] leading-[1.2]">{t('title')}</h1>
         {error ? <Alert tone="error">{error}</Alert> : null}
         <TextField
           label={t('email')}
