@@ -1,6 +1,6 @@
 # Plan: Jordan-wide marketplace, two interfaces, venue self-registration, CliQ payments, prepaid commission
 
-- **Status:** Proposed — waiting for the owner's approval and the decisions in §8.
+- **Status:** Approved (2026-09-27). All §8 decisions resolved as recommended, with the owner's D2 addition (48-hour refund escalation). Implementation in progress, phase by phase (§7).
 - **Replaces:** the original M6 scope ("real provider adapter, webhooks, payouts"). The platform never
   holds player money. Players pay the venue directly by CliQ. The platform earns a commission that is
   taken from a balance the venue pays in advance.
@@ -111,22 +111,24 @@ Jordanian gateway are in Appendix B.
 ## 8. Decisions needed from the owner
 
 - **D1 — The player sent proof but the venue did not confirm within 30 minutes.**
-  - (a) The hold expires anyway.
-  - (b) Once proof is sent, the venue gets 30 more minutes; after that it expires and a dispute opens automatically. **Recommended**, because otherwise a paying player can lose the slot.
-  - (c) It never expires until the venue decides.
+  **Decided: (b)** Once proof is sent, the venue gets 30 more minutes; after that it expires and a
+  dispute opens automatically.
 - **D2 — The player cancels before the free-cancellation deadline, after paying the deposit.**
-  - (a) The venue must refund by CliQ. The platform shows "refund due" until the venue marks it refunded. **Recommended.**
-  - (b) Deposits are never refundable.
+  **Decided:** (a) The venue must refund by CliQ. The platform shows "refund due" until the venue
+  marks it refunded. **Escalation (owner's addition):** if the venue has not marked it refunded
+  within **48 hours** of the cancellation, the venue is hidden from search until it does, and an
+  alert appears in admin (a dedicated "refunds overdue" list, plus an outbox event for a future
+  notification channel).
 - **D3 — Commission base and refunds.**
-  - (a) 8% of the full booking price. It is returned to the balance if the venue cancels, or if the player cancels within the free window. It is kept on no-shows and late cancellations. **Recommended.**
-  - (b) 8% of the deposit only.
-- **D4 — Low balance.** Warn below 10 JOD. Allow the booking that takes the balance below zero, then hide the venue. **Recommended** (never block a player mid-payment). The alternative is to hide the venue before it reaches zero.
+  **Decided: (a)** 8% of the full booking price. It is returned to the balance if the venue
+  cancels, or if the player cancels within the free window. It is kept on no-shows and late
+  cancellations.
+- **D4 — Low balance.** **Decided:** warn below 10 JOD. Allow the booking that takes the balance
+  below zero, then hide the venue (never block a player mid-payment).
 - **D5 — Pay at venue without any deposit.**
-  - (a) Keep it as a venue option (deposit 0%), with commission still charged on confirmation.
-  - (b) Remove it: every online booking needs a CliQ payment. **Recommended for launch**, because it reduces no-shows and makes commission certain.
+  **Decided: (b)** Removed. Every online booking needs a CliQ payment.
 - **D6 — Commission on bookings the venue adds itself (phone or walk-in).**
-  - (a) No commission. **Recommended.**
-  - (b) Commission as well.
+  **Decided: (a)** No commission.
 
 ## Appendix A — Governorates and main areas (editable later from admin)
 
