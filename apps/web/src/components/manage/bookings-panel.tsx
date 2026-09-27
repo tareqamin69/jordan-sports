@@ -23,10 +23,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { can, useSetSchedule } from '@/lib/manage';
 import { addDays, businessToday, dateForLabel, minutesToTime } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { DateSelect } from './date-select';
 
 const durations = [60, 90, 120, 180];
 const weekChoices = [1, 2, 4, 8, 12, 26];
@@ -55,18 +57,20 @@ export function BookingsPanel({ schedule }: { schedule: VenueSchedule }) {
     <div className="flex flex-col gap-6">
       <p className="text-ink-muted">{t('intro')}</p>
       <div className="grid max-w-md grid-cols-2 gap-3">
-        <TextField
+        <DateSelect
+          from={addDays(today, -30)}
+          days={120}
           label={t('from')}
-          type="date"
           value={from}
-          onChange={(e) => setFrom(e.target.value)}
+          onChange={(v) => setFrom(v)}
           name="bookingsFrom"
         />
-        <TextField
+        <DateSelect
+          from={addDays(today, -30)}
+          days={150}
           label={t('to')}
-          type="date"
           value={to}
-          onChange={(e) => setTo(e.target.value)}
+          onChange={(v) => setTo(v)}
           name="bookingsTo"
         />
       </div>
@@ -96,7 +100,9 @@ function DayGroup({
   const format = useFormatter();
   return (
     <section>
-      <h2 className="mb-2 text-lg font-bold">{format.dateTime(dateForLabel(date), 'dayMonth')}</h2>
+      <h2 className="mb-2 text-lg font-bold">
+        {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
+      </h2>
       <ul className="flex flex-col gap-2">
         {items.map((b) => (
           <BookingRow key={b.id} booking={b} schedule={schedule} />
@@ -201,7 +207,6 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage.bookings');
   const tm = useTranslations('web.manage');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
@@ -266,7 +271,7 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
               <span className="block">
                 {t('skipped', {
                   dates: joinList(
-                    create.data.skipped.map((s) => format.dateTime(dateForLabel(s.date), 'date')),
+                    create.data.skipped.map((s) => dmy(s.date)),
                     locale,
                   ),
                 })}
@@ -286,13 +291,11 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
             </option>
           ))}
         </SelectField>
-        <TextField
+        <DateSelect
+          from={today}
           label={t('date')}
-          type="date"
           value={date}
-          min={today}
-          onChange={(e) => setDate(e.target.value)}
-          required
+          onChange={(v) => setDate(v)}
           name="manualDate"
         />
         <SelectField

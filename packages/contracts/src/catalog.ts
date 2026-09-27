@@ -28,6 +28,8 @@ export const sportSchema = z.object({
   id: uuidSchema,
   key: z.string(),
   name: localizedSchema,
+  /** Icon key from the UI icon set (catalog data, so the UI never names a sport). */
+  icon: z.string(),
   formats: z.array(sportFormatSchema),
 });
 export type Sport = z.infer<typeof sportSchema>;

@@ -7,9 +7,10 @@ import {
 } from '@jordan-sports/contracts';
 import { Alert, Button, Card, PageHeader, Spinner, TextField } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -17,7 +18,6 @@ export function HolidaysPage() {
   const t = useTranslations('admin.holidays');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
@@ -99,9 +99,7 @@ export function HolidaysPage() {
           {list.data?.items.map((h) => (
             <li key={h.id} className="flex items-center justify-between gap-3 px-5 py-3">
               <span>
-                <span className="font-medium">
-                  {format.dateTime(new Date(`${h.date}T12:00:00Z`), 'date')}
-                </span>
+                <span className="font-medium">{dmy(h.date)}</span>
                 {' · '}
                 {pick(h.name, locale)}
               </span>

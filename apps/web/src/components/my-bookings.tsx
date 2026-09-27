@@ -8,6 +8,7 @@ import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { isApiError, useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -81,7 +82,8 @@ export function MyBookings() {
                   {pick(b.venue.name, locale)} · {pick(b.resource.name, locale)}
                 </span>
                 <span className="text-sm text-ink-muted">
-                  {format.dateTime(dateForLabel(b.businessDate), 'dayMonth')}{' '}
+                  {format.dateTime(dateForLabel(b.businessDate), { weekday: 'long' })}{' '}
+                  {dmy(b.businessDate)}{' '}
                   <Ltr>
                     {b.localStart}–{b.localEnd}
                   </Ltr>

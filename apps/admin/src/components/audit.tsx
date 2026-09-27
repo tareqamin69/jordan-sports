@@ -3,14 +3,14 @@
 import { adminListAuditLogs } from '@jordan-sports/contracts';
 import { Alert, Card, PageHeader, Spinner } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useApi } from '@/lib/api';
+import { dmyTime } from '@/lib/format';
 import { useErrorMessage } from '@/lib/use-error-message';
 
 export function AuditPage() {
   const t = useTranslations('admin.audit');
   const tc = useTranslations('common');
-  const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const logs = useQuery({
@@ -49,7 +49,7 @@ export function AuditPage() {
               {logs.data.items.map((entry) => (
                 <tr key={entry.id}>
                   <td className="whitespace-nowrap px-4 py-3">
-                    {format.dateTime(new Date(entry.occurredAt), 'short')}
+                    {dmyTime(new Date(entry.occurredAt))}
                   </td>
                   <td className="px-4 py-3">
                     {entry.actorName ?? (entry.actorType === 'system' ? t('system') : '—')}

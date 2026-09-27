@@ -38,7 +38,7 @@ test.describe('pricing', () => {
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
     await expect(page.getByTestId('slot').first()).toContainText('JOD 25.000');
     await page.goto(`${WEB}/ar/venues/${venue.slug}`);
-    await page.getByRole('group', { name: 'التاريخ' }).getByRole('button').nth(1).click();
+    await page.getByRole('group', { name: 'اليوم' }).getByRole('button').nth(1).click();
     await expect(page.getByTestId('slot').first()).toContainText('25.000 د.أ');
   });
 });

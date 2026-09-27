@@ -141,6 +141,39 @@ describe('bookings', () => {
       body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
     });
 
+  it('lists the venue with its from-price and free times when searching by date and time', async () => {
+    const r = await call(t.app, {
+      method: 'GET',
+      url: `/v1/venues?date=${inThreeDays}&time=18:00`,
+    });
+    expect(r.statusCode).toBe(200);
+    const items = (
+      r.json() as {
+        items: Array<{
+          slug: string;
+          priceFrom: { amount: number; durationMinutes: number } | null;
+          sports: Array<{ icon: string }>;
+          freeTimes?: Array<{ localStart: string }>;
+        }>;
+      }
+    ).items;
+    const venue = items.find((v) => v.slug === slug)!;
+    expect(venue.priceFrom).toMatchObject({ amount: 20000, durationMinutes: 60 });
+    expect(venue.sports[0]!.icon).toBe('racket-paddle');
+    expect(venue.freeTimes!.length).toBeGreaterThan(0);
+    for (const f of venue.freeTimes!) {
+      const minutes = Number(f.localStart.slice(0, 2)) * 60 + Number(f.localStart.slice(3));
+      expect(minutes).toBeGreaterThanOrEqual(17 * 60);
+      expect(minutes).toBeLessThanOrEqual(20 * 60);
+    }
+    // A day beyond the booking window finds nothing.
+    const far = DateTime.now().setZone(ZONE).plus({ days: 60 }).toISODate()!;
+    const none = await call(t.app, { method: 'GET', url: `/v1/venues?date=${far}` });
+    expect(
+      (none.json() as { items: Array<{ slug: string }> }).items.map((v) => v.slug),
+    ).not.toContain(slug);
+  });
+
   it('holds, confirms and lists a booking; the slot becomes unavailable', async () => {
     const player = await signInPlayer(t.app, { name: 'Lina' });
     const slot = await slotAt(tomorrow, '10:00');

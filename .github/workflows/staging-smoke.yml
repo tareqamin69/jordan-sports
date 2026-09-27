@@ -1,5 +1,6 @@
 # Builds the staging image and starts the full staging stack (as on the server) to catch
-# deployment breakage before the staging server pulls it. Plain HTTP host names for CI.
+# deployment breakage before the staging server pulls it. Caddy serves plain HTTP host names in
+# CI; the apps keep production settings (https origins, secure cookies).
 name: Staging smoke test
 
 on:
@@ -24,9 +25,9 @@ jobs:
           WEB_HOST=http://web.localhost
           ADMIN_HOST=http://admin.localhost
           WEB_BASE_URL=http://web.localhost
-          WEB_ORIGINS=http://web.localhost
-          ADMIN_ORIGINS=http://admin.localhost
-          COOKIE_SECURE=false
+          WEB_ORIGINS=https://web.localhost
+          ADMIN_ORIGINS=https://admin.localhost
+          COOKIE_SECURE=true
           OTP_CHANNEL=console
           API_HOST=0.0.0.0
           API_INTERNAL_URL=http://api:4000
@@ -61,7 +62,7 @@ jobs:
           admin /ar/sign-in | grep -q 'lang="ar"'
           web /_staging/bootstrap.log | grep -q ok
           # Sign-in codes are readable on staging (shown on screen to testers).
-          curl -fsS -H 'Host: web.localhost' -H 'Origin: http://web.localhost' -H 'content-type: application/json' \
+          curl -fsS -H 'Host: web.localhost' -H 'Origin: https://web.localhost' -H 'content-type: application/json' \
             -d '{"phone":"0790000002"}' http://127.0.0.1/api/v1/auth/otp/request | grep -q phone
           web '/api/v1/dev/otp?phone=0790000002' | grep -q code
           echo "staging smoke: ok"

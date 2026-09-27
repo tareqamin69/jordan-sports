@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type {
   AdminVenue,
   Catalog,
@@ -6,6 +6,8 @@ import type {
   PublicVenue,
   VenueSummary,
 } from '@jordan-sports/contracts';
+import type { Db } from '../../../platform/database/database.js';
+import { DATABASE } from '../../../platform/database/database.module.js';
 import { CatalogService } from '../../catalog/index.js';
 import { overlapping, ResourcesService, type ResourceRow } from '../../resources/index.js';
 import { MediaService, VenuesService, type VenueRow } from '../../venues/index.js';
@@ -19,6 +21,7 @@ type Localized = { ar?: string; en?: string };
 @Injectable()
 export class VenueViewsService {
   constructor(
+    @Inject(DATABASE) private readonly db: Db,
     private readonly catalog: CatalogService,
     private readonly venues: VenuesService,
     private readonly resources: ResourcesService,
@@ -49,13 +52,37 @@ export class VenueViewsService {
     const formatIds = new Set(resources.flatMap((r) => r.sportFormatIds));
     return catalog.sports
       .filter((s) => s.formats.some((f) => formatIds.has(f.id)))
-      .map((s) => ({ id: s.id, key: s.key, name: s.name }));
+      .map((s) => ({ id: s.id, key: s.key, name: s.name, icon: s.icon }));
   }
 
   private place(catalog: Catalog, venue: VenueRow) {
     const city = catalog.cities.find((c) => c.id === venue.cityId)!;
     const area = city.areas.find((a) => a.id === venue.areaId) ?? null;
     return { city: { id: city.id, key: city.key, name: city.name }, area };
+  }
+
+  /** Lowest active price for the shortest priced booking length. */
+  async priceFrom(venue: VenueRow): Promise<VenueSummary['priceFrom']> {
+    const row = await this.db
+      .selectFrom('pricing.price_rules as r')
+      .innerJoin('pricing.price_rule_amounts as a', 'a.rule_id', 'r.id')
+      .innerJoin('resource.resources as res', 'res.id', 'r.resource_id')
+      .select(['a.duration_minutes', (eb) => eb.fn.min('a.amount').as('amount')])
+      .where('r.venue_id', '=', venue.id)
+      .where('r.archived_at', 'is', null)
+      .where('r.currency', '=', venue.currency)
+      .where('res.status', '=', 'active')
+      .groupBy('a.duration_minutes')
+      .orderBy('a.duration_minutes')
+      .limit(1)
+      .executeTakeFirst();
+    return row
+      ? {
+          amount: Number(row.amount),
+          currency: venue.currency,
+          durationMinutes: row.duration_minutes,
+        }
+      : null;
   }
 
   async summary(venue: VenueRow): Promise<VenueSummary> {
@@ -71,6 +98,8 @@ export class VenueViewsService {
       ...this.place(catalog, venue),
       sports: this.sportsOf(catalog, resources),
       cover: media[0] ?? null,
+      location: venue.location,
+      priceFrom: await this.priceFrom(venue),
     };
   }
 
@@ -98,6 +127,7 @@ export class VenueViewsService {
       amenities: catalog.amenities.filter((a) => amenityIds.includes(a.id)),
       media,
       cover: media[0] ?? null,
+      priceFrom: await this.priceFrom(venue),
       resources: await Promise.all(resources.map((r) => this.publicResource(catalog, r))),
     };
   }

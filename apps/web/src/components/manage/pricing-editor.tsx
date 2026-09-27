@@ -5,10 +5,11 @@ import {
   createPriceRules,
   getVenuePricing,
   previewQuote,
+  replacePriceRule,
   type PriceRuleView,
   type VenueSchedule,
 } from '@jordan-sports/contracts';
-import { formatMoney, parseMajor } from '@jordan-sports/money';
+import { formatMoney, parseMajor, toMajorString } from '@jordan-sports/money';
 import {
   Alert,
   Badge,
@@ -23,16 +24,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
 import {
+  addDays,
   businessToday,
-  dateForLabel,
   isoWeekdayDate,
   minutesToTime,
   weekdaysInDisplayOrder,
 } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { DateSelect } from './date-select';
 
 const PRIORITIES = [
   { key: 'low', value: -10 },
@@ -62,14 +65,31 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
   const resources = schedule.resources.filter((r) => r.status !== 'archived');
   const bdStart = schedule.venue.businessDayStartMinute;
 
+  const [editing, setEditing] = useState<BandGroup | null>(null);
+  const groups = groupRules(pricing.data?.rules ?? []);
+  const allIds = resources.map((r) => r.id);
+  const courtsOf = (g: BandGroup) =>
+    allIds.every((id) => g.resourceIds.includes(id))
+      ? t('pricing.allCourts')
+      : joinList(
+          resources.filter((r) => g.resourceIds.includes(r.id)).map((r) => pick(r.name, locale)),
+          locale,
+        );
+
   const weekday = (d: number) =>
     format.dateTime(isoWeekdayDate(d), { weekday: 'short', timeZone: 'UTC' });
   const describe = (rule: PriceRuleView) => {
-    const days = weekdaysInDisplayOrder.filter((d) => rule.daysOfWeek.includes(d)).map(weekday);
-    const band = `${minutesToTime(rule.startMinute)}–${minutesToTime(rule.endMinute)}`;
+    const days =
+      rule.daysOfWeek.length === 7
+        ? [t('pricing.everyDay')]
+        : weekdaysInDisplayOrder.filter((d) => rule.daysOfWeek.includes(d)).map(weekday);
+    const band =
+      rule.endMinute - rule.startMinute >= 1440
+        ? t('pricing.allDay')
+        : `${minutesToTime(rule.startMinute)}–${minutesToTime(rule.endMinute)}`;
     const dates =
       rule.dateFrom && rule.dateTo
-        ? ` · ${format.dateTime(dateForLabel(rule.dateFrom), 'date')}${rule.dateTo !== rule.dateFrom ? ` – ${format.dateTime(dateForLabel(rule.dateTo), 'date')}` : ''}`
+        ? ` · ${dmy(rule.dateFrom)}${rule.dateTo !== rule.dateFrom ? ` – ${dmy(rule.dateTo)}` : ''}`
         : '';
     return `${joinList(days, locale)} · ${band}${dates}`;
   };
@@ -89,58 +109,103 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
         {pricing.data.rules.length === 0 ? (
           <p className="mt-4 text-ink-muted">{t('pricing.empty')}</p>
         ) : null}
-        {resources.map((r) => {
-          const rules = pricing.data.rules.filter((rule) => rule.resourceId === r.id);
-          if (rules.length === 0) return null;
-          return (
-            <section key={r.id} className="mt-5">
-              <h3 className="font-bold">{pick(r.name, locale)}</h3>
-              <ul className="mt-2 divide-y divide-line" data-testid="price-rules">
-                {rules.map((rule) => (
-                  <li
-                    key={rule.id}
-                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+        <ul className="mt-4 divide-y divide-line" data-testid="price-rules">
+          {groups.map((g) => (
+            <li
+              key={g.ruleIds.join()}
+              className="flex flex-wrap items-center justify-between gap-3 py-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm">
+                  {g.rule.label ? <Badge className="me-2">{g.rule.label}</Badge> : null}
+                  {describe(g.rule)}
+                </p>
+                <p className="mt-1 text-sm font-medium">
+                  {joinList(
+                    g.rule.amounts.map(
+                      (a) =>
+                        `${t('minutes', { count: String(a.durationMinutes) })}: ${formatMoney({ amount: a.amount, currency: g.rule.currency }, locale)}`,
+                    ),
+                    locale,
+                  )}
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">{courtsOf(g)}</p>
+              </div>
+              {editable ? (
+                <div className="flex gap-1">
+                  <Button size="sm" variant="secondary" onClick={() => setEditing(g)}>
+                    {t('pricing.edit')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => g.ruleIds.forEach((id) => remove.mutate(id))}
+                    busy={remove.isPending && g.ruleIds.includes(remove.variables ?? '')}
                   >
-                    <div>
-                      <p className="text-sm">
-                        {rule.label ? <Badge className="me-2">{rule.label}</Badge> : null}
-                        {describe(rule)}
-                      </p>
-                      <p className="mt-1 text-sm font-medium">
-                        {joinList(
-                          rule.amounts.map(
-                            (a) =>
-                              `${t('minutes', { count: String(a.durationMinutes) })}: ${formatMoney({ amount: a.amount, currency: rule.currency }, locale)}`,
-                          ),
-                          locale,
-                        )}
-                      </p>
-                    </div>
-                    {editable ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => remove.mutate(rule.id)}
-                        busy={remove.isPending && remove.variables === rule.id}
-                      >
-                        {t('pricing.remove')}
-                      </Button>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        })}
+                    {t('pricing.remove')}
+                  </Button>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </Card>
-      {editable ? <AddBandForm schedule={schedule} currency={pricing.data.currency} /> : null}
+      {editable ? (
+        <BandForm
+          key={editing ? editing.ruleIds.join() : 'new'}
+          schedule={schedule}
+          currency={pricing.data.currency}
+          editing={editing}
+          onDone={() => setEditing(null)}
+        />
+      ) : null}
       <PricePreview schedule={schedule} bdStart={bdStart} />
     </div>
   );
 }
 
-function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency: string }) {
+interface BandGroup {
+  ruleIds: string[];
+  resourceIds: string[];
+  rule: PriceRuleView;
+}
+
+/** Identical bands on several courts are shown (and edited) once. */
+function groupRules(rules: readonly PriceRuleView[]): BandGroup[] {
+  const groups = new Map<string, BandGroup>();
+  for (const rule of rules) {
+    const key = JSON.stringify([
+      [...rule.daysOfWeek].sort(),
+      rule.startMinute,
+      rule.endMinute,
+      rule.dateFrom,
+      rule.dateTo,
+      rule.priority,
+      rule.label,
+      rule.amounts,
+    ]);
+    const g = groups.get(key);
+    if (g) {
+      g.ruleIds.push(rule.id);
+      g.resourceIds.push(rule.resourceId);
+    } else groups.set(key, { ruleIds: [rule.id], resourceIds: [rule.resourceId], rule });
+  }
+  return [...groups.values()];
+}
+
+function BandForm({
+  schedule,
+  currency,
+  editing,
+  onDone,
+}: {
+  schedule: VenueSchedule;
+  currency: string;
+  editing: BandGroup | null;
+  onDone: () => void;
+}) {
   const t = useTranslations('web.manage');
+  const tc = useTranslations('common.actions');
   const locale = useLocale();
   const format = useFormatter();
   const api = useApi();
@@ -149,16 +214,29 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
   const bdStart = schedule.venue.businessDayStartMinute;
   const resources = schedule.resources.filter((r) => r.status !== 'archived');
   const today = businessToday(schedule.venue.timezone, bdStart);
-  const [resourceIds, setResourceIds] = useState<string[]>(resources.map((r) => r.id));
-  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5, 6, 7]);
-  const [from, setFrom] = useState(bdStart);
-  const [to, setTo] = useState(bdStart + 1440);
-  const [special, setSpecial] = useState(false);
-  const [dateFrom, setDateFrom] = useState(today);
-  const [dateTo, setDateTo] = useState(today);
-  const [priority, setPriority] = useState(0);
-  const [label, setLabel] = useState('');
-  const [prices, setPrices] = useState<Record<number, string>>({});
+  const initial = editing?.rule;
+  const [resourceIds, setResourceIds] = useState<string[]>(
+    editing ? editing.resourceIds : resources.map((r) => r.id),
+  );
+  const [days, setDays] = useState<number[]>(
+    initial ? [...initial.daysOfWeek] : [1, 2, 3, 4, 5, 6, 7],
+  );
+  const [from, setFrom] = useState(initial?.startMinute ?? bdStart);
+  const [to, setTo] = useState(initial?.endMinute ?? bdStart + 1440);
+  const [special, setSpecial] = useState(Boolean(initial?.dateFrom));
+  const [dateFrom, setDateFrom] = useState(initial?.dateFrom ?? today);
+  const [dateTo, setDateTo] = useState(initial?.dateTo ?? today);
+  const [priority, setPriority] = useState(initial?.priority ?? 0);
+  const [label, setLabel] = useState(initial?.label ?? '');
+  const [prices, setPrices] = useState<Record<number, string>>(() =>
+    Object.fromEntries(
+      (initial?.amounts ?? []).map((a) => [
+        a.durationMinutes,
+        toMajorString(a.amount, currency, false),
+      ]),
+    ),
+  );
+  const allSelected = resources.every((r) => resourceIds.includes(r.id));
   const [invalid, setInvalid] = useState(false);
 
   const durations = [
@@ -169,27 +247,35 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
   const steps = Array.from({ length: 49 }, (_, i) => bdStart + i * 30);
 
   const add = useMutation({
-    mutationFn: (amounts: Array<{ durationMinutes: number; amount: number }>) =>
-      api(createPriceRules, {
-        params: { venueId: schedule.venue.id },
-        body: {
-          resourceIds,
-          rule: {
-            daysOfWeek: days,
-            startMinute: from,
-            endMinute: to,
-            dateFrom: special ? dateFrom : null,
-            dateTo: special ? dateTo : null,
-            priority,
-            label: label.trim() || null,
-            amounts,
-          },
-        },
-      }),
+    mutationFn: async (amounts: Array<{ durationMinutes: number; amount: number }>) => {
+      const rule = {
+        daysOfWeek: days,
+        startMinute: from,
+        endMinute: to,
+        dateFrom: special ? dateFrom : null,
+        dateTo: special ? dateTo : null,
+        priority,
+        label: label.trim() || null,
+        amounts,
+      };
+      if (!editing) {
+        return api(createPriceRules, {
+          params: { venueId: schedule.venue.id },
+          body: { resourceIds, rule },
+        });
+      }
+      // Rules are immutable: each court's rule is replaced (archived and recreated).
+      let latest;
+      for (const ruleId of editing.ruleIds) {
+        latest = await api(replacePriceRule, { params: { ruleId }, body: { rule } });
+      }
+      return latest!;
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(['pricing', schedule.venue.id], data);
       setPrices({});
       setLabel('');
+      if (editing) onDone();
     },
   });
 
@@ -213,7 +299,9 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
   return (
     <Card>
       <form className="grid gap-4 sm:grid-cols-2" onSubmit={submit}>
-        <h2 className="text-lg font-bold sm:col-span-2">{t('pricing.add')}</h2>
+        <h2 className="text-lg font-bold sm:col-span-2">
+          {editing ? t('pricing.editTitle') : t('pricing.add')}
+        </h2>
         {add.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(add.error)}
@@ -232,10 +320,17 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
         <fieldset className="sm:col-span-2">
           <legend className="mb-2 text-sm font-medium">{t('pricing.resources')}</legend>
           <div className="flex flex-wrap gap-4">
+            <CheckboxField
+              label={t('pricing.allCourts')}
+              checked={allSelected}
+              disabled={Boolean(editing)}
+              onChange={(e) => setResourceIds(e.target.checked ? resources.map((r) => r.id) : [])}
+            />
             {resources.map((r) => (
               <CheckboxField
                 key={r.id}
                 label={pick(r.name, locale)}
+                disabled={Boolean(editing)}
                 checked={resourceIds.includes(r.id)}
                 onChange={(e) =>
                   setResourceIds((ids) =>
@@ -330,20 +425,19 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
         />
         {special ? (
           <>
-            <TextField
+            <DateSelect
+              from={today}
+              days={400}
               label={t('pricing.dateFrom')}
-              type="date"
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              dir="ltr"
+              onChange={(v) => setDateFrom(v)}
             />
-            <TextField
+            <DateSelect
+              from={dateFrom}
+              days={400}
               label={t('pricing.dateTo')}
-              type="date"
               value={dateTo}
-              min={dateFrom}
-              onChange={(e) => setDateTo(e.target.value)}
-              dir="ltr"
+              onChange={(v) => setDateTo(v)}
             />
           </>
         ) : null}
@@ -353,8 +447,13 @@ function AddBandForm({ schedule, currency }: { schedule: VenueSchedule; currency
             busy={add.isPending}
             disabled={resourceIds.length === 0 || days.length === 0}
           >
-            {t('pricing.add')}
+            {editing ? tc('save') : t('pricing.add')}
           </Button>
+          {editing ? (
+            <Button variant="ghost" className="ms-2" onClick={onDone}>
+              {tc('cancel')}
+            </Button>
+          ) : null}
         </div>
       </form>
     </Card>
@@ -368,7 +467,8 @@ function PricePreview({ schedule, bdStart }: { schedule: VenueSchedule; bdStart:
   const errorMessage = useErrorMessage();
   const resources = schedule.resources.filter((r) => r.status !== 'archived');
   const [resourceId, setResourceId] = useState(resources[0]?.id ?? '');
-  const [date, setDate] = useState(businessToday(schedule.venue.timezone, bdStart));
+  const today = businessToday(schedule.venue.timezone, bdStart);
+  const [date, setDate] = useState(today);
   const [start, setStart] = useState(18 * 60);
   const resource = resources.find((r) => r.id === resourceId);
   const [duration, setDuration] = useState(resource?.policy.slotDurations[0] ?? 60);
@@ -410,12 +510,12 @@ function PricePreview({ schedule, bdStart }: { schedule: VenueSchedule; bdStart:
             </option>
           ))}
         </SelectField>
-        <TextField
+        <DateSelect
+          from={addDays(today, -7)}
+          days={60}
           label={t('pricing.previewDate')}
-          type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          dir="ltr"
+          onChange={(v) => setDate(v)}
           name="previewDate"
         />
         <SelectField

@@ -4,8 +4,9 @@ import { adminListBookings } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
 import { Alert, Badge, Button, Card, Ltr, PageHeader, Spinner } from '@jordan-sports/ui';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -14,7 +15,6 @@ export function BookingsPage() {
   const tb = useTranslations('web.booking.statuses');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const bookings = useInfiniteQuery({
@@ -56,7 +56,7 @@ export function BookingsPage() {
                     {pick(b.venue.name, locale)} · {pick(b.resource.name, locale)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
-                    {format.dateTime(new Date(`${b.businessDate}T12:00:00Z`), 'date')}{' '}
+                    {dmy(b.businessDate)}{' '}
                     <Ltr>
                       {b.localStart}–{b.localEnd}
                     </Ltr>

@@ -8,20 +8,21 @@ import {
 } from '@jordan-sports/contracts';
 import { Alert, Button, Card, CheckboxField, SelectField, TextField } from '@jordan-sports/ui';
 import { useMutation } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { can, useSetSchedule } from '@/lib/manage';
-import { businessToday, dateForLabel, minutesToTime } from '@/lib/time';
+import { businessToday, minutesToTime } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { DateSelect } from './date-select';
 
 const HALF_HOURS = Array.from({ length: 48 }, (_, i) => i * 30);
 
 export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const setSchedule = useSetSchedule(schedule.venue.id);
   const errorMessage = useErrorMessage();
@@ -68,7 +69,7 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
     onSuccess: setSchedule,
   });
   const error = add.error ?? remove.error ?? holidays.error;
-  const date = (d: string) => format.dateTime(dateForLabel(d), 'date');
+  const date = (d: string) => dmy(d);
 
   return (
     <div className="flex flex-col gap-6">
@@ -157,29 +158,25 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
               <option value="closed">{t('closures.closed')}</option>
               <option value="hours">{t('closures.specialHours')}</option>
             </SelectField>
-            <TextField
+            <DateSelect
+              from={today}
               label={t('closures.from')}
-              type="date"
               value={form.dateFrom}
-              min={today}
-              onChange={(e) =>
+              onChange={(v) =>
                 setForm((f) => ({
                   ...f,
-                  dateFrom: e.target.value,
-                  dateTo: e.target.value > f.dateTo ? e.target.value : f.dateTo,
+                  dateFrom: v,
+                  dateTo: v > f.dateTo ? v : f.dateTo,
                 }))
               }
               name="overrideFrom"
-              dir="ltr"
             />
-            <TextField
+            <DateSelect
+              from={form.dateFrom}
               label={t('closures.to')}
-              type="date"
               value={form.dateTo}
-              min={form.dateFrom}
-              onChange={(e) => setForm((f) => ({ ...f, dateTo: e.target.value }))}
+              onChange={(v) => setForm((f) => ({ ...f, dateTo: v }))}
               name="overrideTo"
-              dir="ltr"
             />
             {form.kind === 'hours' ? (
               <>

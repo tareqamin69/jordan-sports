@@ -2,15 +2,24 @@
   {
     "slug": "demo-padel-club",
     "name": {
-      "ar": "نادي البادل (تجريبي)",
-      "en": "Padel Club (Demo)"
+      "ar": "نادي سماش للبادل",
+      "en": "Smash Padel Club"
     },
     "description": {
-      "ar": "ملعب تجريبي لأغراض التطوير فقط. ثلاثة ملاعب بادل مغطاة.",
-      "en": "Demo venue for development only. Three indoor padel courts."
+      "ar": "ثلاث ملاعب بادل مغطاة بإضاءة ممتازة، غرف تبديل ومواقف سيارات. (بيانات تجريبية)",
+      "en": "Three indoor padel courts with great lighting, changing rooms and parking. (Demo data)"
+    },
+    "address": {
+      "ar": "الصويفية، شارع باريس",
+      "en": "Paris Street, Sweifieh"
     },
     "area": "sweifieh",
-    "color": "#0b5a37",
+    "location": {
+      "lat": 31.9565,
+      "lng": 35.8625
+    },
+    "phone": "0791110001",
+    "photo": "glass",
     "resources": [
       {
         "name": {
@@ -59,8 +68,8 @@
           "lighting": true
         },
         "prices": {
-          "60": 20000,
-          "90": 28000
+          "60": 18000,
+          "90": 26000
         }
       }
     ]
@@ -68,15 +77,24 @@
   {
     "slug": "demo-football-arena",
     "name": {
-      "ar": "ساحة كرة القدم (تجريبي)",
-      "en": "Football Arena (Demo)"
+      "ar": "ملاعب النجوم",
+      "en": "Stars Football Arena"
     },
     "description": {
-      "ar": "ملعب تجريبي لأغراض التطوير فقط. ملعب يُقسم إلى نصفين أو يُحجز كاملًا.",
-      "en": "Demo venue for development only. One pitch that can be split into two halves or booked whole."
+      "ar": "ملعب عشب صناعي بينقسم لملعبين خماسي أو بينحجز كامل سباعي. (بيانات تجريبية)",
+      "en": "Artificial grass pitch that splits into two 5-a-side pitches or is booked whole for 7-a-side. (Demo data)"
+    },
+    "address": {
+      "ar": "خلدا، قرب دوار المدينة الطبية",
+      "en": "Khalda, near Medical City roundabout"
     },
     "area": "khalda",
-    "color": "#087242",
+    "location": {
+      "lat": 31.9978,
+      "lng": 35.8409
+    },
+    "phone": "0791110002",
+    "photo": "grass",
     "resources": [
       {
         "name": {
@@ -90,7 +108,8 @@
           "lighting": true
         },
         "prices": {
-          "60": 20000
+          "60": 20000,
+          "90": 28000
         }
       },
       {
@@ -105,7 +124,8 @@
           "lighting": true
         },
         "prices": {
-          "60": 20000
+          "60": 20000,
+          "90": 28000
         }
       },
       {
@@ -121,7 +141,8 @@
         },
         "combines": [0, 1],
         "prices": {
-          "60": 35000
+          "60": 35000,
+          "90": 50000
         }
       }
     ]
@@ -129,15 +150,24 @@
   {
     "slug": "demo-tennis-center",
     "name": {
-      "ar": "مركز التنس (تجريبي)",
-      "en": "Tennis Center (Demo)"
+      "ar": "مركز دابوق للتنس",
+      "en": "Dabouq Tennis Center"
     },
     "description": {
-      "ar": "ملعب تجريبي لأغراض التطوير فقط. ملعبا تنس بأرضية صلبة.",
-      "en": "Demo venue for development only. Two hard courts."
+      "ar": "ملعبين تنس بأرضية ترابية، مدربين متوفرين عند الطلب. (بيانات تجريبية)",
+      "en": "Two clay tennis courts, coaches available on request. (Demo data)"
+    },
+    "address": {
+      "ar": "دابوق، شارع الملكة نور",
+      "en": "Queen Noor Street, Dabouq"
     },
     "area": "dabouq",
-    "color": "#0a4a2f",
+    "location": {
+      "lat": 31.9936,
+      "lng": 35.82
+    },
+    "phone": "0791110003",
+    "photo": "clay",
     "resources": [
       {
         "name": {
@@ -146,12 +176,9 @@
         },
         "type": "tennis_court",
         "formats": ["tennis.singles", "tennis.doubles"],
-        "attributes": {
-          "surface": "hard_court",
-          "lighting": true
-        },
         "prices": {
-          "60": 12000
+          "60": 12000,
+          "90": 16500
         }
       },
       {
@@ -161,12 +188,175 @@
         },
         "type": "tennis_court",
         "formats": ["tennis.singles", "tennis.doubles"],
+        "prices": {
+          "60": 12000,
+          "90": 16500
+        }
+      }
+    ]
+  },
+  {
+    "slug": "jubeiha-five-a-side",
+    "name": {
+      "ar": "ملعب الجبيهة الخماسي",
+      "en": "Jubeiha Five-a-side"
+    },
+    "description": {
+      "ar": "ملعبين خماسي قريبين من الجامعة الأردنية، أسعار مناسبة للطلاب. (بيانات تجريبية)",
+      "en": "Two 5-a-side pitches near the University of Jordan, student-friendly prices. (Demo data)"
+    },
+    "address": {
+      "ar": "الجبيهة، شارع ياجوز",
+      "en": "Yajouz Street, Jubeiha"
+    },
+    "area": "jubeiha",
+    "location": {
+      "lat": 32.0233,
+      "lng": 35.871
+    },
+    "phone": "0791110004",
+    "photo": "grass",
+    "resources": [
+      {
+        "name": {
+          "ar": "الملعب 1 (خماسي)",
+          "en": "Pitch 1 (5-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.five_a_side"],
         "attributes": {
-          "surface": "hard_court",
-          "lighting": false
+          "surface": "artificial_grass",
+          "lighting": true
         },
         "prices": {
-          "60": 12000
+          "60": 15000,
+          "90": 21000
+        }
+      },
+      {
+        "name": {
+          "ar": "الملعب 2 (خماسي)",
+          "en": "Pitch 2 (5-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.five_a_side"],
+        "attributes": {
+          "surface": "artificial_grass",
+          "lighting": true
+        },
+        "prices": {
+          "60": 15000,
+          "90": 21000
+        }
+      }
+    ]
+  },
+  {
+    "slug": "abdoun-padel",
+    "name": {
+      "ar": "بادل عبدون",
+      "en": "Abdoun Padel"
+    },
+    "description": {
+      "ar": "ملعبين بادل بانوراما مع كافيه. (بيانات تجريبية)",
+      "en": "Two panoramic padel courts with a café. (Demo data)"
+    },
+    "address": {
+      "ar": "عبدون، شارع القاهرة",
+      "en": "Cairo Street, Abdoun"
+    },
+    "area": "abdoun",
+    "location": {
+      "lat": 31.9496,
+      "lng": 35.8844
+    },
+    "phone": "0791110005",
+    "photo": "glass",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب بادل 1",
+          "en": "Padel court 1"
+        },
+        "type": "padel_court",
+        "formats": ["padel.doubles"],
+        "attributes": {
+          "indoor": true,
+          "panoramic": true,
+          "lighting": true
+        },
+        "prices": {
+          "60": 24000,
+          "90": 32000
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب بادل 2",
+          "en": "Padel court 2"
+        },
+        "type": "padel_court",
+        "formats": ["padel.doubles"],
+        "attributes": {
+          "indoor": true,
+          "panoramic": false,
+          "lighting": true
+        },
+        "prices": {
+          "60": 24000,
+          "90": 32000
+        }
+      }
+    ]
+  },
+  {
+    "slug": "tla-al-ali-sports",
+    "name": {
+      "ar": "نادي تلاع العلي الرياضي",
+      "en": "Tla' Al-Ali Sports Club"
+    },
+    "description": {
+      "ar": "ملعب خماسي وملعب تنس بنفس المكان. (بيانات تجريبية)",
+      "en": "A 5-a-side pitch and a tennis court in one place. (Demo data)"
+    },
+    "address": {
+      "ar": "تلاع العلي، شارع وصفي التل",
+      "en": "Wasfi Al-Tal Street, Tla' Al-Ali"
+    },
+    "area": "tla_al_ali",
+    "location": {
+      "lat": 32.0108,
+      "lng": 35.8519
+    },
+    "phone": "0791110006",
+    "photo": "grass",
+    "resources": [
+      {
+        "name": {
+          "ar": "الملعب الرئيسي (خماسي)",
+          "en": "Pitch Main (5-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.five_a_side"],
+        "attributes": {
+          "surface": "artificial_grass",
+          "lighting": true
+        },
+        "prices": {
+          "60": 18000,
+          "90": 25000
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب تنس 1",
+          "en": "Tennis court 1"
+        },
+        "type": "tennis_court",
+        "formats": ["tennis.singles", "tennis.doubles"],
+        "prices": {
+          "60": 10000,
+          "90": 14000
         }
       }
     ]

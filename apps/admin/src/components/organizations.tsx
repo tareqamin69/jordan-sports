@@ -19,10 +19,11 @@ import {
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
+import { dmyTime } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { VenueList } from './venues/venue-list';
@@ -31,7 +32,6 @@ export function OrganizationsPage() {
   const t = useTranslations('admin.organizations');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const [showCreate, setShowCreate] = useState(false);
@@ -74,7 +74,7 @@ export function OrganizationsPage() {
                     </span>
                     <span className="flex items-center gap-3 text-sm text-ink-muted">
                       <Badge>{t(`statuses.${org.status}`)}</Badge>
-                      {format.dateTime(new Date(org.createdAt), 'date')}
+                      {dmyTime(new Date(org.createdAt)).slice(0, 10)}
                     </span>
                   </Link>
                 </li>

@@ -39,14 +39,19 @@ test.describe('web (marketplace) skeleton', () => {
   test('renders English left-to-right', async ({ page }) => {
     await page.goto(`${WEB}/en`);
     await expectDocumentLocale(page, 'en');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sports booking for Jordan');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Book your court in Amman in seconds',
+    );
     await expectHeaderDirection(page, 'ltr');
   });
 
-  test('states honestly that booking is not available yet', async ({ page }) => {
+  test('the home page offers a venue search and no outdated banners', async ({ page }) => {
     await page.goto(`${WEB}/en`);
-    await expect(page.getByRole('status')).toContainText('Booking is not available yet');
-    await expect(page.getByRole('button')).toHaveCount(0);
+    await expect(page.getByRole('search')).toBeVisible();
+    await expect(page.getByText(/not available|coming soon|call the venue/i)).toHaveCount(0);
+    await page.getByRole('search').getByLabel('Day').selectOption({ index: 2 });
+    await page.getByRole('button', { name: 'Search' }).click();
+    await expect(page).toHaveURL(/\/en\/venues\?.*date=\d{4}-\d{2}-\d{2}/);
   });
 
   test('switches language in both directions', async ({ page }) => {
@@ -63,7 +68,7 @@ test.describe('web (marketplace) skeleton', () => {
     const response = await page.goto(`${WEB}/ar/no-such-page`);
     expect(response?.status()).toBe(404);
     await expectDocumentLocale(page, 'ar');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('الصفحة غير موجودة');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('الصفحة مش موجودة');
   });
 
   for (const locale of ['ar', 'en'] as const) {

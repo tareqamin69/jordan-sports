@@ -35,8 +35,8 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   return (
     <>
       <PageHeader title={pick(s.venue.name, locale)} description={t('title')} />
-      <nav aria-label={t('tabs.label')} className="mb-6 overflow-x-auto border-b border-line">
-        <ul className="flex gap-1">
+      <nav aria-label={t('tabs.label')} className="mb-6 border-b border-line">
+        <ul className="flex flex-wrap gap-x-1">
           {tabs.map((key) => (
             <li key={key}>
               <Link

@@ -12,6 +12,7 @@ import { loadDotEnv, parseConfig } from '../platform/config/config.js';
 import { DATABASE } from '../platform/database/database.module.js';
 import type { Db } from '../platform/database/database.js';
 import { uuidv7 } from '../platform/database/ids.js';
+import { demoPhotoSvg, demoPhotoVariants, type DemoPhotoKind } from './demo-photos.js';
 
 /**
  * DEVELOPMENT ONLY: creates clearly labelled demo venues so the product can be explored locally.
@@ -34,22 +35,24 @@ interface DemoVenue {
   slug: string;
   name: { ar: string; en: string };
   description: { ar: string; en: string };
+  address: { ar: string; en: string };
   area: string;
-  color: string;
+  location: { lat: number; lng: number };
+  phone: string;
+  photo: DemoPhotoKind;
   resources: DemoResource[];
 }
 
 const SEED_FILE = fileURLToPath(new URL('../../seeds/demo-venues.json', import.meta.url));
 
-/** A plain generated banner image (no real photos in the repository). */
-async function banner(color: string): Promise<Buffer> {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900">
-    <rect width="1600" height="900" fill="${color}"/>
-    <rect x="200" y="150" width="1200" height="600" fill="none" stroke="#ffffff" stroke-width="12" opacity="0.6"/>
-    <line x1="800" y1="150" x2="800" y2="750" stroke="#ffffff" stroke-width="12" opacity="0.6"/>
-    <circle cx="800" cy="450" r="110" fill="none" stroke="#ffffff" stroke-width="12" opacity="0.6"/>
-  </svg>`;
-  return sharp(Buffer.from(svg)).jpeg().toBuffer();
+/** Generated illustration (no real photos in the repository). */
+async function photo(
+  kind: DemoPhotoKind,
+  variant: (typeof demoPhotoVariants)[number],
+): Promise<Buffer> {
+  return sharp(Buffer.from(demoPhotoSvg(kind, variant)))
+    .jpeg({ quality: 85 })
+    .toBuffer();
 }
 
 async function main(): Promise<number> {
@@ -83,7 +86,7 @@ async function main(): Promise<number> {
         {
           slug: 'demo-sports-group',
           name: { ar: 'مجموعة رياضية تجريبية', en: 'Demo Sports Group' },
-          owner: { phone: DEMO_OWNER_PHONE, displayName: 'Demo Owner' },
+          owner: { phone: DEMO_OWNER_PHONE, displayName: 'أبو أحمد' },
         },
         systemActor.meta,
       );
@@ -109,6 +112,9 @@ async function main(): Promise<number> {
           slug: demo.slug,
           name: demo.name,
           description: demo.description,
+          address: demo.address,
+          location: demo.location,
+          contactPhone: demo.phone,
           cityId: city.id,
           areaId: city.areas.find((a) => a.key === demo.area)!.id,
           amenityIds: catalog.amenities.slice(0, 4).map((a) => a.id),
@@ -132,9 +138,11 @@ async function main(): Promise<number> {
           ),
         );
       }
-      await app
-        .get(MediaService)
-        .upload(venueId, org.id, await banner(demo.color), 'image/jpeg', systemActor);
+      for (const variant of demoPhotoVariants) {
+        await app
+          .get(MediaService)
+          .upload(venueId, org.id, await photo(demo.photo, variant), 'image/jpeg', systemActor);
+      }
       await app
         .get(VenuesService)
         .setStatus(
@@ -146,7 +154,7 @@ async function main(): Promise<number> {
         );
       console.log(`created ${demo.slug}`);
     }
-    // Opening hours for demo resources that have none: 16:00–24:00, Friday and Saturday from 10:00.
+    // Opening hours for demo resources that have none: every day 08:00–24:00.
     const demoResources = await db
       .selectFrom('resource.resources as r')
       .innerJoin('venue.venues as v', 'v.id', 'r.venue_id')
@@ -171,8 +179,8 @@ async function main(): Promise<number> {
             id: uuidv7(),
             resource_id: r.id,
             day_of_week: day,
-            start_minute: day === 5 || day === 6 ? 600 : 960,
-            duration_minutes: day === 5 || day === 6 ? 840 : 480,
+            start_minute: 480,
+            duration_minutes: 960,
           })),
         )
         .execute();
@@ -184,6 +192,14 @@ async function main(): Promise<number> {
       const resources = await app.get(ResourcesService).listForVenue(venue.id);
       for (const resource of resources) {
         const spec = demo.resources.find((r) => r.name.en === resource.name.en);
+        if (spec) {
+          // Bookable lengths = the priced lengths.
+          await db
+            .updateTable('resource.booking_policies')
+            .set({ slot_durations: Object.keys(spec.prices).map(Number) })
+            .where('resource_id', '=', resource.id)
+            .execute();
+        }
         const priced = await db
           .selectFrom('pricing.price_rules')
           .select('id')
@@ -198,7 +214,7 @@ async function main(): Promise<number> {
             factor: 1,
             label: null,
           },
-          { start: 18 * 60, end: 24 * 60, priority: 10, factor: 1.25, label: 'Peak' },
+          { start: 18 * 60, end: 24 * 60, priority: 10, factor: 1.25, label: 'وقت الذروة' },
         ];
         for (const band of bands) {
           const ruleId = uuidv7();

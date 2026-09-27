@@ -4,6 +4,11 @@ export function dmy(date: string): string {
   return `${d}/${m}/${y}`;
 }
 
+/** "Monday 28/09/2026" style label: localized weekday + Jordanian numeric date. */
+export function dayLabel(date: string, weekday: string): string {
+  return `${weekday} ${dmy(date)}`;
+}
+
 /** Calendar date (YYYY-MM-DD) of an instant in a time zone. */
 export function dateInZone(instant: Date, timeZone: string): string {
   return new Intl.DateTimeFormat('en-CA', {

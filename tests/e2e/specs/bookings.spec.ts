@@ -41,7 +41,14 @@ test.describe('bookings', () => {
     await expect(page).toHaveURL(new RegExp(`/en/venues/${venue.slug}$`));
 
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
-    const slot = page.getByTestId('slot').getByRole('button').filter({ hasText: '10:00–11:00' });
+    await page
+      .getByRole('group', { name: 'Booking length' })
+      .getByRole('button', { name: '60 min' })
+      .click();
+    const slot = page
+      .getByTestId('slot')
+      .getByRole('button')
+      .filter({ hasText: /^10:00/ });
     await expect(slot).toContainText('JOD 20.000');
     await slot.click();
     await expect(page).toHaveURL(/\/en\/bookings\/[0-9a-f-]{36}$/);
@@ -62,9 +69,12 @@ test.describe('bookings', () => {
     // The time is no longer offered to others.
     await page.goto(`${WEB}/en/venues/${venue.slug}`);
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
-    await expect(page.getByTestId('slot').filter({ hasText: '10:00–11:00' })).toContainText(
-      'Booked',
-    );
+    await page
+      .getByRole('group', { name: 'Booking length' })
+      .getByRole('button', { name: '60 min' })
+      .click();
+    await expect(page.getByTestId('slot').filter({ hasText: /^10:00/ })).toHaveCount(0);
+    await expect(page.getByTestId('slot').filter({ hasText: /^11:00/ })).toHaveCount(1);
 
     await page.getByTestId('bookings-link').click();
     await expect(page).toHaveURL(/\/en\/bookings$/);
@@ -81,12 +91,20 @@ test.describe('bookings', () => {
     await makeBookable(await userApi(venue.ownerPhone, 'Owner'), venue.venueId, venue.resourceId);
     await signUpPlayer(page, 'ar', 'سامي');
     await page.goto(`${WEB}/ar/venues/${venue.slug}`);
-    await page.getByRole('group', { name: 'التاريخ' }).getByRole('button').nth(1).click();
-    await page.getByTestId('slot').getByRole('button').filter({ hasText: '12:00–13:00' }).click();
-    await expect(page.getByRole('heading', { name: 'أكمل حجزك' })).toBeVisible();
+    await page.getByRole('group', { name: 'اليوم' }).getByRole('button').nth(1).click();
+    await page
+      .getByRole('group', { name: 'مدة الحجز' })
+      .getByRole('button', { name: '60 دقيقة' })
+      .click();
+    await page
+      .getByTestId('slot')
+      .getByRole('button')
+      .filter({ hasText: /^12:00/ })
+      .click();
+    await expect(page.getByRole('heading', { name: 'كمّل حجزك' })).toBeVisible();
     await expect(page.getByTestId('booking-price')).toHaveText('20.000 د.أ');
     await page.getByRole('button', { name: 'إلغاء حجز الوقت' }).click();
-    await expect(page.getByText('تم إلغاء حجز الوقت.')).toBeVisible();
+    await expect(page.getByText('انلغى حجز الوقت.')).toBeVisible();
     await expect(page.getByTestId('booking-status')).toHaveText('ملغي');
   });
 
@@ -99,7 +117,7 @@ test.describe('bookings', () => {
     await page.goto(`${WEB}/en/manage/${venue.venueId}?tab=bookings`);
     await expect(page.getByText('No bookings in this period.')).toBeVisible();
 
-    await page.locator('input[name="manualDate"]').fill(tomorrowInAmman());
+    await page.locator('select[name="manualDate"]').selectOption(tomorrowInAmman());
     await page.locator('select[name="manualStart"]').selectOption({ label: '20:00' });
     await page.locator('input[name="manualName"]').fill('Team Falcons');
     await page.locator('input[name="manualPhone"]').fill('0791234567');

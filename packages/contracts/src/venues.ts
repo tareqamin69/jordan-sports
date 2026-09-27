@@ -48,14 +48,31 @@ export const publicResourceSchema = z.object({
 });
 export type PublicResource = z.infer<typeof publicResourceSchema>;
 
+// Defined here (not imported from pricing) to keep the contracts module graph acyclic.
+const money = z.object({ amount: z.number().int(), currency: z.string().length(3) });
+
 export const venueSummarySchema = z.object({
   id: uuidSchema,
   slug: z.string(),
   name: localizedSchema,
   city: namedRef,
   area: namedRef.nullable(),
-  sports: z.array(namedRef),
+  sports: z.array(namedRef.extend({ icon: z.string() })),
   cover: mediaSchema.nullable(),
+  location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
+  /** Lowest price for the shortest bookable length ("from 20.000 JOD"). */
+  priceFrom: money.extend({ durationMinutes: z.number().int() }).nullable(),
+  /** Free start times on the searched date (only when `date` is given), nearest to `time` first. */
+  freeTimes: z
+    .array(
+      z.object({
+        start: z.string(),
+        localStart: z.string(),
+        durationMinutes: z.number().int(),
+        price: money,
+      }),
+    )
+    .optional(),
 });
 export type VenueSummary = z.infer<typeof venueSummarySchema>;
 
@@ -81,6 +98,16 @@ export const listVenues = endpoint({
     sport: z.string().max(40).optional(),
     city: z.string().max(40).optional(),
     area: z.string().max(40).optional(),
+    /** Only venues with a free, priced time on this business date (YYYY-MM-DD). */
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    /** Preferred start time (HH:mm) with `date`: free times within about two hours. */
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .optional(),
   }),
   response: page(venueSummarySchema),
 });

@@ -72,6 +72,6 @@ test.describe('venue dashboard (/manage)', () => {
   test('a signed-in player without memberships sees no venues', async ({ page }) => {
     await signUpPlayer(page, 'ar', 'لاعب');
     await page.goto(`${WEB}/ar/manage`);
-    await expect(page.getByText('لا تدير أي ملعب بعد.')).toBeVisible();
+    await expect(page.getByText('ما عندك ملاعب لسا.')).toBeVisible();
   });
 });

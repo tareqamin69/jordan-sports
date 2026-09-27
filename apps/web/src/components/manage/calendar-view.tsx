@@ -13,10 +13,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
 import { addDays, businessToday, dateForLabel, minutesToTime } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { QuickBookingSheet } from './quick-booking-sheet';
 
 const PX_PER_MINUTE = 1;
 const reasons: BlockReason[] = [
@@ -49,6 +51,8 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar', venueId] }),
   });
   const canBlock = can(schedule, 'schedule.block');
+  const canBook = can(schedule, 'booking.manage');
+  const [draft, setDraft] = useState<{ resourceId: string; offset: number } | null>(null);
   const nameOf = (id: string) => pick(schedule.resources.find((r) => r.id === id)?.name, locale);
 
   const entryLabel = (e: CalendarEntry) => {
@@ -108,7 +112,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
           {t('calendar.next')}
         </Button>
         <h2 className="ms-2 text-lg font-bold" data-testid="calendar-date">
-          {format.dateTime(dateForLabel(date), 'dayMonth')}
+          {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
         </h2>
       </div>
 
@@ -161,6 +165,37 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
                       }}
                     />
                   ))}
+                  {canBook
+                    ? r.open.flatMap((o) =>
+                        Array.from({ length: Math.floor(o.durationMinutes / 30) }, (_, i) => {
+                          const m = o.offsetMinutes + i * 30;
+                          const busy = r.entries.some(
+                            (e) =>
+                              e.offsetMinutes < m + 30 && m < e.offsetMinutes + e.durationMinutes,
+                          );
+                          if (busy) return null;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              data-testid="free-cell"
+                              onClick={() => setDraft({ resourceId: r.id, offset: m })}
+                              aria-label={t('calendar.freeTime', {
+                                time: minutesToTime(bdStart + m),
+                              })}
+                              className="absolute inset-x-1 rounded border border-dashed border-transparent text-xs text-ink-muted hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:bg-brand-50 focus-visible:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-700"
+                              style={{
+                                top: (m - span.from) * PX_PER_MINUTE + 1,
+                                height: 30 * PX_PER_MINUTE - 2,
+                              }}
+                              dir="ltr"
+                            >
+                              {['+', minutesToTime(bdStart + m)].join(' ')}
+                            </button>
+                          );
+                        }),
+                      )
+                    : null}
                   {r.open.length === 0 ? (
                     <p className="absolute inset-x-0 top-2 text-center text-sm text-ink-muted">
                       {t('calendar.closed')}
@@ -197,7 +232,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
                         {removable ? (
                           <button
                             type="button"
-                            className="mt-1 text-xs font-medium text-danger underline"
+                            className="mt-0.5 inline-flex min-h-6 items-center text-xs font-medium text-danger underline"
                             onClick={() => {
                               if (window.confirm(t('calendar.confirmRemove')))
                                 remove.mutate(e.blockId!);
@@ -216,6 +251,16 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
         </Card>
       ) : null}
 
+      {canBook ? <p className="-mt-3 text-sm text-ink-muted">{t('calendar.tapHint')}</p> : null}
+      {draft ? (
+        <QuickBookingSheet
+          schedule={schedule}
+          date={date}
+          resourceId={draft.resourceId}
+          offset={draft.offset}
+          onClose={() => setDraft(null)}
+        />
+      ) : null}
       {canBlock ? <BlockForm schedule={schedule} date={date} /> : null}
     </div>
   );

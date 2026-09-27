@@ -53,6 +53,7 @@ export class CatalogService {
         id: s.id,
         key: s.key,
         name: s.name as Localized,
+        icon: s.icon,
         formats: formats
           .filter((f) => f.sport_id === s.id)
           .map((f) => ({

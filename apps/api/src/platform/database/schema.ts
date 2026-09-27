@@ -170,6 +170,7 @@ export interface CatalogSportFormats {
 
 export interface CatalogSports {
   active: Generated<boolean>;
+  icon: Generated<string>;
   id: Generated<string>;
   key: string;
   name: Json;
