@@ -30,9 +30,15 @@ export async function createHttpApp(
 
   const fastify = app.getHttpAdapter().getInstance();
   await fastify.register(fastifyCookie);
+  // Venue photo uploads arrive as raw image bodies (max 10 MB); everything else is JSON.
+  fastify.addContentTypeParser(
+    ['image/jpeg', 'image/png', 'image/webp'],
+    { parseAs: 'buffer', bodyLimit: 10 * 1024 * 1024 },
+    (_request, body, done) => done(null, body),
+  );
   fastify.addHook('onSend', async (request, reply) => {
     reply.header('x-request-id', request.id);
-    reply.header('cache-control', 'no-store');
+    if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
     reply.header('x-content-type-options', 'nosniff');
   });
 

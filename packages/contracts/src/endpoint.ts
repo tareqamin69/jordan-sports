@@ -33,6 +33,6 @@ type Field<E, K extends 'params' | 'query' | 'body'> = E extends {
 
 export type EndpointInput<E extends Endpoint> = Field<E, 'params'> &
   Field<E, 'query'> &
-  Field<E, 'body'> & { idempotencyKey?: string };
+  Field<E, 'body'> & { idempotencyKey?: string; file?: Blob };
 
 export type EndpointOutput<E extends Endpoint> = z.output<E['response']>;

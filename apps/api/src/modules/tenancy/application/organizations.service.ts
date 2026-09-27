@@ -78,7 +78,7 @@ export class OrganizationsService {
   }
 
   async create(
-    adminUserId: string,
+    adminUserId: string | null,
     input: { slug: string; name: LocalizedText; owner: { phone: string; displayName: string } },
     meta: RequestMeta,
   ): Promise<OrganizationDetail> {
@@ -103,7 +103,7 @@ export class OrganizationsService {
           .execute();
         await this.audit.record(
           {
-            actorType: 'admin',
+            actorType: adminUserId ? 'admin' : 'system',
             actorUserId: adminUserId,
             action: 'organization.created',
             targetType: 'organization',

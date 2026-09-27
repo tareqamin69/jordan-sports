@@ -2,8 +2,13 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AccountModule } from './modules/account/account.module.js';
 import { AuditModule } from './modules/audit/index.js';
+import { CatalogModule } from './modules/catalog/index.js';
+import { DirectoryModule } from './modules/directory/index.js';
 import { IdentityModule } from './modules/identity/index.js';
+import { ResourcesModule } from './modules/resources/index.js';
 import { TenancyModule } from './modules/tenancy/index.js';
+import { VenueAdminModule } from './modules/venue-admin/venue-admin.module.js';
+import { VenuesModule } from './modules/venues/index.js';
 import { AuthGuard } from './platform/auth/auth.guard.js';
 import type { AppConfig } from './platform/config/config.js';
 import { ConfigModule } from './platform/config/config.module.js';
@@ -32,6 +37,11 @@ export class AppModule {
         IdentityModule.forRoot(config),
         TenancyModule,
         AccountModule,
+        CatalogModule,
+        VenuesModule.forRoot(config),
+        ResourcesModule,
+        DirectoryModule,
+        VenueAdminModule,
       ],
       controllers: [OpenApiController],
       providers: [

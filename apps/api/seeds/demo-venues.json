@@ -1,0 +1,147 @@
+[
+  {
+    "slug": "demo-padel-club",
+    "name": {
+      "ar": "نادي البادل (تجريبي)",
+      "en": "Padel Club (Demo)"
+    },
+    "description": {
+      "ar": "ملعب تجريبي لأغراض التطوير فقط. ثلاثة ملاعب بادل مغطاة.",
+      "en": "Demo venue for development only. Three indoor padel courts."
+    },
+    "area": "sweifieh",
+    "color": "#0b5a37",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب بادل 1",
+          "en": "Padel court 1"
+        },
+        "type": "padel_court",
+        "formats": ["padel.doubles"],
+        "attributes": {
+          "indoor": true,
+          "panoramic": true,
+          "lighting": true
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب بادل 2",
+          "en": "Padel court 2"
+        },
+        "type": "padel_court",
+        "formats": ["padel.doubles"],
+        "attributes": {
+          "indoor": true,
+          "panoramic": false,
+          "lighting": true
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب بادل 3",
+          "en": "Padel court 3"
+        },
+        "type": "padel_court",
+        "formats": ["padel.doubles"],
+        "attributes": {
+          "indoor": true,
+          "panoramic": false,
+          "lighting": true
+        }
+      }
+    ]
+  },
+  {
+    "slug": "demo-football-arena",
+    "name": {
+      "ar": "ساحة كرة القدم (تجريبي)",
+      "en": "Football Arena (Demo)"
+    },
+    "description": {
+      "ar": "ملعب تجريبي لأغراض التطوير فقط. ملعب يُقسم إلى نصفين أو يُحجز كاملًا.",
+      "en": "Demo venue for development only. One pitch that can be split into two halves or booked whole."
+    },
+    "area": "khalda",
+    "color": "#087242",
+    "resources": [
+      {
+        "name": {
+          "ar": "الملعب أ (خماسي)",
+          "en": "Pitch A (5-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.five_a_side"],
+        "attributes": {
+          "surface": "artificial_grass",
+          "lighting": true
+        }
+      },
+      {
+        "name": {
+          "ar": "الملعب ب (خماسي)",
+          "en": "Pitch B (5-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.five_a_side"],
+        "attributes": {
+          "surface": "artificial_grass",
+          "lighting": true
+        }
+      },
+      {
+        "name": {
+          "ar": "الملعب الكامل (سباعي)",
+          "en": "Full pitch (7-a-side)"
+        },
+        "type": "football_pitch",
+        "formats": ["football.seven_a_side"],
+        "attributes": {
+          "surface": "artificial_grass",
+          "lighting": true
+        },
+        "combines": [0, 1]
+      }
+    ]
+  },
+  {
+    "slug": "demo-tennis-center",
+    "name": {
+      "ar": "مركز التنس (تجريبي)",
+      "en": "Tennis Center (Demo)"
+    },
+    "description": {
+      "ar": "ملعب تجريبي لأغراض التطوير فقط. ملعبا تنس بأرضية صلبة.",
+      "en": "Demo venue for development only. Two hard courts."
+    },
+    "area": "dabouq",
+    "color": "#0a4a2f",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب تنس 1",
+          "en": "Tennis court 1"
+        },
+        "type": "tennis_court",
+        "formats": ["tennis.singles", "tennis.doubles"],
+        "attributes": {
+          "surface": "hard_court",
+          "lighting": true
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب تنس 2",
+          "en": "Tennis court 2"
+        },
+        "type": "tennis_court",
+        "formats": ["tennis.singles", "tennis.doubles"],
+        "attributes": {
+          "surface": "hard_court",
+          "lighting": false
+        }
+      }
+    ]
+  }
+]

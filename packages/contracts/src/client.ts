@@ -50,15 +50,17 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       const qs = search.toString();
       if (qs) url += `?${qs}`;
     }
+    const file = (input as { file?: Blob } | undefined)?.file;
     const headers: Record<string, string> = { accept: 'application/json', ...options.headers };
     if (body !== undefined) headers['content-type'] = 'application/json';
+    if (file) headers['content-type'] = file.type || 'application/octet-stream';
     if (input?.idempotencyKey) headers['idempotency-key'] = input.idempotencyKey;
 
     const response = await doFetch(url, {
       method: endpoint.method,
       headers,
       credentials: 'include',
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: JSON.stringify(body) } : file ? { body: file } : {}),
     });
     const text = await response.text();
     const json: unknown = text ? JSON.parse(text) : null;

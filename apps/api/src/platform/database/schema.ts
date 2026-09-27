@@ -42,6 +42,64 @@ export interface AuditAuditLogs {
   user_agent: string | null;
 }
 
+export interface CatalogAmenities {
+  id: Generated<string>;
+  key: string;
+  name: Json;
+  sort_order: Generated<number>;
+}
+
+export interface CatalogAreas {
+  city_id: string;
+  id: Generated<string>;
+  key: string;
+  name: Json;
+  sort_order: Generated<number>;
+}
+
+export interface CatalogCities {
+  country_code: string;
+  id: Generated<string>;
+  key: string;
+  name: Json;
+  sort_order: Generated<number>;
+  timezone: string;
+}
+
+export interface CatalogResourceTypeFormats {
+  resource_type_id: string;
+  sport_format_id: string;
+}
+
+export interface CatalogResourceTypes {
+  active: Generated<boolean>;
+  attribute_schema: Generated<Json>;
+  id: Generated<string>;
+  key: string;
+  name: Json;
+  sort_order: Generated<number>;
+}
+
+export interface CatalogSportFormats {
+  active: Generated<boolean>;
+  default_duration_minutes: number;
+  id: Generated<string>;
+  key: string;
+  max_players: number;
+  min_players: number;
+  name: Json;
+  sort_order: Generated<number>;
+  sport_id: string;
+}
+
+export interface CatalogSports {
+  active: Generated<boolean>;
+  id: Generated<string>;
+  key: string;
+  name: Json;
+  sort_order: Generated<number>;
+}
+
 export interface IdentityOtpChallenges {
   attempts: Generated<number>;
   code_hash: string;
@@ -93,6 +151,47 @@ export interface IdentityUsers {
   updated_at: Generated<Timestamp>;
 }
 
+export interface ResourceBookingPolicies {
+  buffer_after_minutes: Generated<number>;
+  buffer_before_minutes: Generated<number>;
+  hold_minutes: Generated<number>;
+  max_advance_days: Generated<number>;
+  min_lead_minutes: Generated<number>;
+  resource_id: string;
+  slot_durations: number[];
+  start_alignment_minutes: Generated<number>;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface ResourceResourceFormats {
+  resource_id: string;
+  sport_format_id: string;
+}
+
+export interface ResourceResources {
+  attributes: Generated<Json>;
+  created_at: Generated<Timestamp>;
+  facility_id: string | null;
+  id: string;
+  name: Json;
+  resource_type_id: string;
+  sort_order: Generated<number>;
+  status: Generated<string>;
+  updated_at: Generated<Timestamp>;
+  venue_id: string;
+}
+
+export interface ResourceResourceUnits {
+  resource_id: string;
+  unit_id: string;
+}
+
+export interface ResourceUnits {
+  created_at: Generated<Timestamp>;
+  id: string;
+  venue_id: string;
+}
+
 export interface TenancyMemberships {
   created_at: Generated<Timestamp>;
   id: string;
@@ -110,13 +209,76 @@ export interface TenancyOrganizations {
   updated_at: Generated<Timestamp>;
 }
 
+export interface VenueFacilities {
+  archived_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  id: string;
+  name: Json;
+  sort_order: Generated<number>;
+  venue_id: string;
+}
+
+export interface VenueMedia {
+  byte_size: number;
+  content_type: string;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  height: number;
+  id: string;
+  sort_order: Generated<number>;
+  storage_key: string;
+  venue_id: string;
+  width: number;
+}
+
+export interface VenueVenueAmenities {
+  amenity_id: string;
+  venue_id: string;
+}
+
+export interface VenueVenues {
+  address: Generated<Json>;
+  archived_at: Timestamp | null;
+  area_id: string | null;
+  business_day_start_minute: Generated<number>;
+  city_id: string;
+  contact_phone: string | null;
+  created_at: Generated<Timestamp>;
+  currency: Generated<string>;
+  description: Generated<Json>;
+  id: string;
+  location: string | null;
+  name: Json;
+  organization_id: string;
+  slug: string;
+  status: Generated<string>;
+  timezone: Generated<string>;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface DB {
   'audit.audit_logs': AuditAuditLogs;
+  'catalog.amenities': CatalogAmenities;
+  'catalog.areas': CatalogAreas;
+  'catalog.cities': CatalogCities;
+  'catalog.resource_type_formats': CatalogResourceTypeFormats;
+  'catalog.resource_types': CatalogResourceTypes;
+  'catalog.sport_formats': CatalogSportFormats;
+  'catalog.sports': CatalogSports;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;
   'identity.sessions': IdentitySessions;
   'identity.totp_credentials': IdentityTotpCredentials;
   'identity.users': IdentityUsers;
+  'resource.booking_policies': ResourceBookingPolicies;
+  'resource.resource_formats': ResourceResourceFormats;
+  'resource.resource_units': ResourceResourceUnits;
+  'resource.resources': ResourceResources;
+  'resource.units': ResourceUnits;
   'tenancy.memberships': TenancyMemberships;
   'tenancy.organizations': TenancyOrganizations;
+  'venue.facilities': VenueFacilities;
+  'venue.media': VenueMedia;
+  'venue.venue_amenities': VenueVenueAmenities;
+  'venue.venues': VenueVenues;
 }

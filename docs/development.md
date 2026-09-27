@@ -32,6 +32,7 @@ pnpm db:migrate           # applies apps/api/migrations to DATABASE_URL
 | `pnpm db:migrate` / `pnpm db:status` | Apply / inspect SQL migrations (status exits 1 if anything is pending) |
 | `pnpm infra:up` / `pnpm infra:down` | Start / stop local infrastructure |
 | `pnpm --filter @jordan-sports/api db:codegen` | Regenerate Kysely types from the migrated database (commit the result) |
+| `pnpm --filter @jordan-sports/api seed:demo` | Development only: create three demo venues (idempotent) |
 | `ADMIN_PASSWORD=… pnpm --filter @jordan-sports/api admin:create -- --email … --name …` | Create a platform staff account; prints the authenticator secret once |
 
 CI (`.github/workflows/ci.yml`) runs the same steps in this order: format, repository checks,

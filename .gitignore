@@ -28,3 +28,6 @@ test-results/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# local media storage (development)
+.data/

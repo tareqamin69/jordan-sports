@@ -80,3 +80,5 @@ export const pageQuerySchema = z.object({
 
 export const page = <T extends z.ZodType>(item: T) =>
   z.object({ items: z.array(item), nextCursor: z.string().nullable() });
+
+export const reasonSchemaBase = z.object({ reason: z.string().trim().min(3).max(500) });

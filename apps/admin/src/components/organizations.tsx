@@ -25,6 +25,7 @@ import { Link } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { VenueList } from './venues/venue-list';
 
 export function OrganizationsPage() {
   const t = useTranslations('admin.organizations');
@@ -286,6 +287,9 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
             </Button>
           </form>
         </Card>
+        <div className="lg:col-span-2">
+          <VenueList organizationId={organizationId} />
+        </div>
       </div>
     </>
   );

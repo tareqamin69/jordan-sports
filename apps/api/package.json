@@ -13,7 +13,8 @@
     "db:migrate": "node dist/platform/database/cli.js migrate",
     "db:status": "node dist/platform/database/cli.js status",
     "db:codegen": "kysely-codegen --dialect postgres --out-file src/platform/database/schema.ts --include-pattern \"{identity,tenancy,audit,catalog,venue,resource,scheduling,pricing,booking,platform}.*\" && prettier --write src/platform/database/schema.ts",
-    "admin:create": "node dist/cli/admin.js create"
+    "admin:create": "node dist/cli/admin.js create",
+    "seed:demo": "node dist/cli/seed-demo.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
@@ -30,6 +31,7 @@
     "pino": "10.3.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
+    "sharp": "0.35.4",
     "zod": "4.6.5"
   },
   "devDependencies": {

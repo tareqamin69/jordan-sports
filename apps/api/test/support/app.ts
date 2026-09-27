@@ -207,3 +207,101 @@ export async function resetRateLimits(app: NestFastifyApplication, subject: stri
   const keys = await redis.keys(`rl:*:${subject}:*`);
   if (keys.length > 0) await redis.del(...keys);
 }
+
+/** Creates an organization through the admin API and returns its id and owner phone. */
+export async function createOrganization(
+  app: NestFastifyApplication,
+  adminCookie: string,
+): Promise<{ id: string; ownerPhone: string }> {
+  const ownerPhone = randomPhone();
+  const r = await call(app, {
+    method: 'POST',
+    url: '/v1/admin/organizations',
+    cookie: adminCookie,
+    body: {
+      slug: `org-${Date.now()}-${randomInt(0, 1e6)}`,
+      name: { ar: 'منشأة اختبار', en: 'Test Org' },
+      owner: { phone: ownerPhone, displayName: 'Owner' },
+    },
+  });
+  if (r.statusCode !== 201) throw new Error(`Create organization failed: ${r.body}`);
+  return { id: (r.json() as { id: string }).id, ownerPhone };
+}
+
+export interface CatalogFixture {
+  cityId: string;
+  areaId: string;
+  types: Record<string, { id: string; sportFormatIds: string[] }>;
+  formats: Record<string, string>;
+  amenityIds: string[];
+}
+
+/** Looks up reference data by key (keys are test data; the application never uses them). */
+export async function catalogFixture(app: NestFastifyApplication): Promise<CatalogFixture> {
+  const catalog = (await call(app, { method: 'GET', url: '/v1/catalog' })).json() as {
+    sports: Array<{ key: string; formats: Array<{ id: string; key: string }> }>;
+    resourceTypes: Array<{ id: string; key: string; sportFormatIds: string[] }>;
+    amenities: Array<{ id: string }>;
+    cities: Array<{ id: string; key: string; areas: Array<{ id: string }> }>;
+  };
+  const amman = catalog.cities.find((c) => c.key === 'amman')!;
+  return {
+    cityId: amman.id,
+    areaId: amman.areas[0]!.id,
+    types: Object.fromEntries(
+      catalog.resourceTypes.map((t) => [t.key, { id: t.id, sportFormatIds: t.sportFormatIds }]),
+    ),
+    formats: Object.fromEntries(
+      catalog.sports.flatMap((s) => s.formats.map((f) => [`${s.key}.${f.key}`, f.id])),
+    ),
+    amenityIds: catalog.amenities.map((a) => a.id),
+  };
+}
+
+/** Creates a venue with one active resource of the given type (default: padel court). */
+export async function createVenue(
+  app: NestFastifyApplication,
+  adminCookie: string,
+  organizationId: string,
+  options: { approve?: boolean; typeKey?: string; formatKey?: string; slug?: string } = {},
+): Promise<{ venueId: string; slug: string; resourceIds: string[] }> {
+  const fx = await catalogFixture(app);
+  const slug = options.slug ?? `venue-${Date.now()}-${randomInt(0, 1e6)}`;
+  const venue = await call(app, {
+    method: 'POST',
+    url: `/v1/admin/organizations/${organizationId}/venues`,
+    cookie: adminCookie,
+    body: {
+      slug,
+      name: { ar: 'ملعب الاختبار', en: 'Test Venue' },
+      cityId: fx.cityId,
+      areaId: fx.areaId,
+    },
+  });
+  if (venue.statusCode !== 201) throw new Error(`Create venue failed: ${venue.body}`);
+  const venueId = (venue.json() as { id: string }).id;
+  const typeKey = options.typeKey ?? 'padel_court';
+  const formatKey = options.formatKey ?? 'padel.doubles';
+  const resource = await call(app, {
+    method: 'POST',
+    url: `/v1/admin/venues/${venueId}/resources`,
+    cookie: adminCookie,
+    body: {
+      name: { ar: 'ملعب 1', en: 'Court 1' },
+      resourceTypeId: fx.types[typeKey]!.id,
+      sportFormatIds: [fx.formats[formatKey]],
+    },
+  });
+  if (resource.statusCode !== 201) throw new Error(`Create resource failed: ${resource.body}`);
+  if (options.approve) {
+    const r = await call(app, {
+      method: 'POST',
+      url: `/v1/admin/venues/${venueId}/status`,
+      cookie: adminCookie,
+      body: { status: 'approved', reason: 'Pilot venue verified' },
+    });
+    if (r.statusCode !== 201) throw new Error(`Approve failed: ${r.body}`);
+  }
+  const resources = (resource.json() as { resources: Array<{ id: string }> }).resources;
+  return { venueId, slug, resourceIds: resources.map((r) => r.id) };
+}

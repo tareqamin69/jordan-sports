@@ -54,7 +54,15 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser } },
     rules: {
       // All user-facing text comes from the i18n catalogs (docs/architecture.md §M).
-      'react/jsx-no-literals': ['error', { noStrings: true, ignoreProps: true }],
+      // Punctuation needs no translation.
+      'react/jsx-no-literals': [
+        'error',
+        {
+          noStrings: true,
+          ignoreProps: true,
+          allowedStrings: ['·', '—', '–', '/', ':', '(', ')', '×'],
+        },
+      ],
     },
   },
 );
