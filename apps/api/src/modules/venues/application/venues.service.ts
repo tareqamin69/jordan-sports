@@ -23,7 +23,7 @@ export interface VenueRow {
   status: VenueStatus;
   timezone: string;
   currency: string;
-  cityId: string;
+  governorateId: string;
   areaId: string | null;
   address: Localized;
   location: { lat: number; lng: number } | null;
@@ -92,7 +92,7 @@ export class VenuesService {
       status: r.status as VenueStatus,
       timezone: r.timezone,
       currency: r.currency,
-      cityId: r.city_id,
+      governorateId: r.city_id,
       areaId: r.area_id,
       address: r.address as Localized,
       location:
@@ -155,7 +155,7 @@ export class VenuesService {
     if (input.description !== undefined) values.description = JSON.stringify(input.description);
     if (input.address !== undefined) values.address = JSON.stringify(input.address);
     if (input.areaId !== undefined) values.area_id = input.areaId;
-    if (input.cityId !== undefined) values.city_id = input.cityId;
+    if (input.governorateId !== undefined) values.city_id = input.governorateId;
     if (input.businessDayStartMinute !== undefined)
       values.business_day_start_minute = input.businessDayStartMinute;
     const phone = phoneOrNull(input.contactPhone);
@@ -182,9 +182,12 @@ export class VenuesService {
     }
   }
 
-  private async validateProfile(input: Partial<VenueProfileInput>, cityId: string): Promise<void> {
-    await this.catalog.city(cityId);
-    await this.catalog.assertArea(cityId, input.areaId);
+  private async validateProfile(
+    input: Partial<VenueProfileInput>,
+    governorateId: string,
+  ): Promise<void> {
+    await this.catalog.governorate(governorateId);
+    await this.catalog.assertArea(governorateId, input.areaId);
     if (input.amenityIds) await this.catalog.assertAmenities(input.amenityIds);
   }
 
@@ -196,8 +199,8 @@ export class VenuesService {
   }
 
   async create(organizationId: string, input: VenueProfileInput, actor: Actor): Promise<string> {
-    await this.validateProfile(input, input.cityId);
-    const city = await this.catalog.city(input.cityId);
+    await this.validateProfile(input, input.governorateId);
+    const governorate = await this.catalog.governorate(input.governorateId);
     const org = await this.db
       .selectFrom('tenancy.organizations')
       .select('id')
@@ -214,15 +217,15 @@ export class VenuesService {
             organization_id: organizationId,
             slug: input.slug,
             name: JSON.stringify(input.name),
-            city_id: input.cityId,
-            timezone: city.timezone,
+            city_id: input.governorateId,
+            timezone: governorate.timezone,
           })
           .execute();
         await this.writeProfile(tx, id, {
           ...input,
           slug: undefined,
           name: undefined,
-          cityId: undefined,
+          governorateId: undefined,
         });
         await this.audit.record(
           {
@@ -246,10 +249,10 @@ export class VenuesService {
 
   async update(venueId: string, patch: Partial<VenueProfileInput>, actor: Actor): Promise<void> {
     const venue = await this.find(venueId);
-    const cityId = patch.cityId ?? venue.cityId;
+    const governorateId = patch.governorateId ?? venue.governorateId;
     await this.validateProfile(
       { ...patch, areaId: patch.areaId === undefined ? venue.areaId : patch.areaId },
-      cityId,
+      governorateId,
     );
     try {
       await this.db.transaction().execute(async (tx) => {
@@ -315,6 +318,8 @@ export class VenuesService {
         tx,
       );
     });
+    // Approval/suspension changes which sports have an offering venue.
+    this.catalog.invalidate();
   }
 
   async addFacility(venueId: string, name: Localized, actor: Actor): Promise<void> {

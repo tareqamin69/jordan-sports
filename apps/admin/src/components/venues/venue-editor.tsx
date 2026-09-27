@@ -160,7 +160,7 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
   });
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
-  const areas = catalog.cities.find((c) => c.id === venue.cityId)?.areas ?? [];
+  const areas = catalog.governorates.find((g) => g.id === venue.governorateId)?.areas ?? [];
 
   const save = useVenueMutation(venue.id, () => {
     const name = localized(f.nameAr, f.nameEn);

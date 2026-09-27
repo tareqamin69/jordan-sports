@@ -40,7 +40,7 @@ describe('pricing', () => {
           method: 'POST',
           url: `/v1/admin/organizations/${org.id}/venues`,
           cookie: admin,
-          body: { slug, name: { en: 'Pricing Club' }, cityId: fx.cityId },
+          body: { slug, name: { en: 'Pricing Club' }, governorateId: fx.governorateId },
         })
       ).json() as { id: string }
     ).id;

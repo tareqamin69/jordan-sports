@@ -29,7 +29,7 @@ export class DirectoryService {
 
   async list(filters: {
     sport?: string;
-    city?: string;
+    governorate?: string;
     area?: string;
     date?: string;
     time?: string;
@@ -39,7 +39,7 @@ export class DirectoryService {
     if (filters.date) return this.search({ ...filters, date: filters.date });
     let query = this.db
       .selectFrom('venue.venues as v')
-      .innerJoin('catalog.cities as c', 'c.id', 'v.city_id')
+      .innerJoin('catalog.cities as g', 'g.id', 'v.city_id')
       .leftJoin('catalog.areas as a', 'a.id', 'v.area_id')
       .select('v.id')
       .where('v.status', '=', 'approved')
@@ -47,7 +47,7 @@ export class DirectoryService {
       .orderBy('v.id', 'desc')
       .limit(filters.limit + 1);
     if (filters.cursor) query = query.where('v.id', '<', filters.cursor);
-    if (filters.city) query = query.where('c.key', '=', filters.city);
+    if (filters.governorate) query = query.where('g.key', '=', filters.governorate);
     if (filters.area) query = query.where('a.key', '=', filters.area);
     if (filters.sport) {
       const sport = filters.sport;
@@ -79,7 +79,7 @@ export class DirectoryService {
    */
   private async search(filters: {
     sport?: string;
-    city?: string;
+    governorate?: string;
     area?: string;
     date: string;
     time?: string;

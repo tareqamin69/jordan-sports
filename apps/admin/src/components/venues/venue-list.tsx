@@ -61,12 +61,18 @@ function CreateVenueForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
   const catalog = useCatalog();
   const errorMessage = useErrorMessage();
-  const [form, setForm] = useState({ slug: '', nameAr: '', nameEn: '', cityId: '', areaId: '' });
+  const [form, setForm] = useState({
+    slug: '',
+    nameAr: '',
+    nameEn: '',
+    governorateId: '',
+    areaId: '',
+  });
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
-  const cities = catalog.data?.cities ?? [];
-  const cityId = form.cityId || cities[0]?.id || '';
-  const areas = cities.find((c) => c.id === cityId)?.areas ?? [];
+  const governorates = catalog.data?.governorates ?? [];
+  const governorateId = form.governorateId || governorates[0]?.id || '';
+  const areas = governorates.find((g) => g.id === governorateId)?.areas ?? [];
 
   const create = useMutation({
     mutationFn: () =>
@@ -78,7 +84,7 @@ function CreateVenueForm({ organizationId }: { organizationId: string }) {
             ...(form.nameAr.trim() ? { ar: form.nameAr } : {}),
             ...(form.nameEn.trim() ? { en: form.nameEn } : {}),
           },
-          cityId,
+          governorateId,
           areaId: form.areaId || null,
           amenityIds: [],
         },
@@ -125,10 +131,15 @@ function CreateVenueForm({ organizationId }: { organizationId: string }) {
         required
         name="venueSlug"
       />
-      <SelectField label={t('venues.city')} value={cityId} onChange={set('cityId')} name="cityId">
-        {cities.map((c) => (
-          <option key={c.id} value={c.id}>
-            {pick(c.name, locale)}
+      <SelectField
+        label={t('venues.governorate')}
+        value={governorateId}
+        onChange={(e) => setForm((f) => ({ ...f, governorateId: e.target.value, areaId: '' }))}
+        name="governorateId"
+      >
+        {governorates.map((g) => (
+          <option key={g.id} value={g.id}>
+            {pick(g.name, locale)}
           </option>
         ))}
       </SelectField>

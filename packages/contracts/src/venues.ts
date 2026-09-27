@@ -55,7 +55,7 @@ export const venueSummarySchema = z.object({
   id: uuidSchema,
   slug: z.string(),
   name: localizedSchema,
-  city: namedRef,
+  governorate: namedRef,
   area: namedRef.nullable(),
   sports: z.array(namedRef.extend({ icon: z.string() })),
   cover: mediaSchema.nullable(),
@@ -92,11 +92,11 @@ export type PublicVenue = z.infer<typeof publicVenueSchema>;
 export const listVenues = endpoint({
   method: 'GET',
   path: '/v1/venues',
-  summary: 'Approved venues, filterable by sport, city and area',
+  summary: 'Approved venues, filterable by sport, governorate and area',
   auth: 'public',
   query: pageQuerySchema.extend({
     sport: z.string().max(40).optional(),
-    city: z.string().max(40).optional(),
+    governorate: z.string().max(40).optional(),
     area: z.string().max(40).optional(),
     /** Only venues with a free, priced time on this business date (YYYY-MM-DD). */
     date: z
@@ -134,7 +134,7 @@ export const venueProfileInputSchema = z.object({
   slug: slugSchema,
   name: localizedTextSchema(120),
   description: localizedTextSchema(2000).optional(),
-  cityId: uuidSchema,
+  governorateId: uuidSchema,
   areaId: uuidSchema.nullable().optional(),
   address: localizedTextSchema(300).optional(),
   location: locationInput.nullable().optional(),
@@ -165,7 +165,7 @@ export const adminVenueSchema = z.object({
   status: venueStatusSchema,
   timezone: z.string(),
   currency: z.string(),
-  cityId: uuidSchema,
+  governorateId: uuidSchema,
   areaId: uuidSchema.nullable(),
   address: localizedSchema,
   location: z.object({ lat: z.number(), lng: z.number() }).nullable(),

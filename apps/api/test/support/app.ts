@@ -229,7 +229,7 @@ export async function createOrganization(
 }
 
 export interface CatalogFixture {
-  cityId: string;
+  governorateId: string;
   areaId: string;
   types: Record<string, { id: string; sportFormatIds: string[] }>;
   formats: Record<string, string>;
@@ -242,11 +242,11 @@ export async function catalogFixture(app: NestFastifyApplication): Promise<Catal
     sports: Array<{ key: string; formats: Array<{ id: string; key: string }> }>;
     resourceTypes: Array<{ id: string; key: string; sportFormatIds: string[] }>;
     amenities: Array<{ id: string }>;
-    cities: Array<{ id: string; key: string; areas: Array<{ id: string }> }>;
+    governorates: Array<{ id: string; key: string; areas: Array<{ id: string }> }>;
   };
-  const amman = catalog.cities.find((c) => c.key === 'amman')!;
+  const amman = catalog.governorates.find((c) => c.key === 'amman')!;
   return {
-    cityId: amman.id,
+    governorateId: amman.id,
     areaId: amman.areas[0]!.id,
     types: Object.fromEntries(
       catalog.resourceTypes.map((t) => [t.key, { id: t.id, sportFormatIds: t.sportFormatIds }]),
@@ -274,7 +274,7 @@ export async function createVenue(
     body: {
       slug,
       name: { ar: 'ملعب الاختبار', en: 'Test Venue' },
-      cityId: fx.cityId,
+      governorateId: fx.governorateId,
       areaId: fx.areaId,
     },
   });

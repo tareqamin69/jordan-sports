@@ -56,9 +56,12 @@ export class VenueViewsService {
   }
 
   private place(catalog: Catalog, venue: VenueRow) {
-    const city = catalog.cities.find((c) => c.id === venue.cityId)!;
-    const area = city.areas.find((a) => a.id === venue.areaId) ?? null;
-    return { city: { id: city.id, key: city.key, name: city.name }, area };
+    const governorate = catalog.governorates.find((g) => g.id === venue.governorateId)!;
+    const area = governorate.areas.find((a) => a.id === venue.areaId) ?? null;
+    return {
+      governorate: { id: governorate.id, key: governorate.key, name: governorate.name },
+      area,
+    };
   }
 
   /** Lowest active price for the shortest priced booking length. */
@@ -150,7 +153,7 @@ export class VenueViewsService {
       status: venue.status,
       timezone: venue.timezone,
       currency: venue.currency,
-      cityId: venue.cityId,
+      governorateId: venue.governorateId,
       areaId: venue.areaId,
       address: venue.address,
       location: venue.location,

@@ -21,7 +21,7 @@ export function VenueCard({
   const href = `/venues/${venue.slug}`;
   const place = [
     venue.area ? pick(venue.area.name, locale) : null,
-    pick(venue.city.name, locale),
+    pick(venue.governorate.name, locale),
   ].filter(Boolean) as string[];
   return (
     <article

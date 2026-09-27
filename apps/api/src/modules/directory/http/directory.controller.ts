@@ -41,7 +41,7 @@ export class DirectoryController {
       limit: q.limit,
       ...(q.cursor ? { cursor: q.cursor } : {}),
       ...(q.sport ? { sport: q.sport } : {}),
-      ...(q.city ? { city: q.city } : {}),
+      ...(q.governorate ? { governorate: q.governorate } : {}),
       ...(q.area ? { area: q.area } : {}),
       ...(q.date ? { date: q.date } : {}),
       ...(q.time ? { time: q.time } : {}),

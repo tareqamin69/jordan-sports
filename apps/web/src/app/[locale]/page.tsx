@@ -18,8 +18,10 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations('web.home');
   const [catalog, venues] = await Promise.all([
     serverApi(getCatalog),
-    serverApi(listVenues, { query: { limit: 6, city: 'amman' } }),
+    serverApi(listVenues, { query: { limit: 6 } }),
   ]);
+  // Players only see sports that at least one approved venue actually offers.
+  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
 
   return (
     <main className="flex-1">
@@ -36,8 +38,8 @@ export default async function HomePage({ params }: Props) {
           <h2 id="sports-heading" className="text-xl font-bold">
             {t('sportsTitle')}
           </h2>
-          <ul className="mt-3 grid grid-cols-3 gap-3">
-            {catalog.sports.map((sport) => (
+          <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            {offeredSports.map((sport) => (
               <li key={sport.id}>
                 <Link
                   href={{ pathname: '/venues', query: { sport: sport.key } }}

@@ -121,7 +121,7 @@ export async function arrangeVenue(
   const catalog = (await (await api.get('/v1/catalog')).json()) as {
     sports: Array<{ key: string; formats: Array<{ id: string; key: string }> }>;
     resourceTypes: Array<{ id: string; key: string }>;
-    cities: Array<{ id: string; key: string }>;
+    governorates: Array<{ id: string; key: string }>;
   };
   const suffix = `${Date.now()}-${randomInt(0, 1e6)}`;
   const ownerPhone = randomPhone();
@@ -140,7 +140,7 @@ export async function arrangeVenue(
       data: {
         slug,
         name: { en: `E2E Venue ${suffix}`, ar: 'ملعب تجريبي' },
-        cityId: catalog.cities.find((c) => c.key === 'amman')!.id,
+        governorateId: catalog.governorates.find((c) => c.key === 'amman')!.id,
       },
     })
   ).json();

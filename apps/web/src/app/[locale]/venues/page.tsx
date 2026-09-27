@@ -11,7 +11,13 @@ export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ sport?: string; area?: string; date?: string; time?: string }>;
+  searchParams: Promise<{
+    sport?: string;
+    governorate?: string;
+    area?: string;
+    date?: string;
+    time?: string;
+  }>;
 };
 
 const KEY = /^[a-z0-9_]{1,40}$/;
@@ -36,6 +42,8 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
   const query = await searchParams;
   const sport = query.sport && KEY.test(query.sport) ? query.sport : undefined;
+  const governorate =
+    query.governorate && KEY.test(query.governorate) ? query.governorate : undefined;
   const area = query.area && KEY.test(query.area) ? query.area : undefined;
   const date = query.date && DATE.test(query.date) ? query.date : undefined;
   const time = date && query.time && TIME.test(query.time) ? query.time : undefined;
@@ -45,7 +53,7 @@ export default async function VenuesPage({ params, searchParams }: Props) {
     serverApi(listVenues, {
       query: {
         limit: 60,
-        city: 'amman',
+        ...(governorate ? { governorate } : {}),
         ...(sport ? { sport } : {}),
         ...(area ? { area } : {}),
         ...(date ? { date } : {}),
@@ -62,7 +70,7 @@ export default async function VenuesPage({ params, searchParams }: Props) {
       </h1>
       <p className="mt-1 text-ink-muted">{date ? t('searchDescription') : t('description')}</p>
 
-      <SearchBar catalog={catalog} values={{ sport, area, date, time }} className="mt-5" />
+      <SearchBar catalog={catalog} values={{ sport, governorate, area, date, time }} className="mt-5" />
 
       {venues.items.length === 0 ? (
         <p className="mt-10 text-ink-muted">{date ? t('emptySearch') : t('empty')}</p>

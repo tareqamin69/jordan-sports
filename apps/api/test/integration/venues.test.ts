@@ -29,16 +29,26 @@ describe('catalog, venues and resources', () => {
     const r = await call(t.app, { method: 'GET', url: '/v1/catalog' });
     expect(r.statusCode).toBe(200);
     const catalog = r.json() as {
-      sports: Array<{ key: string; name: { ar: string; en: string }; formats: unknown[] }>;
+      sports: Array<{ key: string; name: { ar: string; en: string }; icon: string; formats: unknown[] }>;
       resourceTypes: Array<{ attributes: unknown[] }>;
-      cities: Array<{ timezone: string; areas: unknown[] }>;
+      governorates: Array<{ key: string; timezone: string; areas: unknown[] }>;
+      offeredSportIds: string[];
     };
-    expect(catalog.sports.map((s) => s.key)).toEqual(['football', 'padel', 'tennis']);
+    // Football/padel/tennis lead by sort_order; the catalog also covers the rest of Jordan's
+    // common sports (basketball, volleyball, squash, badminton, ... — see migration 0008).
+    expect(catalog.sports.slice(0, 3).map((s) => s.key)).toEqual(['football', 'padel', 'tennis']);
+    expect(catalog.sports.length).toBeGreaterThanOrEqual(14);
     expect(catalog.sports[0]!.name).toEqual({ ar: 'كرة القدم', en: 'Football' });
     expect(catalog.sports.every((s) => s.formats.length > 0)).toBe(true);
-    expect(catalog.resourceTypes.every((rt) => rt.attributes.length > 0)).toBe(true);
-    expect(catalog.cities[0]).toMatchObject({ timezone: 'Asia/Amman' });
-    expect(catalog.cities[0]!.areas.length).toBeGreaterThan(5);
+    expect(catalog.sports.every((s) => s.icon.length > 0)).toBe(true);
+    expect(catalog.resourceTypes.every((rt) => rt.attributes.length >= 0)).toBe(true);
+    // Every governorate of Jordan is present, not only Amman.
+    expect(catalog.governorates.length).toBe(12);
+    const amman = catalog.governorates.find((g) => g.key === 'amman')!;
+    expect(amman).toMatchObject({ timezone: 'Asia/Amman' });
+    expect(amman.areas.length).toBeGreaterThan(5);
+    const irbid = catalog.governorates.find((g) => g.key === 'irbid')!;
+    expect(irbid.areas.length).toBeGreaterThan(0);
   });
 
   it('runs the venue lifecycle: draft (hidden) → approved (public) → suspended (hidden)', async () => {
@@ -66,7 +76,7 @@ describe('catalog, venues and resources', () => {
     });
     const list = await call(t.app, {
       method: 'GET',
-      url: '/v1/venues?sport=padel&city=amman&limit=100',
+      url: '/v1/venues?sport=padel&governorate=amman&limit=100',
     });
     expect((list.json() as { items: Array<{ slug: string }> }).items.map((v) => v.slug)).toContain(
       slug,
@@ -105,7 +115,7 @@ describe('catalog, venues and resources', () => {
       method: 'POST',
       url: `/v1/admin/organizations/${org.id}/venues`,
       cookie: admin,
-      body: { slug: `empty-${Date.now()}`, name: { ar: 'فارغ' }, cityId: fx.cityId },
+      body: { slug: `empty-${Date.now()}`, name: { ar: 'فارغ' }, governorateId: fx.governorateId },
     });
     const r = await call(t.app, {
       method: 'POST',
@@ -123,7 +133,7 @@ describe('catalog, venues and resources', () => {
       method: 'POST',
       url: `/v1/admin/organizations/${org.id}/venues`,
       cookie: admin,
-      body: { slug, name: { en: 'Dup' }, cityId: fx.cityId },
+      body: { slug, name: { en: 'Dup' }, governorateId: fx.governorateId },
     });
     expect(r.json()).toMatchObject({ code: 'SLUG_TAKEN' });
   });

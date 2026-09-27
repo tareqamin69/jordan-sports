@@ -42,7 +42,7 @@ describe('scheduling: hours, blocks, overrides, availability, calendar', () => {
       method: 'POST',
       url: `/v1/admin/organizations/${org.id}/venues`,
       cookie: admin,
-      body: { slug, name: { en: 'Scheduling Arena' }, cityId: fx.cityId },
+      body: { slug, name: { en: 'Scheduling Arena' }, governorateId: fx.governorateId },
     });
     venueId = (venue.json() as { id: string }).id;
     const add = async (name: string, extra: object = {}) =>

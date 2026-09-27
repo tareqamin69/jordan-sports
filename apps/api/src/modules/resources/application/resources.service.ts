@@ -138,7 +138,7 @@ export class ResourcesService {
     );
     const durations = await this.catalog.defaultDurations(input.sportFormatIds);
 
-    return this.db.transaction().execute(async (tx) => {
+    const createdId = await this.db.transaction().execute(async (tx) => {
       await this.assertFacility(venueId, input.facilityId, tx);
       const id = uuidv7();
 
@@ -220,6 +220,9 @@ export class ResourcesService {
       );
       return id;
     });
+    // A new resource can change which sports have an offering venue.
+    this.catalog.invalidate();
+    return createdId;
   }
 
   async update(
@@ -278,6 +281,8 @@ export class ResourcesService {
         tx,
       );
     });
+    // A status or sport-format change can change which sports have an offering venue.
+    if (input.status || input.sportFormatIds) this.catalog.invalidate();
     return current.venueId;
   }
 }

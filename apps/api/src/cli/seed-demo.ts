@@ -93,7 +93,7 @@ async function main(): Promise<number> {
       org = { id: created.id };
     }
 
-    const city = catalog.cities.find((c) => c.key === 'amman')!;
+    const city = catalog.governorates.find((g) => g.key === 'amman')!;
     const typeId = (key: string) => catalog.resourceTypes.find((t) => t.key === key)!.id;
     const formatId = (ref: string) => {
       const [sport, format] = ref.split('.');
@@ -115,7 +115,7 @@ async function main(): Promise<number> {
           address: demo.address,
           location: demo.location,
           contactPhone: demo.phone,
-          cityId: city.id,
+          governorateId: city.id,
           areaId: city.areas.find((a) => a.key === demo.area)!.id,
           amenityIds: catalog.amenities.slice(0, 4).map((a) => a.id),
         },

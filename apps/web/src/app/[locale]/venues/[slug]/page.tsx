@@ -72,7 +72,7 @@ function jsonLd(venue: PublicVenue, locale: string, url: string): string {
     ...(venue.contactPhone ? { telephone: venue.contactPhone } : {}),
     address: {
       '@type': 'PostalAddress',
-      addressLocality: pick(venue.city.name, locale),
+      addressLocality: pick(venue.governorate.name, locale),
       addressCountry: 'JO',
       ...(pick(venue.address, locale) ? { streetAddress: pick(venue.address, locale) } : {}),
     },
@@ -104,7 +104,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
   const place = [
     pick(venue.address, locale),
     venue.area ? pick(venue.area.name, locale) : '',
-    pick(venue.city.name, locale),
+    pick(venue.governorate.name, locale),
   ].filter(Boolean);
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${t('shareText', { name })} ${url}`)}`;
 
@@ -128,7 +128,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
             {joinList(
               [
                 venue.area ? pick(venue.area.name, locale) : '',
-                pick(venue.city.name, locale),
+                pick(venue.governorate.name, locale),
               ].filter(Boolean),
               locale,
             )}

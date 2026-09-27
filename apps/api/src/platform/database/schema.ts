@@ -168,6 +168,20 @@ export interface CatalogSportFormats {
   sport_id: string;
 }
 
+export interface CatalogSportRequests {
+  created_at: Generated<Timestamp>;
+  id: string;
+  name: string;
+  note: string | null;
+  organization_id: string;
+  rejection_reason: string | null;
+  requested_by: string | null;
+  resolved_at: Timestamp | null;
+  resolved_by: string | null;
+  resolved_sport_id: string | null;
+  status: Generated<string>;
+}
+
 export interface CatalogSports {
   active: Generated<boolean>;
   icon: Generated<string>;
@@ -459,6 +473,7 @@ export interface DB {
   'catalog.resource_type_formats': CatalogResourceTypeFormats;
   'catalog.resource_types': CatalogResourceTypes;
   'catalog.sport_formats': CatalogSportFormats;
+  'catalog.sport_requests': CatalogSportRequests;
   'catalog.sports': CatalogSports;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;

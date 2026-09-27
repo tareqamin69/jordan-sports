@@ -14,6 +14,7 @@ const sections = [
   { href: '/', key: 'dashboard' },
   { href: '/organizations', key: 'organizations' },
   { href: '/users', key: 'users' },
+  { href: '/geography', key: 'geography' },
   { href: '/holidays', key: 'holidays' },
   { href: '/bookings', key: 'bookings' },
   { href: '/audit', key: 'audit' },
