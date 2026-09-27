@@ -51,7 +51,8 @@ export class OccupancyService {
       await tx
         .insertInto('scheduling.occupancies')
         .values(
-          input.unitIds.map((unitId) => ({
+          // Sorted so concurrent transactions touch units in the same order.
+          [...input.unitIds].sort().map((unitId) => ({
             id: uuidv7(),
             venue_id: input.venueId,
             unit_id: unitId,

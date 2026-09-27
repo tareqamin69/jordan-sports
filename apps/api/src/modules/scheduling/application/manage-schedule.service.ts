@@ -10,6 +10,7 @@ import type {
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
+import { transaction } from '../../../platform/database/transaction.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
 import { AuditService } from '../../audit/index.js';
@@ -360,7 +361,7 @@ export class ManageScheduleService {
     };
     const blockId = uuidv7();
     try {
-      await this.db.transaction().execute(async (tx) => {
+      await transaction(this.db, async (tx) => {
         await tx
           .insertInto('scheduling.blocks')
           .values({
