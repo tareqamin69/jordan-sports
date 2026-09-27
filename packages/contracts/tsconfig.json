@@ -1,0 +1,7 @@
+{
+  "extends": "@jordan-sports/config/tsconfig/node-library.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

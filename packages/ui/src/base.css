@@ -1,0 +1,23 @@
+@layer base {
+  :root:lang(ar) {
+    --font-sans: var(--font-arabic);
+  }
+
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Arabic script needs more line height than Latin to avoid clipped diacritics. */
+  :root:lang(ar) body {
+    line-height: 1.8;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}

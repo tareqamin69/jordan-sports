@@ -1,0 +1,16 @@
+{
+  "name": "@jordan-sports/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./styles.css": "./src/styles.css"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/ibm-plex-sans-arabic": "5.3.0"
+  }
+}

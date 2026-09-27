@@ -1,0 +1,7 @@
+/*
+ * Shared design system entry point. Import from an app stylesheet *after*
+ * `@import 'tailwindcss';` so that the theme variables extend Tailwind's theme.
+ */
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';
