@@ -33,6 +33,12 @@ test.describe('venue dashboard (/manage)', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Opening hours saved.')).toBeVisible();
 
+    // A price, so the times are offered publicly.
+    await page.getByRole('link', { name: 'Prices' }).click();
+    await page.locator('input[name="price-90"]').fill('20');
+    await page.getByRole('button', { name: 'Add price band' }).click();
+    await expect(page.getByTestId('price-rules')).toContainText('JOD 20.000');
+
     // Block tomorrow 18:00–19:00 (a booking taken by phone).
     await page.getByRole('link', { name: 'Calendar' }).click();
     await page.getByRole('button', { name: 'Next day' }).click();

@@ -5,6 +5,7 @@ import { AuditModule } from './modules/audit/index.js';
 import { CatalogModule } from './modules/catalog/index.js';
 import { DirectoryModule } from './modules/directory/index.js';
 import { IdentityModule } from './modules/identity/index.js';
+import { PricingModule } from './modules/pricing/index.js';
 import { ResourcesModule } from './modules/resources/index.js';
 import { SchedulingModule } from './modules/scheduling/index.js';
 import { TenancyModule } from './modules/tenancy/index.js';
@@ -43,6 +44,7 @@ export class AppModule {
         ResourcesModule,
         DirectoryModule,
         SchedulingModule,
+        PricingModule,
         VenueAdminModule,
       ],
       controllers: [OpenApiController],

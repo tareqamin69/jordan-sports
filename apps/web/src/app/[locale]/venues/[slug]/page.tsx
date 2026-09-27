@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import { VenueAvailability } from '@/components/venue-availability';
 import { joinList, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
 
@@ -163,6 +164,11 @@ export default async function VenuePage({ params }: Props) {
               <p className="mt-3 whitespace-pre-line text-ink">{pick(venue.description, locale)}</p>
             </section>
           ) : null}
+          <VenueAvailability
+            slug={venue.slug}
+            timezone={venue.timezone}
+            resources={venue.resources}
+          />
           <section>
             <h2 className="text-xl font-bold">{t('resources')}</h2>
             <ul className="mt-3 grid gap-3 sm:grid-cols-2">

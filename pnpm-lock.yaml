@@ -184,6 +184,9 @@ importers:
       '@jordan-sports/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@jordan-sports/money':
+        specifier: workspace:*
+        version: link:../../packages/money
       '@jordan-sports/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -263,6 +266,24 @@ importers:
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.0.2
+        version: 5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+
+  packages/money:
+    devDependencies:
+      '@jordan-sports/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.20.4
+        version: 22.20.4
+      fast-check:
+        specifier: 4.10.2
+        version: 4.10.2
       typescript:
         specifier: ~6.0.3
         version: 6.0.3

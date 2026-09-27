@@ -23,6 +23,10 @@
           "indoor": true,
           "panoramic": true,
           "lighting": true
+        },
+        "prices": {
+          "60": 20000,
+          "90": 28000
         }
       },
       {
@@ -36,6 +40,10 @@
           "indoor": true,
           "panoramic": false,
           "lighting": true
+        },
+        "prices": {
+          "60": 20000,
+          "90": 28000
         }
       },
       {
@@ -49,6 +57,10 @@
           "indoor": true,
           "panoramic": false,
           "lighting": true
+        },
+        "prices": {
+          "60": 20000,
+          "90": 28000
         }
       }
     ]
@@ -76,6 +88,9 @@
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
+        },
+        "prices": {
+          "60": 20000
         }
       },
       {
@@ -88,6 +103,9 @@
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
+        },
+        "prices": {
+          "60": 20000
         }
       },
       {
@@ -101,7 +119,10 @@
           "surface": "artificial_grass",
           "lighting": true
         },
-        "combines": [0, 1]
+        "combines": [0, 1],
+        "prices": {
+          "60": 35000
+        }
       }
     ]
   },
@@ -128,6 +149,9 @@
         "attributes": {
           "surface": "hard_court",
           "lighting": true
+        },
+        "prices": {
+          "60": 12000
         }
       },
       {
@@ -140,6 +164,9 @@
         "attributes": {
           "surface": "hard_court",
           "lighting": false
+        },
+        "prices": {
+          "60": 12000
         }
       }
     ]

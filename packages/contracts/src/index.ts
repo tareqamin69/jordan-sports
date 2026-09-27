@@ -8,3 +8,4 @@ export * from './openapi.js';
 export * from './tenancy.js';
 export * from './venues.js';
 export * from './scheduling.js';
+export * from './pricing.js';

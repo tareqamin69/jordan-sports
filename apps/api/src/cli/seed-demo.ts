@@ -27,6 +27,7 @@ interface DemoResource {
   formats: string[];
   attributes?: Record<string, string | boolean>;
   combines?: number[];
+  prices: Record<string, number>;
 }
 
 interface DemoVenue {
@@ -175,6 +176,58 @@ async function main(): Promise<number> {
           })),
         )
         .execute();
+    }
+    // Prices for demo resources without any: the demo JSON price all day, plus +25% from 18:00.
+    for (const demo of venues) {
+      const venue = await app.get(VenuesService).findBySlug(demo.slug);
+      if (!venue) continue;
+      const resources = await app.get(ResourcesService).listForVenue(venue.id);
+      for (const resource of resources) {
+        const spec = demo.resources.find((r) => r.name.en === resource.name.en);
+        const priced = await db
+          .selectFrom('pricing.price_rules')
+          .select('id')
+          .where('resource_id', '=', resource.id)
+          .executeTakeFirst();
+        if (!spec || priced) continue;
+        const bands = [
+          {
+            start: venue.businessDayStartMinute,
+            end: venue.businessDayStartMinute + 1440,
+            priority: 0,
+            factor: 1,
+            label: null,
+          },
+          { start: 18 * 60, end: 24 * 60, priority: 10, factor: 1.25, label: 'Peak' },
+        ];
+        for (const band of bands) {
+          const ruleId = uuidv7();
+          await db
+            .insertInto('pricing.price_rules')
+            .values({
+              id: ruleId,
+              venue_id: venue.id,
+              resource_id: resource.id,
+              days_of_week: [1, 2, 3, 4, 5, 6, 7],
+              start_minute: band.start,
+              end_minute: band.end,
+              priority: band.priority,
+              currency: venue.currency,
+              label: band.label,
+            })
+            .execute();
+          await db
+            .insertInto('pricing.price_rule_amounts')
+            .values(
+              Object.entries(spec.prices).map(([duration, amount]) => ({
+                rule_id: ruleId,
+                duration_minutes: Number(duration),
+                amount: String(Math.round((amount * band.factor) / 500) * 500),
+              })),
+            )
+            .execute();
+        }
+      }
     }
     console.log(`Demo owner phone (sign in with the dev OTP): ${DEMO_OWNER_PHONE}`);
     return 0;

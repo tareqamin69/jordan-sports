@@ -58,16 +58,6 @@ export const venueAvailabilitySchema = z.object({
 });
 export type VenueAvailability = z.infer<typeof venueAvailabilitySchema>;
 
-export const getVenueAvailability = endpoint({
-  method: 'GET',
-  path: '/v1/venues/:slug/availability',
-  summary: 'Bookable slots of every active resource on a business date (venue-local)',
-  auth: 'public',
-  params: z.object({ slug: z.string().max(60) }),
-  query: z.object({ date: dateSchema }),
-  response: venueAvailabilitySchema,
-});
-
 // ---------------------------------------------------------------------------------------------
 // Venue management (/manage) — venue staff, authorized per organization membership
 // ---------------------------------------------------------------------------------------------

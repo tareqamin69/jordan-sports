@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { AvailabilitySlot, VenueAvailability } from '@jordan-sports/contracts';
+import type { AvailabilitySlot } from '@jordan-sports/contracts';
 import type { Db, DbOrTx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
@@ -96,8 +96,11 @@ export class AvailabilityService {
     return result;
   }
 
-  /** Public availability of every active resource of an approved venue. */
-  async forVenue(slug: string, date: string, now = new Date()): Promise<VenueAvailability> {
+  /**
+   * Raw slots of every active resource of an approved venue on a business date. Prices are attached
+   * by the composition layer (directory), which also decides what the public sees.
+   */
+  async slotsForVenue(slug: string, date: string, now = new Date()) {
     const venue = await this.venues.findBySlug(slug);
     if (!venue || venue.status !== 'approved') throw Errors.notFound();
     this.assertBusinessDate(venue, date, now);
@@ -106,14 +109,10 @@ export class AvailabilityService {
     );
     const inputs = await this.inputs(venue, resources, date, now);
     return {
-      date,
-      timezone: venue.timezone,
+      venue,
       resources: resources.map((r) => {
         const entry = inputs.get(r.id);
-        return {
-          resourceId: r.id,
-          slots: entry ? computeSlots(entry.input).map((s) => toApiSlot(s, venue.timezone)) : [],
-        };
+        return { resource: r, slots: entry ? computeSlots(entry.input) : [] };
       }),
     };
   }

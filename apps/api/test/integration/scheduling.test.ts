@@ -108,6 +108,22 @@ describe('scheduling: hours, blocks, overrides, availability, calendar', () => {
         },
       });
     }
+    // Public availability only lists priced slots: one base price for the whole business day.
+    const priced = await call(t.app, {
+      method: 'POST',
+      url: `/v1/manage/venues/${venueId}/pricing`,
+      cookie: owner,
+      body: {
+        resourceIds: [halfA, halfB, full],
+        rule: {
+          daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+          startMinute: 360,
+          endMinute: 1800,
+          amounts: [{ durationMinutes: 60, amount: 20000 }],
+        },
+      },
+    });
+    expect(priced.statusCode).toBe(201);
   });
 
   afterAll(async () => {

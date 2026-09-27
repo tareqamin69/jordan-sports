@@ -1,8 +1,10 @@
 import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import {
   getVenue,
+  getVenueAvailability,
   listVenues,
   type EndpointOutput,
+  type PricedAvailability,
   type PublicVenue,
 } from '@jordan-sports/contracts';
 import type { FastifyReply } from 'fastify';
@@ -10,6 +12,7 @@ import { z } from 'zod';
 import { Public } from '../../../platform/auth/decorators.js';
 import { parseInput } from '../../../platform/http/validation.js';
 import { MediaService } from '../../venues/index.js';
+import { AvailabilityViewService } from '../application/availability-view.service.js';
 import { DirectoryService } from '../application/directory.service.js';
 
 @Controller()
@@ -18,7 +21,18 @@ export class DirectoryController {
   constructor(
     private readonly directory: DirectoryService,
     private readonly media: MediaService,
+    private readonly availability: AvailabilityViewService,
   ) {}
+
+  @Get(getVenueAvailability.path)
+  availabilityForVenue(
+    @Param() params: unknown,
+    @Query() query: unknown,
+  ): Promise<PricedAvailability> {
+    const { slug } = parseInput(getVenueAvailability.params, params);
+    const { date } = parseInput(getVenueAvailability.query, query);
+    return this.availability.forVenue(slug, date);
+  }
 
   @Get(listVenues.path)
   list(@Query() query: unknown): Promise<EndpointOutput<typeof listVenues>> {

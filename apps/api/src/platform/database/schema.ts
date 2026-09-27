@@ -151,6 +151,29 @@ export interface IdentityUsers {
   updated_at: Generated<Timestamp>;
 }
 
+export interface PricingPriceRuleAmounts {
+  amount: Int8;
+  duration_minutes: number;
+  rule_id: string;
+}
+
+export interface PricingPriceRules {
+  archived_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  currency: string;
+  date_from: string | null;
+  date_to: string | null;
+  days_of_week: number[];
+  end_minute: number;
+  id: string;
+  label: string | null;
+  priority: Generated<number>;
+  resource_id: string;
+  start_minute: number;
+  venue_id: string;
+}
+
 export interface ResourceBookingPolicies {
   buffer_after_minutes: Generated<number>;
   buffer_before_minutes: Generated<number>;
@@ -326,6 +349,8 @@ export interface DB {
   'identity.sessions': IdentitySessions;
   'identity.totp_credentials': IdentityTotpCredentials;
   'identity.users': IdentityUsers;
+  'pricing.price_rule_amounts': PricingPriceRuleAmounts;
+  'pricing.price_rules': PricingPriceRules;
   'resource.booking_policies': ResourceBookingPolicies;
   'resource.resource_formats': ResourceResourceFormats;
   'resource.resource_units': ResourceResourceUnits;

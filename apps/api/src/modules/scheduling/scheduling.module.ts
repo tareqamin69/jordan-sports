@@ -5,7 +5,6 @@ import { ManageScheduleService } from './application/manage-schedule.service.js'
 import { OccupancyService } from './application/occupancy.service.js';
 import { ScheduleDataService } from './application/schedule-data.service.js';
 import { AdminHolidaysController } from './http/admin-holidays.controller.js';
-import { AvailabilityController } from './http/availability.controller.js';
 import { ManageScheduleController } from './http/manage-schedule.controller.js';
 
 @Global()
@@ -17,7 +16,7 @@ import { ManageScheduleController } from './http/manage-schedule.controller.js';
     ManageScheduleService,
     HolidaysService,
   ],
-  controllers: [AvailabilityController, ManageScheduleController, AdminHolidaysController],
+  controllers: [ManageScheduleController, AdminHolidaysController],
   exports: [OccupancyService, ScheduleDataService, AvailabilityService],
 })
 export class SchedulingModule {}

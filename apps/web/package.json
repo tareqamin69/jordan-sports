@@ -12,6 +12,7 @@
   "dependencies": {
     "@jordan-sports/contracts": "workspace:*",
     "@jordan-sports/i18n": "workspace:*",
+    "@jordan-sports/money": "workspace:*",
     "@jordan-sports/ui": "workspace:*",
     "@tanstack/react-query": "5.104.0",
     "next": "16.3.6",
