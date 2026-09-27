@@ -51,6 +51,9 @@ export function bookingQuery(db: DbOrTx) {
       'v.slug as venue_slug',
       'v.name as venue_name',
       'v.contact_phone as venue_phone',
+      'v.address as venue_address',
+      sql<number | null>`ST_Y(v.location::geometry)`.as('venue_lat'),
+      sql<number | null>`ST_X(v.location::geometry)`.as('venue_lng'),
       'r.name as resource_name',
       'u.display_name as user_name',
       'u.phone as user_phone',
@@ -80,6 +83,11 @@ export function toBooking(r: LoadedBooking): Booking {
       slug: r.venue_slug,
       name: r.venue_name as Localized,
       contactPhone: r.venue_phone,
+      address: r.venue_address as Localized,
+      location:
+        r.venue_lat !== null && r.venue_lng !== null
+          ? { lat: Number(r.venue_lat), lng: Number(r.venue_lng) }
+          : null,
     },
     resource: { id: r.resource_id, name: r.resource_name as Localized },
     start: start.toISOString(),

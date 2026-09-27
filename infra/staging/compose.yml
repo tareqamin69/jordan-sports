@@ -4,6 +4,8 @@ name: jordan-sports-staging
 
 x-app: &app
   image: jordan-sports-app:latest
+  # Built locally by the `init` service; never pulled from a registry.
+  pull_policy: never
   env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
   restart: unless-stopped
 
@@ -26,6 +28,7 @@ services:
   init:
     <<: *app
     build: { context: ../.., dockerfile: infra/staging/Dockerfile }
+    pull_policy: build
     restart: 'no'
     working_dir: /app/apps/api
     command:

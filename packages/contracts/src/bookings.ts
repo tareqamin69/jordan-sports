@@ -34,6 +34,8 @@ export const bookingSchema = z.object({
     slug: z.string(),
     name: localizedSchema,
     contactPhone: z.string().nullable(),
+    address: localizedSchema,
+    location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   }),
   resource: z.object({ id: uuidSchema, name: localizedSchema }),
   start: z.string(),

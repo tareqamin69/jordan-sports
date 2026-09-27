@@ -46,6 +46,7 @@ export class OccupancyService {
    */
   async occupy(tx: Tx, input: OccupyInput): Promise<void> {
     if (input.unitIds.length === 0) throw new Error('A resource without units cannot be occupied');
+    await this.lockUnits(tx, input.unitIds);
     await sql`SAVEPOINT occupy`.execute(tx);
     try {
       await tx
@@ -74,6 +75,17 @@ export class OccupancyService {
         throw new OccupancyConflictError('Time is already occupied');
       }
       throw error;
+    }
+  }
+
+  /**
+   * Serializes writers per unit for the rest of the transaction (re-entrant, sorted to avoid lock
+   * cycles). Without it, concurrent inserts checking the exclusion constraint can deadlock each
+   * other repeatedly under heavy contention. Call it before touching other rows of the same slot.
+   */
+  async lockUnits(tx: Tx, unitIds: readonly string[]): Promise<void> {
+    for (const unitId of [...new Set(unitIds)].sort()) {
+      await sql`SELECT pg_advisory_xact_lock(hashtextextended(${unitId}, 0))`.execute(tx);
     }
   }
 

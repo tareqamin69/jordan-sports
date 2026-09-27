@@ -139,6 +139,7 @@ export class BookingsService {
             .executeTakeFirstOrThrow();
           if (Number(active.n) >= MAX_ACTIVE_HOLDS) throw new AppError('HOLD_LIMIT_REACHED', 409);
 
+          await this.occupancy.lockUnits(tx, resource.unitIds);
           await expireHolds(tx, now, { unitIds: resource.unitIds, during });
           await tx
             .insertInto('booking.bookings')
