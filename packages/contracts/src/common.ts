@@ -34,6 +34,8 @@ export const errorCodes = [
   'HOLD_LIMIT_REACHED',
   'NO_PRICE',
   'IDEMPOTENCY_KEY_REUSED',
+  'REQUEST_IN_PROGRESS',
+  'IDEMPOTENCY_KEY_REQUIRED',
   'CANCELLATION_NOT_ALLOWED',
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];

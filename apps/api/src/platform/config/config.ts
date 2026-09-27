@@ -21,6 +21,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_HOST: z.string().min(1).default('127.0.0.1'),
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
+  WORKER_PORT: z.coerce.number().int().min(1).max(65_535).default(4001),
   DATABASE_URL: z
     .string()
     .refine((value) => /^postgres(ql)?:\/\/.+/.test(value), 'must be a postgres:// URL'),
@@ -47,6 +48,8 @@ export interface AppConfig {
   readonly nodeEnv: NodeEnv;
   readonly host: string;
   readonly port: number;
+  /** Health endpoint of the background worker process. */
+  readonly workerPort: number;
   readonly databaseUrl: string;
   readonly databasePoolMax: number;
   readonly databaseAppRole: string;
@@ -81,6 +84,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     nodeEnv: e.NODE_ENV,
     host: e.API_HOST,
     port: e.API_PORT,
+    workerPort: e.WORKER_PORT,
     databaseUrl: e.DATABASE_URL,
     databasePoolMax: e.DATABASE_POOL_MAX,
     databaseAppRole: e.DATABASE_APP_ROLE,

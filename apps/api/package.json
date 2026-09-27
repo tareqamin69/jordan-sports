@@ -7,18 +7,22 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "nest start --watch",
     "start": "node dist/main.http.js",
+    "start:worker": "node dist/main.worker.js",
+    "dev:worker": "node --watch dist/main.worker.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "db:migrate": "node dist/platform/database/cli.js migrate",
     "db:status": "node dist/platform/database/cli.js status",
-    "db:codegen": "kysely-codegen --dialect postgres --date-parser string --out-file src/platform/database/schema.ts --include-pattern \"{identity,tenancy,audit,catalog,venue,resource,scheduling,pricing,booking,platform}.*\" && prettier --write src/platform/database/schema.ts",
+    "db:codegen": "kysely-codegen --dialect postgres --date-parser string --out-file src/platform/database/schema.ts --include-pattern \"{identity,tenancy,audit,catalog,venue,resource,scheduling,pricing,booking,platform,notification}.*\" && prettier --write src/platform/database/schema.ts",
     "admin:create": "node dist/cli/admin.js create",
     "seed:demo": "node dist/cli/seed-demo.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
     "@jordan-sports/contracts": "workspace:*",
+    "@jordan-sports/i18n": "workspace:*",
+    "@jordan-sports/money": "workspace:*",
     "@nestjs/common": "12.1.0",
     "@nestjs/core": "12.1.0",
     "@nestjs/platform-fastify": "12.1.0",
@@ -32,6 +36,7 @@
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
     "sharp": "0.35.4",
+    "use-intl": "4.14.7",
     "zod": "4.6.5"
   },
   "devDependencies": {

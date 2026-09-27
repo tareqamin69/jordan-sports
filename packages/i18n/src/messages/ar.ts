@@ -65,8 +65,23 @@ export const ar = {
       HOLD_LIMIT_REACHED: 'لديك حجوزات قيد الإتمام. أكملها أو ألغِها أولًا.',
       NO_PRICE: 'لا يوجد سعر محدد لهذا الوقت.',
       IDEMPOTENCY_KEY_REUSED: 'تم إرسال هذا الطلب مسبقًا بتفاصيل مختلفة.',
+      REQUEST_IN_PROGRESS: 'جارٍ تنفيذ هذا الطلب بالفعل. يرجى الانتظار قليلًا.',
+      IDEMPOTENCY_KEY_REQUIRED: 'حدث خطأ في هذا الطلب. أعد تحميل الصفحة وحاول مرة أخرى.',
       CANCELLATION_NOT_ALLOWED: 'لم يعد بالإمكان إلغاء هذا الحجز عبر الإنترنت.',
     },
+  },
+  notifications: {
+    bookingConfirmed:
+      'رياضة الأردن: تم تأكيد حجزك {reference} في {venue} ({resource}) يوم {date} الساعة {time}. الدفع في الملعب: {price}.',
+    bookingCancelled:
+      'رياضة الأردن: تم إلغاء حجزك {reference} في {venue} يوم {date} الساعة {time}.',
+    bookingCancelledByVenue:
+      'رياضة الأردن: ألغى {venue} حجزك {reference} يوم {date} الساعة {time}. السبب: {reason}',
+    venueNewBooking:
+      'رياضة الأردن: حجز جديد {reference} — {resource}، {date} الساعة {time}، {customer} ({phone}). الدفع في الملعب: {price}.',
+    venueBookingCancelled:
+      'رياضة الأردن: ألغى اللاعب الحجز {reference} — {resource}، {date} الساعة {time}.',
+    noPrice: 'السعر غير محدد',
   },
   web: {
     metadata: {

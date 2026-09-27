@@ -88,11 +88,7 @@ export class ManageScheduleController {
   ): Promise<VenueSchedule> {
     const { venueId } = parseInput(updateScheduleSettings.params, params);
     const input = parseInput(updateScheduleSettings.body, body);
-    return this.schedule.updateSettings(
-      staff(actor, request),
-      venueId,
-      input.closedOnPublicHolidays,
-    );
+    return this.schedule.updateSettings(staff(actor, request), venueId, input);
   }
 
   @Post(createOverride.path)

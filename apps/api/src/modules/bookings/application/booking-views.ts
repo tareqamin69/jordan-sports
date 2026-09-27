@@ -1,0 +1,120 @@
+import type { Booking, VenueBooking } from '@jordan-sports/contracts';
+import { sql } from 'kysely';
+import type { DbOrTx } from '../../../platform/database/database.js';
+import { instantToLocal } from '../../scheduling/index.js';
+import {
+  freeCancellationUntil,
+  type BookingStatus,
+  type CancellationPolicy,
+} from '../domain/booking-rules.js';
+
+type Localized = { ar?: string; en?: string };
+
+/**
+ * Base query joining everything a booking view needs. Venue customers are private to their
+ * organization (row-level security): without a tenant context the join yields nulls.
+ */
+export function bookingQuery(db: DbOrTx) {
+  return db
+    .selectFrom('booking.bookings as b')
+    .innerJoin('venue.venues as v', 'v.id', 'b.venue_id')
+    .innerJoin('resource.resources as r', 'r.id', 'b.resource_id')
+    .leftJoin('identity.users as u', 'u.id', 'b.customer_user_id')
+    .leftJoin('booking.venue_customers as vc', 'vc.id', 'b.venue_customer_id')
+    .select([
+      'b.id',
+      'b.reference',
+      'b.status',
+      'b.payment_status',
+      'b.payment_method',
+      'b.channel',
+      'b.venue_id',
+      'b.organization_id',
+      'b.resource_id',
+      'b.customer_user_id',
+      'b.series_id',
+      'b.business_date',
+      'b.time_zone',
+      'b.currency',
+      'b.total',
+      'b.cancellation_policy',
+      'b.note',
+      'b.hold_expires_at',
+      'b.cancelled_at',
+      'b.cancelled_by_role',
+      'b.cancel_reason',
+      'b.late_cancellation',
+      'b.checked_in_at',
+      'b.created_at',
+      sql<Date>`lower(b.during)`.as('start'),
+      sql<Date>`upper(b.during)`.as('end'),
+      'v.slug as venue_slug',
+      'v.name as venue_name',
+      'v.contact_phone as venue_phone',
+      'r.name as resource_name',
+      'u.display_name as user_name',
+      'u.phone as user_phone',
+      'u.locale as user_locale',
+      'vc.name as vc_name',
+      'vc.phone as vc_phone',
+    ]);
+}
+
+export type BookingQuery = ReturnType<typeof bookingQuery>;
+
+export type LoadedBooking = Awaited<ReturnType<BookingQuery['execute']>>[number];
+
+export function toBooking(r: LoadedBooking): Booking {
+  const start = new Date(r.start);
+  const end = new Date(r.end);
+  const policy = r.cancellation_policy as unknown as CancellationPolicy;
+  return {
+    id: r.id,
+    reference: r.reference,
+    status: r.status as BookingStatus,
+    paymentStatus: r.payment_status as Booking['paymentStatus'],
+    paymentMethod: r.payment_method as Booking['paymentMethod'],
+    channel: r.channel as Booking['channel'],
+    venue: {
+      id: r.venue_id,
+      slug: r.venue_slug,
+      name: r.venue_name as Localized,
+      contactPhone: r.venue_phone,
+    },
+    resource: { id: r.resource_id, name: r.resource_name as Localized },
+    start: start.toISOString(),
+    end: end.toISOString(),
+    businessDate: r.business_date,
+    localStart: instantToLocal(start, r.time_zone).time,
+    localEnd: instantToLocal(end, r.time_zone).time,
+    timezone: r.time_zone,
+    durationMinutes: Math.round((end.getTime() - start.getTime()) / 60_000),
+    price: r.total === null ? null : { amount: Number(r.total), currency: r.currency },
+    holdExpiresAt: r.hold_expires_at ? new Date(r.hold_expires_at).toISOString() : null,
+    cancellation: {
+      cutoffHours: policy.cutoffHours,
+      freeUntil: freeCancellationUntil(start, policy).toISOString(),
+      late: r.late_cancellation,
+    },
+    cancelledAt: r.cancelled_at ? new Date(r.cancelled_at).toISOString() : null,
+    cancelledBy: r.cancelled_by_role as Booking['cancelledBy'],
+    cancelReason: r.cancel_reason,
+    createdAt: new Date(r.created_at).toISOString(),
+  };
+}
+
+/** Venue staff view: includes the customer's name and phone (own bookings only). */
+export function toVenueBooking(r: LoadedBooking): VenueBooking {
+  const player = r.customer_user_id !== null;
+  return {
+    ...toBooking(r),
+    customer: {
+      kind: player ? 'player' : 'venue_customer',
+      name: player ? r.user_name : r.vc_name,
+      phone: player ? r.user_phone : r.vc_phone,
+    },
+    note: r.note,
+    seriesId: r.series_id,
+    checkedInAt: r.checked_in_at ? new Date(r.checked_in_at).toISOString() : null,
+  };
+}

@@ -10,6 +10,7 @@ import type {
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
+import { setTenant } from '../../../platform/database/tenant.js';
 import { transaction } from '../../../platform/database/transaction.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
@@ -126,6 +127,7 @@ export class ManageScheduleService {
         timezone: venue.timezone,
         businessDayStartMinute: venue.businessDayStartMinute,
         closedOnPublicHolidays,
+        cancellationCutoffHours: venue.cancellationCutoffHours,
       },
       role,
       permissions: [...orgRolePermissions[role]],
@@ -227,13 +229,24 @@ export class ManageScheduleService {
   async updateSettings(
     actor: StaffActor,
     venueId: string,
-    closedOnPublicHolidays: boolean,
+    settings: { closedOnPublicHolidays?: boolean; cancellationCutoffHours?: number },
   ): Promise<VenueSchedule> {
     const { venue } = await this.access.require(actor.userId, venueId, 'schedule.manage');
+    const { closedOnPublicHolidays, cancellationCutoffHours } = settings;
+    if (closedOnPublicHolidays === undefined && cancellationCutoffHours === undefined) {
+      return this.schedule(actor.userId, venueId);
+    }
     await this.db.transaction().execute(async (tx) => {
       await tx
         .updateTable('venue.venues')
-        .set({ closed_on_public_holidays: closedOnPublicHolidays })
+        .set({
+          ...(closedOnPublicHolidays !== undefined
+            ? { closed_on_public_holidays: closedOnPublicHolidays }
+            : {}),
+          ...(cancellationCutoffHours !== undefined
+            ? { cancellation_cutoff_hours: cancellationCutoffHours }
+            : {}),
+        })
         .where('id', '=', venueId)
         .execute();
       await this.audit.record(
@@ -244,7 +257,7 @@ export class ManageScheduleService {
           targetType: 'venue',
           targetId: venueId,
           organizationId: venue.organizationId,
-          details: { closedOnPublicHolidays },
+          details: { closedOnPublicHolidays, cancellationCutoffHours },
           meta: actor.meta,
         },
         tx,
@@ -467,6 +480,10 @@ export class ManageScheduleService {
           .execute()
       : [];
     const blockById = new Map(blocks.map((b) => [b.id, b]));
+    const bookingById = await this.bookingSummaries(
+      venue.organizationId,
+      occupancies.map((o) => o.bookingId).filter((id): id is string => id !== null),
+    );
     const dayMinutes = Math.round((day.end.getTime() - day.start.getTime()) / 60_000);
 
     const range = (start: Date, end: Date) => {
@@ -499,14 +516,17 @@ export class ManageScheduleService {
           if (seen.has(key)) continue;
           seen.add(key);
           const block = o.blockId ? blockById.get(o.blockId) : undefined;
+          const booking = o.bookingId ? bookingById.get(o.bookingId) : undefined;
+          const via = block?.resource_id ?? booking?.resourceId;
           entries.push({
             id: o.id,
             kind: o.kind,
             blockId: o.blockId,
             bookingId: o.bookingId,
             reason: (block?.reason as BlockReason | undefined) ?? null,
-            note: block?.note ?? null,
-            viaResourceId: block && block.resource_id !== r.id ? block.resource_id : null,
+            note: block?.note ?? booking?.note ?? null,
+            viaResourceId: via && via !== r.id ? via : null,
+            customerName: booking?.customerName ?? null,
             ...range(o.start, o.end),
           });
         }
@@ -520,5 +540,33 @@ export class ManageScheduleService {
         };
       }),
     };
+  }
+
+  /** Resource and customer name of bookings shown in the calendar (tenant-scoped read). */
+  private async bookingSummaries(organizationId: string, ids: readonly string[]) {
+    const map = new Map<
+      string,
+      { resourceId: string; customerName: string | null; note: string | null }
+    >();
+    if (ids.length === 0) return map;
+    const rows = await this.db.transaction().execute(async (tx) => {
+      await setTenant(tx, organizationId);
+      return tx
+        .selectFrom('booking.bookings as b')
+        .leftJoin('identity.users as u', 'u.id', 'b.customer_user_id')
+        .leftJoin('booking.venue_customers as vc', 'vc.id', 'b.venue_customer_id')
+        .select(['b.id', 'b.resource_id', 'b.note', 'u.display_name', 'vc.name as vc_name'])
+        .where('b.id', 'in', [...new Set(ids)])
+        .where('b.organization_id', '=', organizationId)
+        .execute();
+    });
+    for (const r of rows) {
+      map.set(r.id, {
+        resourceId: r.resource_id,
+        customerName: r.display_name ?? r.vc_name,
+        note: r.note,
+      });
+    }
+    return map;
   }
 }

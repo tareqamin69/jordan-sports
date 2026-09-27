@@ -100,6 +100,7 @@ export const venueScheduleSchema = z.object({
     timezone: z.string(),
     businessDayStartMinute: z.number().int(),
     closedOnPublicHolidays: z.boolean(),
+    cancellationCutoffHours: z.number().int(),
   }),
   role: membershipRoleSchema,
   permissions: z.array(z.string()),
@@ -155,7 +156,10 @@ export const updateScheduleSettings = endpoint({
   summary: 'Venue scheduling settings',
   auth: 'user',
   params: venueParams,
-  body: z.object({ closedOnPublicHolidays: z.boolean() }),
+  body: z.object({
+    closedOnPublicHolidays: z.boolean().optional(),
+    cancellationCutoffHours: z.number().int().min(0).max(168).optional(),
+  }),
   response: venueScheduleSchema,
 });
 
@@ -203,6 +207,8 @@ export const calendarEntrySchema = timeRangeSchema.extend({
   note: z.string().nullable(),
   /** Set when the time is taken through another resource sharing a unit (e.g. the full pitch). */
   viaResourceId: uuidSchema.nullable(),
+  /** Customer name for bookings (venue staff only). */
+  customerName: z.string().nullable(),
   /** Minutes from the start of the business day (for positioning in a day grid). */
   offsetMinutes: z.number().int(),
   durationMinutes: z.number().int(),

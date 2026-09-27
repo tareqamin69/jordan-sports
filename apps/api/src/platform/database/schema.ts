@@ -42,6 +42,82 @@ export interface AuditAuditLogs {
   user_agent: string | null;
 }
 
+export interface BookingBookingItems {
+  amount: Int8 | null;
+  booking_id: string;
+  during: string;
+  id: string;
+  resource_id: string;
+}
+
+export interface BookingBookings {
+  business_date: string;
+  cancel_reason: string | null;
+  cancellation_policy: Json;
+  cancelled_at: Timestamp | null;
+  cancelled_by: string | null;
+  cancelled_by_role: string | null;
+  channel: string;
+  checked_in_at: Timestamp | null;
+  checked_in_by: string | null;
+  confirmed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  currency: string;
+  customer_user_id: string | null;
+  during: string;
+  hold_expires_at: Timestamp | null;
+  id: string;
+  late_cancellation: boolean | null;
+  note: string | null;
+  organization_id: string;
+  payment_method: string | null;
+  payment_status: string;
+  price_snapshot: Json | null;
+  reference: string;
+  resource_id: string;
+  series_id: string | null;
+  status: string;
+  subtotal: Int8 | null;
+  time_zone: string;
+  total: Int8 | null;
+  updated_at: Generated<Timestamp>;
+  venue_customer_id: string | null;
+  venue_id: string;
+}
+
+export interface BookingSeries {
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  duration_minutes: number;
+  first_date: string;
+  id: string;
+  resource_id: string;
+  start_time: string;
+  venue_customer_id: string;
+  venue_id: string;
+  weeks: number;
+}
+
+export interface BookingStatusHistory {
+  actor_type: string;
+  actor_user_id: string | null;
+  booking_id: string;
+  from_status: string | null;
+  id: string;
+  occurred_at: Generated<Timestamp>;
+  reason: string | null;
+  to_status: string;
+}
+
+export interface BookingVenueCustomers {
+  created_at: Generated<Timestamp>;
+  id: string;
+  name: string;
+  organization_id: string;
+  phone: string | null;
+}
+
 export interface CatalogAmenities {
   id: Generated<string>;
   key: string;
@@ -149,6 +225,39 @@ export interface IdentityUsers {
   platform_role: string | null;
   status: Generated<string>;
   updated_at: Generated<Timestamp>;
+}
+
+export interface NotificationDeliveries {
+  body: string;
+  channel: string;
+  created_at: Generated<Timestamp>;
+  event_id: string;
+  id: string;
+  locale: string;
+  recipient: string;
+  status: string;
+  template: string;
+}
+
+export interface PlatformIdempotencyKeys {
+  created_at: Generated<Timestamp>;
+  key: string;
+  request_hash: string;
+  response_body: Json | null;
+  response_status: number | null;
+  status: string;
+  user_id: string;
+}
+
+export interface PlatformOutboxEvents {
+  attempts: Generated<number>;
+  created_at: Generated<Timestamp>;
+  id: string;
+  last_error: string | null;
+  next_attempt_at: Generated<Timestamp>;
+  payload: Json;
+  processed_at: Timestamp | null;
+  type: string;
 }
 
 export interface PricingPriceRuleAmounts {
@@ -319,6 +428,7 @@ export interface VenueVenues {
   archived_at: Timestamp | null;
   area_id: string | null;
   business_day_start_minute: Generated<number>;
+  cancellation_cutoff_hours: Generated<number>;
   city_id: string;
   closed_on_public_holidays: Generated<boolean>;
   contact_phone: string | null;
@@ -337,6 +447,11 @@ export interface VenueVenues {
 
 export interface DB {
   'audit.audit_logs': AuditAuditLogs;
+  'booking.booking_items': BookingBookingItems;
+  'booking.bookings': BookingBookings;
+  'booking.series': BookingSeries;
+  'booking.status_history': BookingStatusHistory;
+  'booking.venue_customers': BookingVenueCustomers;
   'catalog.amenities': CatalogAmenities;
   'catalog.areas': CatalogAreas;
   'catalog.cities': CatalogCities;
@@ -349,6 +464,9 @@ export interface DB {
   'identity.sessions': IdentitySessions;
   'identity.totp_credentials': IdentityTotpCredentials;
   'identity.users': IdentityUsers;
+  'notification.deliveries': NotificationDeliveries;
+  'platform.idempotency_keys': PlatformIdempotencyKeys;
+  'platform.outbox_events': PlatformOutboxEvents;
   'pricing.price_rule_amounts': PricingPriceRuleAmounts;
   'pricing.price_rules': PricingPriceRules;
   'resource.booking_policies': ResourceBookingPolicies;

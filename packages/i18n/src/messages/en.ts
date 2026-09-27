@@ -65,8 +65,24 @@ export const en = {
         'You already have reservations in progress. Finish or release them first.',
       NO_PRICE: 'No price is set for this time.',
       IDEMPOTENCY_KEY_REUSED: 'This request was already submitted with different details.',
+      REQUEST_IN_PROGRESS: 'This request is already being processed. Please wait a moment.',
+      IDEMPOTENCY_KEY_REQUIRED:
+        'Something went wrong with this request. Reload the page and try again.',
       CANCELLATION_NOT_ALLOWED: 'This booking can no longer be cancelled online.',
     },
+  },
+  notifications: {
+    bookingConfirmed:
+      'Jordan Sports: your booking {reference} at {venue} ({resource}) on {date} at {time} is confirmed. Pay at the venue: {price}.',
+    bookingCancelled:
+      'Jordan Sports: your booking {reference} at {venue} on {date} at {time} has been cancelled.',
+    bookingCancelledByVenue:
+      'Jordan Sports: {venue} cancelled your booking {reference} on {date} at {time}. Reason: {reason}',
+    venueNewBooking:
+      'Jordan Sports: new booking {reference} — {resource}, {date} at {time}, {customer} ({phone}). Pay at venue: {price}.',
+    venueBookingCancelled:
+      'Jordan Sports: booking {reference} — {resource}, {date} at {time} was cancelled by the player.',
+    noPrice: 'price not set',
   },
   web: {
     metadata: {

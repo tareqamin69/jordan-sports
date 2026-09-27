@@ -17,6 +17,7 @@ describe('parseConfig', () => {
       nodeEnv: 'development',
       host: '127.0.0.1',
       port: 4000,
+      workerPort: 4001,
       databaseUrl: DATABASE_URL,
       databasePoolMax: 10,
       databaseAppRole: 'js_app',

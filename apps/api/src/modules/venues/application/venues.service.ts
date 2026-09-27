@@ -29,6 +29,7 @@ export interface VenueRow {
   location: { lat: number; lng: number } | null;
   contactPhone: string | null;
   businessDayStartMinute: number;
+  cancellationCutoffHours: number;
   createdAt: Date;
 }
 
@@ -71,6 +72,7 @@ export class VenuesService {
         'address',
         'contact_phone',
         'business_day_start_minute',
+        'cancellation_cutoff_hours',
         'created_at',
         sql<number | null>`ST_Y(location::geometry)`.as('lat'),
         sql<number | null>`ST_X(location::geometry)`.as('lng'),
@@ -97,6 +99,7 @@ export class VenuesService {
         r.lat !== null && r.lng !== null ? { lat: Number(r.lat), lng: Number(r.lng) } : null,
       contactPhone: r.contact_phone,
       businessDayStartMinute: r.business_day_start_minute,
+      cancellationCutoffHours: r.cancellation_cutoff_hours,
       createdAt: r.created_at,
     };
   }
