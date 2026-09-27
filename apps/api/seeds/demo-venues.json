@@ -27,9 +27,7 @@
           "en": "Padel court 1"
         },
         "type": "padel_court",
-        "formats": [
-          "padel.doubles"
-        ],
+        "formats": ["padel.doubles"],
         "attributes": {
           "indoor": true,
           "panoramic": true,
@@ -46,9 +44,7 @@
           "en": "Padel court 2"
         },
         "type": "padel_court",
-        "formats": [
-          "padel.doubles"
-        ],
+        "formats": ["padel.doubles"],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -65,9 +61,7 @@
           "en": "Padel court 3"
         },
         "type": "padel_court",
-        "formats": [
-          "padel.doubles"
-        ],
+        "formats": ["padel.doubles"],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -109,9 +103,7 @@
           "en": "Pitch A (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.five_a_side"
-        ],
+        "formats": ["football.five_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -127,9 +119,7 @@
           "en": "Pitch B (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.five_a_side"
-        ],
+        "formats": ["football.five_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -145,17 +135,12 @@
           "en": "Full pitch (7-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.seven_a_side"
-        ],
+        "formats": ["football.seven_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
         },
-        "combines": [
-          0,
-          1
-        ],
+        "combines": [0, 1],
         "prices": {
           "60": 35000,
           "90": 50000
@@ -192,10 +177,7 @@
           "en": "Tennis court 1"
         },
         "type": "tennis_court",
-        "formats": [
-          "tennis.singles",
-          "tennis.doubles"
-        ],
+        "formats": ["tennis.singles", "tennis.doubles"],
         "prices": {
           "60": 12000,
           "90": 16500
@@ -207,10 +189,7 @@
           "en": "Tennis court 2"
         },
         "type": "tennis_court",
-        "formats": [
-          "tennis.singles",
-          "tennis.doubles"
-        ],
+        "formats": ["tennis.singles", "tennis.doubles"],
         "prices": {
           "60": 12000,
           "90": 16500
@@ -247,9 +226,7 @@
           "en": "Pitch 1 (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.five_a_side"
-        ],
+        "formats": ["football.five_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -265,9 +242,7 @@
           "en": "Pitch 2 (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.five_a_side"
-        ],
+        "formats": ["football.five_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -308,9 +283,7 @@
           "en": "Padel court 1"
         },
         "type": "padel_court",
-        "formats": [
-          "padel.doubles"
-        ],
+        "formats": ["padel.doubles"],
         "attributes": {
           "indoor": true,
           "panoramic": true,
@@ -327,9 +300,7 @@
           "en": "Padel court 2"
         },
         "type": "padel_court",
-        "formats": [
-          "padel.doubles"
-        ],
+        "formats": ["padel.doubles"],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -371,9 +342,7 @@
           "en": "Pitch Main (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": [
-          "football.five_a_side"
-        ],
+        "formats": ["football.five_a_side"],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -389,10 +358,7 @@
           "en": "Tennis court 1"
         },
         "type": "tennis_court",
-        "formats": [
-          "tennis.singles",
-          "tennis.doubles"
-        ],
+        "formats": ["tennis.singles", "tennis.doubles"],
         "prices": {
           "60": 10000,
           "90": 14000
@@ -430,10 +396,7 @@
           "en": "Basketball court"
         },
         "type": "basketball_court",
-        "formats": [
-          "basketball.five_a_side",
-          "basketball.three_x_three"
-        ],
+        "formats": ["basketball.five_a_side", "basketball.three_x_three"],
         "attributes": {
           "surface": "hardwood",
           "indoor": true,
@@ -450,10 +413,7 @@
           "en": "Badminton court"
         },
         "type": "badminton_court",
-        "formats": [
-          "badminton.singles",
-          "badminton.doubles"
-        ],
+        "formats": ["badminton.singles", "badminton.doubles"],
         "attributes": {
           "indoor": true,
           "lighting": true
@@ -493,9 +453,7 @@
           "en": "Squash court 1"
         },
         "type": "squash_court",
-        "formats": [
-          "squash.singles"
-        ],
+        "formats": ["squash.singles"],
         "attributes": {
           "air_conditioned": true
         },
@@ -509,9 +467,7 @@
           "en": "Squash court 2"
         },
         "type": "squash_court",
-        "formats": [
-          "squash.singles"
-        ],
+        "formats": ["squash.singles"],
         "attributes": {
           "air_conditioned": true
         },
@@ -550,9 +506,7 @@
           "en": "Main hall"
         },
         "type": "volleyball_court",
-        "formats": [
-          "volleyball.six_a_side"
-        ],
+        "formats": ["volleyball.six_a_side"],
         "attributes": {
           "surface": "indoor",
           "lighting": true
@@ -592,9 +546,7 @@
           "en": "Beach volleyball court"
         },
         "type": "beach_volleyball_court",
-        "formats": [
-          "beach_volleyball.four_a_side"
-        ],
+        "formats": ["beach_volleyball.four_a_side"],
         "attributes": {
           "lighting": true,
           "showers": true
@@ -609,9 +561,7 @@
           "en": "Swimming lane"
         },
         "type": "swimming_lane",
-        "formats": [
-          "swimming.lane_session"
-        ],
+        "formats": ["swimming.lane_session"],
         "attributes": {
           "heated": false,
           "indoor": false

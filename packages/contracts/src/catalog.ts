@@ -80,7 +80,13 @@ export const adminCreateGovernorate = endpoint({
   path: '/v1/admin/geography/governorates',
   summary: 'Add a governorate',
   auth: 'admin',
-  body: z.object({ key: z.string().regex(/^[a-z0-9_]+$/).max(40), name: localizedSchema }),
+  body: z.object({
+    key: z
+      .string()
+      .regex(/^[a-z0-9_]+$/)
+      .max(40),
+    name: localizedSchema,
+  }),
   response: catalogSchema,
 });
 
@@ -100,7 +106,13 @@ export const adminCreateArea = endpoint({
   summary: 'Add an area to a governorate',
   auth: 'admin',
   params: z.object({ governorateId: uuidSchema }),
-  body: z.object({ key: z.string().regex(/^[a-z0-9_]+$/).max(40), name: localizedSchema }),
+  body: z.object({
+    key: z
+      .string()
+      .regex(/^[a-z0-9_]+$/)
+      .max(40),
+    name: localizedSchema,
+  }),
   response: catalogSchema,
 });
 
@@ -119,7 +131,10 @@ export const adminUpdateArea = endpoint({
 // extended later directly in the database as the catalog grows); rename/re-icon afterwards.
 // ---------------------------------------------------------------------------------------------
 
-const keySchema = z.string().regex(/^[a-z0-9_]+$/).max(40);
+const keySchema = z
+  .string()
+  .regex(/^[a-z0-9_]+$/)
+  .max(40);
 
 export const adminCreateSport = endpoint({
   method: 'POST',

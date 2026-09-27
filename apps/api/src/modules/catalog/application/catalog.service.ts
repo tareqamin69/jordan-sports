@@ -235,7 +235,10 @@ export class CatalogService {
     return this.get();
   }
 
-  async createArea(governorateId: string, input: { key: string; name: Localized }): Promise<Catalog> {
+  async createArea(
+    governorateId: string,
+    input: { key: string; name: Localized },
+  ): Promise<Catalog> {
     if (!KEY_PATTERN.test(input.key)) throw new AppError('VALIDATION_FAILED', 400, 'Invalid key');
     await this.governorate(governorateId);
     const maxOrder = await this.db
@@ -261,7 +264,10 @@ export class CatalogService {
     return this.get();
   }
 
-  async updateArea(areaId: string, patch: { name?: Localized; sortOrder?: number }): Promise<Catalog> {
+  async updateArea(
+    areaId: string,
+    patch: { name?: Localized; sortOrder?: number },
+  ): Promise<Catalog> {
     const updated = await this.db
       .updateTable('catalog.areas')
       .set({
@@ -356,7 +362,11 @@ export class CatalogService {
       });
     } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError('VALIDATION_FAILED', 400, 'A sport, format or resource type key already exists');
+      throw new AppError(
+        'VALIDATION_FAILED',
+        400,
+        'A sport, format or resource type key already exists',
+      );
     }
     this.invalidate();
     return this.get();

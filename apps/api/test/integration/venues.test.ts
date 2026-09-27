@@ -29,7 +29,12 @@ describe('catalog, venues and resources', () => {
     const r = await call(t.app, { method: 'GET', url: '/v1/catalog' });
     expect(r.statusCode).toBe(200);
     const catalog = r.json() as {
-      sports: Array<{ key: string; name: { ar: string; en: string }; icon: string; formats: unknown[] }>;
+      sports: Array<{
+        key: string;
+        name: { ar: string; en: string };
+        icon: string;
+        formats: unknown[];
+      }>;
       resourceTypes: Array<{ attributes: unknown[] }>;
       governorates: Array<{ key: string; timezone: string; areas: unknown[] }>;
       offeredSportIds: string[];

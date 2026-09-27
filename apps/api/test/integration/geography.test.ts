@@ -121,7 +121,10 @@ describe('geography and sports catalog (admin)', () => {
           maxPlayers: 4,
           defaultDurationMinutes: 60,
         },
-        resourceType: { key: `test_court_${suffix}`, name: { ar: 'ملعب تجريبي', en: 'Test court' } },
+        resourceType: {
+          key: `test_court_${suffix}`,
+          name: { ar: 'ملعب تجريبي', en: 'Test court' },
+        },
       },
     });
     expect(created.statusCode).toBe(201);
@@ -147,7 +150,9 @@ describe('geography and sports catalog (admin)', () => {
       body: { name: { ar: 'رياضة معدّلة', en: 'Renamed Sport' }, icon: 'ball-bounce' },
     });
     expect(renamed.statusCode).toBe(200);
-    const catalog2 = renamed.json() as { sports: Array<{ id: string; icon: string; name: { en: string } }> };
+    const catalog2 = renamed.json() as {
+      sports: Array<{ id: string; icon: string; name: { en: string } }>;
+    };
     const updated = catalog2.sports.find((s) => s.id === sport.id)!;
     expect(updated.icon).toBe('ball-bounce');
     expect(updated.name.en).toBe('Renamed Sport');
@@ -161,7 +166,13 @@ describe('geography and sports catalog (admin)', () => {
         key: `test_sport2_${suffix}`,
         name: { en: 'Bad' },
         icon: 'ball-generic',
-        format: { key: 'x', name: { en: 'X' }, minPlayers: 5, maxPlayers: 2, defaultDurationMinutes: 60 },
+        format: {
+          key: 'x',
+          name: { en: 'X' },
+          minPlayers: 5,
+          maxPlayers: 2,
+          defaultDurationMinutes: 60,
+        },
         resourceType: { key: `test_court2_${suffix}`, name: { en: 'X' } },
       },
     });
