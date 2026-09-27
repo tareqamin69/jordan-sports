@@ -76,17 +76,15 @@ async function main(): Promise<number> {
       .where('slug', '=', 'demo-sports-group')
       .executeTakeFirst();
     if (!org) {
-      const created = await app
-        .get(OrganizationsService)
-        .create(
-          null,
-          {
-            slug: 'demo-sports-group',
-            name: { ar: 'مجموعة رياضية تجريبية', en: 'Demo Sports Group' },
-            owner: { phone: DEMO_OWNER_PHONE, displayName: 'Demo Owner' },
-          },
-          systemActor.meta,
-        );
+      const created = await app.get(OrganizationsService).create(
+        null,
+        {
+          slug: 'demo-sports-group',
+          name: { ar: 'مجموعة رياضية تجريبية', en: 'Demo Sports Group' },
+          owner: { phone: DEMO_OWNER_PHONE, displayName: 'Demo Owner' },
+        },
+        systemActor.meta,
+      );
       org = { id: created.id };
     }
 
