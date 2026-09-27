@@ -11,6 +11,9 @@ export function SiteHeader() {
         <Link href="/" className="text-lg font-bold text-brand-700" data-testid="brand">
           {t('appName')}
         </Link>
+        <Link href="/sports" className="text-sm font-medium text-ink hover:text-brand-700">
+          {t('allSports')}
+        </Link>
         <div className="ms-auto flex items-center gap-1">
           <AccountLink />
           <LocaleSwitcher />

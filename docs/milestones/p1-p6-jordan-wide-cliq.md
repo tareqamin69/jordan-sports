@@ -58,3 +58,33 @@ across api/web/admin.
 
 Next up: P2 (two interfaces / sign-up mode question / player ↔ venue-owner mode switch on one
 account).
+
+## Post-P1 fixes and additions (2026-09-27, same day)
+
+- **Staging auto-update was silently broken**: the cron daemon isn't installed on the Hetzner
+  Ubuntu image, so `/etc/cron.d/jordan-sports` never ran and the site stayed on whatever commit
+  was live at bootstrap. Switched `infra/staging/bootstrap.sh` to a systemd timer
+  (`jordan-sports-update.timer`, every 5 min) instead — systemd is always present. Confirmed
+  working via `systemctl list-timers` on the box.
+- **More areas per governorate** (migrations 0009, 0010): every governorate now has 5+ areas
+  (was as few as 3); Amman alone has 50. Sourced first from Jordan's official district structure,
+  then from the owner's own governorate-by-governorate list — deduped by normalizing Arabic
+  (hamza, ta marbuta, the "ال" article) and English spelling so re-submitted names don't create
+  near-duplicate rows. `GET /v1/catalog` now sorts areas alphabetically by Arabic name (governorates
+  keep `sort_order`).
+- **3 more sports** (migration 0011): beach volleyball, futsal/indoor football, running track —
+  17 sports total in the catalog now (was 14).
+- **Demo venues for 6 previously-unoffered sports**: `seed-demo.ts`/`demo-venues.json` gained a
+  `governorate` field per venue (was hardcoded to Amman for every demo venue) and 4 new demo
+  venues — Amman (basketball + badminton), Irbid (squash), Zarqa (volleyball), Aqaba (beach
+  volleyball + swimming) — all named "(تجريبي)"/"(Demo)" in both languages. Staging now shows 9
+  offered sports (football, padel, tennis, basketball, badminton, squash, volleyball, beach
+  volleyball, swimming) instead of 3.
+- **New `/sports` page** ("كل الرياضات"): lists every sport with at least one approved venue,
+  each tile linking to `/venues?sport=<key>`. Linked from the site header nav. Added to
+  `sitemap.ts`.
+- **Not done in this pass**: the "Design B — Clubhouse" visual redesign the owner asked for was
+  interrupted before any work started (replaced by this sports-catalog request) — still
+  outstanding, reference file was `fca7a71a-design-B-clubhouse-reference.html`.
+- Verification: API unit+integration 169/169, full Playwright e2e 68/68, `pnpm lint` clean, full
+  typecheck clean.

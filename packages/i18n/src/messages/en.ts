@@ -5,6 +5,7 @@
 export const en = {
   common: {
     appName: 'Jordan Sports',
+    allSports: 'All sports',
     languageSwitcher: {
       label: 'Language',
       switchTo: 'العربية',
@@ -156,6 +157,10 @@ export const en = {
       emptySearch: 'No free times match your search. Try another day or time.',
       priceFrom: 'From {price}',
       distance: '{km} km',
+    },
+    sports: {
+      title: 'All sports',
+      description: 'Every sport with an approved venue on the platform, Jordan-wide.',
     },
     availability: {
       title: 'Available times',

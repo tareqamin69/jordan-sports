@@ -40,6 +40,10 @@ const paths: Record<string, string> = {
   'ball-handball': 'M15 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM2 8h5M2 11h4M3 14h3',
   glove:
     'M7 20v-5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3zM10 12V8a2 2 0 1 1 4 0v4M14 12V7a2 2 0 1 1 4 0v6',
+  'ball-beach':
+    'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM4 9c5-2.3 11-2.3 16 0M12 3v18M3.5 17.5c3-1.2 6-1.2 9 0',
+  'track-oval':
+    'M3 8a9 4.5 0 0 1 18 0v8a9 4.5 0 0 1-18 0zM3 8a9 4.5 0 0 0 18 0M3 16a9 4.5 0 0 0 18 0M7.5 8a4.5 4.5 0 0 1 9 0v8a4.5 4.5 0 0 1-9 0z',
 };
 
 export function Icon({

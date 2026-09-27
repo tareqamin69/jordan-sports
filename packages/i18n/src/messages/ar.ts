@@ -7,6 +7,7 @@ import type { MessageCatalog } from './types.js';
 export const ar = {
   common: {
     appName: 'رياضة الأردن',
+    allSports: 'كل الرياضات',
     languageSwitcher: {
       label: 'اللغة',
       switchTo: 'English',
@@ -154,6 +155,10 @@ export const ar = {
       emptySearch: 'ما في أوقات فاضية بتناسب بحثك. جرّب يوم أو ساعة ثانية.',
       priceFrom: 'من {price}',
       distance: '{km} كم',
+    },
+    sports: {
+      title: 'كل الرياضات',
+      description: 'كل رياضة إلها ملعب معتمد على المنصة، بكل الأردن.',
     },
     availability: {
       title: 'الأوقات الفاضية',

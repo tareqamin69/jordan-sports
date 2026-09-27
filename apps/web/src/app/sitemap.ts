@@ -20,5 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${siteUrl}/ar${path}`,
     alternates: { languages: { ar: `${siteUrl}/ar${path}`, en: `${siteUrl}/en${path}` } },
   });
-  return [entry(''), entry('/venues'), ...slugs.map((slug) => entry(`/venues/${slug}`))];
+  return [
+    entry(''),
+    entry('/venues'),
+    entry('/sports'),
+    ...slugs.map((slug) => entry(`/venues/${slug}`)),
+  ];
 }

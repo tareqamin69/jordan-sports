@@ -36,6 +36,7 @@ interface DemoVenue {
   name: { ar: string; en: string };
   description: { ar: string; en: string };
   address: { ar: string; en: string };
+  governorate: string;
   area: string;
   location: { lat: number; lng: number };
   phone: string;
@@ -93,7 +94,7 @@ async function main(): Promise<number> {
       org = { id: created.id };
     }
 
-    const city = catalog.governorates.find((g) => g.key === 'amman')!;
+    const governorate = (key: string) => catalog.governorates.find((g) => g.key === key)!;
     const typeId = (key: string) => catalog.resourceTypes.find((t) => t.key === key)!.id;
     const formatId = (ref: string) => {
       const [sport, format] = ref.split('.');
@@ -106,6 +107,7 @@ async function main(): Promise<number> {
         console.log(`skip ${demo.slug} (exists)`);
         continue;
       }
+      const city = governorate(demo.governorate);
       const venueId = await app.get(VenuesService).create(
         org.id,
         {

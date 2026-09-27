@@ -27,7 +27,9 @@
           "en": "Padel court 1"
         },
         "type": "padel_court",
-        "formats": ["padel.doubles"],
+        "formats": [
+          "padel.doubles"
+        ],
         "attributes": {
           "indoor": true,
           "panoramic": true,
@@ -44,7 +46,9 @@
           "en": "Padel court 2"
         },
         "type": "padel_court",
-        "formats": ["padel.doubles"],
+        "formats": [
+          "padel.doubles"
+        ],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -61,7 +65,9 @@
           "en": "Padel court 3"
         },
         "type": "padel_court",
-        "formats": ["padel.doubles"],
+        "formats": [
+          "padel.doubles"
+        ],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -72,7 +78,8 @@
           "90": 26000
         }
       }
-    ]
+    ],
+    "governorate": "amman"
   },
   {
     "slug": "demo-football-arena",
@@ -102,7 +109,9 @@
           "en": "Pitch A (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.five_a_side"],
+        "formats": [
+          "football.five_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -118,7 +127,9 @@
           "en": "Pitch B (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.five_a_side"],
+        "formats": [
+          "football.five_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -134,18 +145,24 @@
           "en": "Full pitch (7-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.seven_a_side"],
+        "formats": [
+          "football.seven_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
         },
-        "combines": [0, 1],
+        "combines": [
+          0,
+          1
+        ],
         "prices": {
           "60": 35000,
           "90": 50000
         }
       }
-    ]
+    ],
+    "governorate": "amman"
   },
   {
     "slug": "demo-tennis-center",
@@ -175,7 +192,10 @@
           "en": "Tennis court 1"
         },
         "type": "tennis_court",
-        "formats": ["tennis.singles", "tennis.doubles"],
+        "formats": [
+          "tennis.singles",
+          "tennis.doubles"
+        ],
         "prices": {
           "60": 12000,
           "90": 16500
@@ -187,13 +207,17 @@
           "en": "Tennis court 2"
         },
         "type": "tennis_court",
-        "formats": ["tennis.singles", "tennis.doubles"],
+        "formats": [
+          "tennis.singles",
+          "tennis.doubles"
+        ],
         "prices": {
           "60": 12000,
           "90": 16500
         }
       }
-    ]
+    ],
+    "governorate": "amman"
   },
   {
     "slug": "jubeiha-five-a-side",
@@ -223,7 +247,9 @@
           "en": "Pitch 1 (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.five_a_side"],
+        "formats": [
+          "football.five_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -239,7 +265,9 @@
           "en": "Pitch 2 (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.five_a_side"],
+        "formats": [
+          "football.five_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -249,7 +277,8 @@
           "90": 21000
         }
       }
-    ]
+    ],
+    "governorate": "amman"
   },
   {
     "slug": "abdoun-padel",
@@ -279,7 +308,9 @@
           "en": "Padel court 1"
         },
         "type": "padel_court",
-        "formats": ["padel.doubles"],
+        "formats": [
+          "padel.doubles"
+        ],
         "attributes": {
           "indoor": true,
           "panoramic": true,
@@ -296,7 +327,9 @@
           "en": "Padel court 2"
         },
         "type": "padel_court",
-        "formats": ["padel.doubles"],
+        "formats": [
+          "padel.doubles"
+        ],
         "attributes": {
           "indoor": true,
           "panoramic": false,
@@ -307,7 +340,8 @@
           "90": 32000
         }
       }
-    ]
+    ],
+    "governorate": "amman"
   },
   {
     "slug": "tla-al-ali-sports",
@@ -337,7 +371,9 @@
           "en": "Pitch Main (5-a-side)"
         },
         "type": "football_pitch",
-        "formats": ["football.five_a_side"],
+        "formats": [
+          "football.five_a_side"
+        ],
         "attributes": {
           "surface": "artificial_grass",
           "lighting": true
@@ -353,10 +389,235 @@
           "en": "Tennis court 1"
         },
         "type": "tennis_court",
-        "formats": ["tennis.singles", "tennis.doubles"],
+        "formats": [
+          "tennis.singles",
+          "tennis.doubles"
+        ],
         "prices": {
           "60": 10000,
           "90": 14000
+        }
+      }
+    ],
+    "governorate": "amman"
+  },
+  {
+    "slug": "amman-multisport-club",
+    "name": {
+      "ar": "نادي عمّان متعدد الألعاب (تجريبي)",
+      "en": "Amman Multisport Club (Demo)"
+    },
+    "description": {
+      "ar": "ملعب سلة وملعب ريشة طائرة بنفس النادي. (بيانات تجريبية)",
+      "en": "A basketball court and a badminton court at one club. (Demo data)"
+    },
+    "address": {
+      "ar": "الشميساني، عمّان",
+      "en": "Shmeisani, Amman"
+    },
+    "governorate": "amman",
+    "area": "shmeisani",
+    "location": {
+      "lat": 31.9686,
+      "lng": 35.9046
+    },
+    "phone": "0791110007",
+    "photo": "glass",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب السلة",
+          "en": "Basketball court"
+        },
+        "type": "basketball_court",
+        "formats": [
+          "basketball.five_a_side",
+          "basketball.three_x_three"
+        ],
+        "attributes": {
+          "surface": "hardwood",
+          "indoor": true,
+          "lighting": true
+        },
+        "prices": {
+          "60": 15000,
+          "90": 21000
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب الريشة الطائرة",
+          "en": "Badminton court"
+        },
+        "type": "badminton_court",
+        "formats": [
+          "badminton.singles",
+          "badminton.doubles"
+        ],
+        "attributes": {
+          "indoor": true,
+          "lighting": true
+        },
+        "prices": {
+          "60": 8000
+        }
+      }
+    ]
+  },
+  {
+    "slug": "irbid-squash-club",
+    "name": {
+      "ar": "نادي إربد للسكواش (تجريبي)",
+      "en": "Irbid Squash Club (Demo)"
+    },
+    "description": {
+      "ar": "ملعبين سكواش مكيّفين بوسط إربد. (بيانات تجريبية)",
+      "en": "Two air-conditioned squash courts in Irbid. (Demo data)"
+    },
+    "address": {
+      "ar": "وسط البلد، إربد",
+      "en": "Downtown, Irbid"
+    },
+    "governorate": "irbid",
+    "area": "irbid_city",
+    "location": {
+      "lat": 32.5556,
+      "lng": 35.85
+    },
+    "phone": "0791110008",
+    "photo": "clay",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب سكواش 1",
+          "en": "Squash court 1"
+        },
+        "type": "squash_court",
+        "formats": [
+          "squash.singles"
+        ],
+        "attributes": {
+          "air_conditioned": true
+        },
+        "prices": {
+          "45": 8000
+        }
+      },
+      {
+        "name": {
+          "ar": "ملعب سكواش 2",
+          "en": "Squash court 2"
+        },
+        "type": "squash_court",
+        "formats": [
+          "squash.singles"
+        ],
+        "attributes": {
+          "air_conditioned": true
+        },
+        "prices": {
+          "45": 8000
+        }
+      }
+    ]
+  },
+  {
+    "slug": "zarqa-volleyball-hall",
+    "name": {
+      "ar": "صالة الزرقاء للكرة الطائرة (تجريبي)",
+      "en": "Zarqa Volleyball Hall (Demo)"
+    },
+    "description": {
+      "ar": "صالة طائرة داخلية بإنارة كاملة. (بيانات تجريبية)",
+      "en": "An indoor volleyball hall with full lighting. (Demo data)"
+    },
+    "address": {
+      "ar": "وسط الزرقاء",
+      "en": "Zarqa Downtown"
+    },
+    "governorate": "zarqa",
+    "area": "zarqa_city",
+    "location": {
+      "lat": 32.0728,
+      "lng": 36.0876
+    },
+    "phone": "0791110009",
+    "photo": "grass",
+    "resources": [
+      {
+        "name": {
+          "ar": "الصالة الرئيسية",
+          "en": "Main hall"
+        },
+        "type": "volleyball_court",
+        "formats": [
+          "volleyball.six_a_side"
+        ],
+        "attributes": {
+          "surface": "indoor",
+          "lighting": true
+        },
+        "prices": {
+          "60": 20000
+        }
+      }
+    ]
+  },
+  {
+    "slug": "aqaba-beach-sports-resort",
+    "name": {
+      "ar": "منتجع العقبة الرياضي (تجريبي)",
+      "en": "Aqaba Sports Resort (Demo)"
+    },
+    "description": {
+      "ar": "ملعب طائرة شاطئية وحارة سباحة على البحر الأحمر. (بيانات تجريبية)",
+      "en": "A beach volleyball court and a swimming lane on the Red Sea. (Demo data)"
+    },
+    "address": {
+      "ar": "الشاطئ الجنوبي، العقبة",
+      "en": "South Beach, Aqaba"
+    },
+    "governorate": "aqaba",
+    "area": "aqaba_city",
+    "location": {
+      "lat": 29.532,
+      "lng": 35.0063
+    },
+    "phone": "0791110010",
+    "photo": "grass",
+    "resources": [
+      {
+        "name": {
+          "ar": "ملعب الطائرة الشاطئية",
+          "en": "Beach volleyball court"
+        },
+        "type": "beach_volleyball_court",
+        "formats": [
+          "beach_volleyball.four_a_side"
+        ],
+        "attributes": {
+          "lighting": true,
+          "showers": true
+        },
+        "prices": {
+          "60": 18000
+        }
+      },
+      {
+        "name": {
+          "ar": "حارة السباحة",
+          "en": "Swimming lane"
+        },
+        "type": "swimming_lane",
+        "formats": [
+          "swimming.lane_session"
+        ],
+        "attributes": {
+          "heated": false,
+          "indoor": false
+        },
+        "prices": {
+          "60": 10000
         }
       }
     ]

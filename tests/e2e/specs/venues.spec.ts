@@ -81,6 +81,16 @@ test.describe('venues: admin onboarding → public page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('ملاعب بادل');
   });
 
+  test('the "all sports" page lists every offered sport and links to its venues', async ({
+    page,
+  }) => {
+    await page.goto(`${WEB}/ar/sports`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('كل الرياضات');
+    await expect(page.getByRole('link', { name: 'بادل', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'بادل', exact: true }).click();
+    await expect(page).toHaveURL(`${WEB}/ar/venues?sport=padel`);
+  });
+
   test('publishes a sitemap and robots.txt', async ({ request }) => {
     const sitemap = await request.get(`${WEB}/sitemap.xml`);
     expect(sitemap.status()).toBe(200);
