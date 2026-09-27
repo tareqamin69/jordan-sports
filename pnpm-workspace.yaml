@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+  - tests/*
+
+# Dependency install scripts are not run (supply-chain hardening). These packages ship prebuilt
+# platform binaries as optional dependencies and work without their postinstall scripts.
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  unrs-resolver: false
