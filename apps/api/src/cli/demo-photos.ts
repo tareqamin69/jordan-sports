@@ -6,7 +6,7 @@
 const W = 1600;
 const H = 1000;
 
-type Kind = 'grass' | 'glass' | 'clay';
+type Kind = 'grass' | 'glass' | 'clay' | 'pool';
 type Variant = 'day' | 'night' | 'angle';
 
 function lights(night: boolean): string {
@@ -80,9 +80,25 @@ function clay(): string {
     <circle cx="990" cy="420" r="12" fill="#e4f73b"/>`;
 }
 
+function pool(): string {
+  const lanes = Array.from(
+    { length: 6 },
+    (_, i) => `<line x1="${260 + i * 180}" y1="150" x2="${260 + i * 180}" y2="850" stroke="#f4f8f2" stroke-width="6" stroke-dasharray="26 20" opacity="0.85"/>`,
+  ).join('');
+  return `
+    <rect width="${W}" height="${H}" fill="#0b1c26"/>
+    <rect x="200" y="150" width="1200" height="700" fill="#1f7fa6"/>
+    <rect x="200" y="150" width="1200" height="700" fill="url(#waterHighlight)"/>
+    <g fill="none" stroke="#f4f8f2" stroke-width="8">
+      <rect x="200" y="150" width="1200" height="700"/>
+    </g>
+    ${lanes}`;
+}
+
 export function demoPhotoSvg(kind: Kind, variant: Variant): string {
   const night = variant === 'night';
-  const body = kind === 'grass' ? grass(night) : kind === 'glass' ? glass() : clay();
+  const body =
+    kind === 'grass' ? grass(night) : kind === 'glass' ? glass() : kind === 'clay' ? clay() : pool();
   const transform =
     variant === 'angle' ? 'translate(260 120) scale(0.78 0.62) skewX(-14) translate(-80 180)' : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -91,6 +107,7 @@ export function demoPhotoSvg(kind: Kind, variant: Variant): string {
     <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="1" stop-color="#000000" stop-opacity="0.12"/></linearGradient>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3e8"/><stop offset="1" stop-color="#e8d9b5"/></linearGradient>
     <linearGradient id="nightsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1426"/><stop offset="1" stop-color="#23324d"/></linearGradient>
+    <linearGradient id="waterHighlight" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
   </defs>
   ${variant === 'angle' ? `<rect width="${W}" height="${H}" fill="url(#sky)"/><rect y="560" width="${W}" height="440" fill="#5d6b58"/>` : ''}
   <g transform="${transform}">${body}</g>
