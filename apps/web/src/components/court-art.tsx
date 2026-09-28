@@ -142,21 +142,21 @@ export function HeroArt({ className }: { className?: string }) {
         fill="#6E5A48"
         fillOpacity="0.55"
       />
+      {/*
+        The court's near edge sits low in the frame (y >= 385) so its lines never run behind the
+        title/subtitle text block anchored near the hero's bottom; the far goal box (visible in
+        the CourtArt thumbnail version of this scene) is dropped here rather than pushed further
+        down, since there's no room left before the viewBox's bottom edge.
+      */}
       <rect x="-400" y="280" width="1190" height="190" fill="#0C3A27" />
-      <polygon points="-20,470 410,470 300,280 90,280" fill="#0F4D34" />
+      <polygon points="-20,470 410,470 300,385 90,385" fill="#0F4D34" />
       <g fill="none" stroke="#F4F0E6" strokeOpacity="0.8" strokeWidth="2">
-        <polygon points="-20,470 410,470 300,280 90,280" />
-        <line x1="195" y1="280" x2="195" y2="470" />
-        <line x1="40" y1="385" x2="350" y2="385" />
-        <line x1="72" y1="320" x2="318" y2="320" />
+        <polygon points="-20,470 410,470 300,385 90,385" />
+        <line x1="195" y1="385" x2="195" y2="470" />
+        <line x1="40" y1="448" x2="350" y2="448" />
       </g>
-      <line x1="30" y1="385" x2="360" y2="385" stroke="#151712" strokeWidth="4" />
-      <g stroke="#F4F0E6" strokeOpacity="0.35" strokeWidth="1.5" fill="#F4F0E6" fillOpacity="0.06">
-        <polygon points="90,280 300,280 300,215 90,215" />
-        <line x1="160" y1="215" x2="160" y2="280" />
-        <line x1="230" y1="215" x2="230" y2="280" />
-      </g>
-      <circle cx="255" cy="352" r="5" fill="#E7F06A" />
+      <line x1="30" y1="448" x2="360" y2="448" stroke="#151712" strokeWidth="4" />
+      <circle cx="255" cy="415" r="5" fill="#E7F06A" />
     </svg>
   );
 }
