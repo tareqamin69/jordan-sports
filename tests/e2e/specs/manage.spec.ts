@@ -21,10 +21,11 @@ test.describe('venue dashboard (/manage)', () => {
 
     await signUpPlayer(page, 'en', 'Venue Owner', venue.ownerPhone, 'venue');
     await page.getByTestId('managed-venue').click();
-    await expect(page.getByTestId('calendar-resource')).toContainText('Closed');
+    // No opening hours yet: the calendar asks for them first (with a link to the editor).
+    await expect(page.getByText('Set opening hours first')).toBeVisible();
 
     // Opening hours: open every day (editor default 16:00–00:00).
-    await page.getByRole('link', { name: 'Opening hours' }).click();
+    await page.getByRole('link', { name: 'Opening hours', exact: true }).click();
     for (const day of [6, 7, 1, 2, 3, 4, 5]) {
       await page.getByTestId(`hours-day-${day}`).getByRole('checkbox').check();
     }
@@ -32,7 +33,7 @@ test.describe('venue dashboard (/manage)', () => {
     await expect(page.getByText('Opening hours saved.')).toBeVisible();
 
     // A price, so the times are offered publicly.
-    await page.getByRole('link', { name: 'Prices' }).click();
+    await page.getByRole('link', { name: 'Prices', exact: true }).click();
     await page.locator('input[name="price-90"]').fill('20');
     await page.getByRole('button', { name: 'Add price band' }).click();
     await expect(page.getByTestId('price-rules')).toContainText('JOD 20.000');
