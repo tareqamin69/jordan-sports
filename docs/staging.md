@@ -11,7 +11,7 @@ data on staging.
 |---|---|
 | Server | One VM (e.g. Hetzner CX22: 2 vCPU, 4 GB RAM, Ubuntu 24.04) |
 | Processes | Docker Compose (`infra/staging/compose.yml`): PostGIS, Redis, `init` (migrations, demo seed, staff account), `api`, `worker`, `web`, `admin`, Caddy |
-| HTTPS | Caddy obtains certificates automatically for `<ip-with-dashes>.sslip.io` (web) and `admin.<ip-with-dashes>.sslip.io` (admin). No domain needed |
+| HTTPS | Caddy obtains certificates automatically for `<ip-with-dashes>.sslip.io` (web) and `admin.<ip-with-dashes>.sslip.io` (admin). No domain needed; to move to `jorena.app` see [domain.md](./domain.md) |
 | Image | Built on the server from `infra/staging/Dockerfile` (one image for every Node process) |
 | Updates | `infra/staging/update.sh` runs every 5 minutes (systemd timer `jordan-sports-update.timer`): when the staging branch moved, it pulls and runs `docker compose up -d --build` (migrations and idempotent seeding run in `init`) |
 | Secrets | Generated on the server (`/opt/jordan-sports/staging.env`, mode 600): database password, `AUTH_SECRET`. The staff account (email, password, TOTP secret) comes from the cloud-config, written to `/opt/jordan-sports/admin.env` |

@@ -1,7 +1,10 @@
-# HTTPS certificates are obtained automatically for the sslip.io host names.
+# HTTPS certificates are obtained automatically (Let's Encrypt) for every host name below: the
+# sslip.io names bootstrap.sh writes, or a real domain from domain.env (see docs/domain.md).
 (common) {
 	encode gzip
-	header X-Robots-Tag "noindex, nofollow"
+	# Keep search engines out until launch; set X_ROBOTS_TAG=all in domain.env to allow indexing.
+	header X-Robots-Tag "{$X_ROBOTS_TAG:noindex, nofollow}"
+	header Strict-Transport-Security "max-age=31536000"
 	# Deployment progress (no secrets are written to these logs).
 	handle_path /_staging/* {
 		root * /srv/logs
@@ -23,4 +26,10 @@
 {$ADMIN_HOST} {
 	import common
 	reverse_proxy admin:3001
+}
+
+# Extra names for the web app (e.g. www.jorena.app) permanently redirect to the main host. Unset:
+# a local-only placeholder name, so no public certificate is ever requested for it.
+{$WEB_REDIRECT_HOSTS:www.redirect.localhost} {
+	redir https://{$WEB_HOST}{uri} permanent
 }

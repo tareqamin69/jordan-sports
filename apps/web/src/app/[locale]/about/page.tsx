@@ -5,6 +5,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 type Props = { params: Promise<{ locale: Locale }> };
 
+// Absolute URLs (metadataBase, share links) use WEB_BASE_URL, which is only known at runtime: the
+// deployment image is built without it, so these must not be pre-rendered at build time.
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'web.about' });

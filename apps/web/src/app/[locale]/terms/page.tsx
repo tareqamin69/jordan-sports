@@ -8,6 +8,10 @@ type Props = { params: Promise<{ locale: Locale }> };
 /** Placeholder legal text was drafted this date — bump it whenever the copy actually changes. */
 const DRAFTED_AT = new Date('2026-09-28');
 
+// Absolute URLs (metadataBase, share links) use WEB_BASE_URL, which is only known at runtime: the
+// deployment image is built without it, so these must not be pre-rendered at build time.
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'web.terms' });

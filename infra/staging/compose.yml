@@ -1,12 +1,15 @@
 # Staging (test) deployment: everything on one small server. See docs/staging.md.
-# Secrets and host names come from the env file created by bootstrap.sh (never committed).
+# Secrets and host names come from the env file created by bootstrap.sh (never committed);
+# domain.env (committed, no secrets) overrides the host names once a real domain is set up.
 name: jordan-sports-staging
 
 x-app: &app
   image: jordan-sports-app:latest
   # Built locally by the `init` service; never pulled from a registry.
   pull_policy: never
-  env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+  env_file:
+    - ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+    - ./domain.env
   restart: unless-stopped
 
 services:
@@ -72,7 +75,9 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    env_file: ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+    env_file:
+      - ${STAGING_ENV_FILE:-/opt/jordan-sports/staging.env}
+      - ./domain.env
     ports: ['80:80', '443:443']
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
