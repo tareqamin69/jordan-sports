@@ -17,6 +17,9 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       '**/next-env.d.ts',
+      // Static assets served as-is (the service worker, offline fallback page, icons) — not
+      // application source.
+      'apps/web/public/**',
     ],
   },
   js.configs.recommended,

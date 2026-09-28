@@ -431,6 +431,15 @@ export const ar = {
       browse: 'دوّر على ملعب',
       open: 'التفاصيل',
     },
+    pwa: {
+      installTitle: 'ثبّت {appName} على جهازك',
+      installBody: 'وصول أسرع وتصفح بدون متصفح، متل أي تطبيق.',
+      install: 'تثبيت',
+      dismiss: 'مو هلأ',
+      iosTitle: 'ثبّت {appName} على هاتفك',
+      iosBody: 'اضغط على زر المشاركة {shareIcon} تحت، وبعدين "إضافة إلى الشاشة الرئيسية".',
+      gotIt: 'تمام',
+    },
   },
   admin: {
     metadata: {

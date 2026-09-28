@@ -433,6 +433,15 @@ export const en = {
       browse: 'Find a venue',
       open: 'Details',
     },
+    pwa: {
+      installTitle: 'Install {appName} on your device',
+      installBody: 'Faster access, no browser chrome — just like an app.',
+      install: 'Install',
+      dismiss: 'Not now',
+      iosTitle: 'Install {appName} on your phone',
+      iosBody: 'Tap the share button {shareIcon} below, then "Add to Home Screen".',
+      gotIt: 'Got it',
+    },
   },
   admin: {
     metadata: {

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>جورينا — بدون إنترنت</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 32px;
+        box-sizing: border-box;
+        background: #f4f0e6;
+        color: #151712;
+        font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        text-align: center;
+      }
+      .mark {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: #0f4d34;
+        color: #f4f0e6;
+        display: grid;
+        place-items: center;
+        font-size: 34px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      p {
+        margin: 0;
+        max-width: 32ch;
+        color: #6a6e64;
+        line-height: 1.8;
+      }
+      button {
+        margin-top: 8px;
+        min-height: 48px;
+        padding: 0 24px;
+        border: none;
+        border-radius: 999px;
+        background: #0f4d34;
+        color: #f4f0e6;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mark" aria-hidden="true">ج</div>
+    <h1>ما في اتصال بالإنترنت</h1>
+    <p>تأكّد من الاتصال وجرّب مرة ثانية. حجوزاتك وبياناتك ما تأثّروا.</p>
+    <button onclick="location.reload()">إعادة المحاولة</button>
+  </body>
+</html>

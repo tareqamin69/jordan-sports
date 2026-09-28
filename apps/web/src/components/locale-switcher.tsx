@@ -23,7 +23,7 @@ export function LocaleSwitcher({ overlay = false }: { overlay?: boolean }) {
         className={cx(
           'flex h-10 items-center rounded-full border px-4 text-sm font-medium transition-colors duration-200',
           overlay
-            ? 'border-canvas/35 bg-night/25 text-canvas backdrop-blur-sm hover:bg-night/40 focus-visible:outline-canvas'
+            ? 'border-canvas/35 bg-night/60 text-canvas backdrop-blur-sm hover:bg-night/75 focus-visible:outline-canvas'
             : 'border-line-strong text-ink hover:bg-surface',
         )}
         data-testid="locale-switcher"
