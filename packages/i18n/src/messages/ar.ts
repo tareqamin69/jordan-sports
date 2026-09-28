@@ -277,6 +277,7 @@ export const ar = {
       switchVenue: 'بدّل الملعب',
       statusBadge: {
         draft: 'مسودة',
+        approved: 'منشور',
         submitted: 'قيد المراجعة',
         rejected: 'مرفوض',
         suspended: 'موقوف',

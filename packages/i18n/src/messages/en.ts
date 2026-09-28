@@ -280,6 +280,7 @@ export const en = {
       switchVenue: 'Switch venue',
       statusBadge: {
         draft: 'Draft',
+        approved: 'Live',
         submitted: 'Under review',
         rejected: 'Rejected',
         suspended: 'Suspended',

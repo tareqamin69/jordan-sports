@@ -75,9 +75,14 @@ export function ManageHome() {
                   </span>
                   <span className="flex flex-wrap gap-2">
                     <Badge>{tc(`roles.${v.role}`)}</Badge>
-                    {v.status !== 'approved' ? (
-                      <Badge className="bg-accent-300/70">{t(`statusBadge.${v.status}`)}</Badge>
-                    ) : null}
+                    <Badge
+                      data-testid="venue-status-badge"
+                      className={
+                        v.status === 'approved' ? 'bg-brand-100 text-brand-900' : 'bg-accent-300/70'
+                      }
+                    >
+                      {t(`statusBadge.${v.status}`)}
+                    </Badge>
                   </span>
                 </span>
                 <Icon name="chevron" className="size-5 shrink-0 text-ink-muted rtl:rotate-180" />
