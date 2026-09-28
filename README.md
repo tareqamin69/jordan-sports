@@ -1,7 +1,9 @@
-# Jordan Sports
+# Jorena
 
 A Jordan-focused sports participation and booking marketplace with venue operating software.
-"Jordan Sports" is a working name.
+Brand name: **Jorena** (English) / **جورينا** (Arabic) — defined once in `packages/brand`
+(`BRAND_NAME`), consumed everywhere else (UI copy, emails/SMS, OpenAPI docs, the admin TOTP
+issuer, the web PWA manifest).
 
 > **Status: M0 (foundations).** The repository contains the monorepo, tooling, CI, the database
 > migration runner, health endpoints, and Arabic/English (RTL/LTR) skeletons of the web and admin

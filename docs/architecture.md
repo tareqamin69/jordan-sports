@@ -1,8 +1,8 @@
-# Jordan Sports — Product & Technical Architecture
+# Jorena — Product & Technical Architecture
 
 > **Status:** Approved (2026-09-27). This document is the authoritative architecture for the project.
 > Architectural decisions are recorded individually in [`docs/adr/`](./adr/README.md).
-> "Jordan Sports" is a working name.
+> Brand name: **Jorena** / **جورينا**, defined once in `packages/brand` (`BRAND_NAME`).
 >
 > This document describes the **target** architecture. What is actually implemented at any point is
 > tracked per milestone in [`docs/milestones/`](./milestones/). Nothing described here should be assumed

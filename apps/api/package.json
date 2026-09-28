@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
+    "@jordan-sports/brand": "workspace:*",
     "@jordan-sports/contracts": "workspace:*",
     "@jordan-sports/i18n": "workspace:*",
     "@jordan-sports/money": "workspace:*",

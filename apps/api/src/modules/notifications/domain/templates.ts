@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@jordan-sports/brand';
 import { messages, type Locale } from '@jordan-sports/i18n';
 import { formatMoney } from '@jordan-sports/money';
 import { DateTime } from 'luxon';
@@ -44,5 +45,6 @@ export function renderBookingMessage(
     customer: facts.customerName ?? '-',
     phone: facts.customerPhone ?? '-',
     reason: facts.reason ?? '-',
+    appName: BRAND_NAME[locale],
   });
 }

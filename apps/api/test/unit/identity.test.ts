@@ -93,7 +93,7 @@ describe('TOTP (RFC 6238 / RFC 4226)', () => {
 
   it('builds an otpauth URI for authenticator apps', () => {
     expect(otpauthUri('ABC', 'a@b.jo')).toMatch(
-      /^otpauth:\/\/totp\/Jordan%20Sports%3Aa%40b\.jo\?secret=ABC&/,
+      /^otpauth:\/\/totp\/Jorena%3Aa%40b\.jo\?secret=ABC&/,
     );
   });
 });

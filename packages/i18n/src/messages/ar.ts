@@ -1,4 +1,5 @@
 import type { MessageCatalog } from './types.js';
+import { BRAND_NAME } from '@jordan-sports/brand';
 
 /**
  * Arabic UI catalog (ICU MessageFormat). Typed against the English catalog's shape so
@@ -6,7 +7,7 @@ import type { MessageCatalog } from './types.js';
  */
 export const ar = {
   common: {
-    appName: 'رياضة الأردن',
+    appName: BRAND_NAME.ar,
     allSports: 'كل الرياضات',
     languageSwitcher: {
       label: 'اللغة',
@@ -73,19 +74,19 @@ export const ar = {
   },
   notifications: {
     bookingConfirmed:
-      'رياضة الأردن: تأكّد حجزك {reference} في {venue} ({resource}) يوم {date} الساعة {time}. الدفع بالملعب: {price}.',
-    bookingCancelled: 'رياضة الأردن: انلغى حجزك {reference} في {venue} يوم {date} الساعة {time}.',
+      '{appName}: تأكّد حجزك {reference} في {venue} ({resource}) يوم {date} الساعة {time}. الدفع بالملعب: {price}.',
+    bookingCancelled: '{appName}: انلغى حجزك {reference} في {venue} يوم {date} الساعة {time}.',
     bookingCancelledByVenue:
-      'رياضة الأردن: {venue} لغى حجزك {reference} يوم {date} الساعة {time}. السبب: {reason}',
+      '{appName}: {venue} لغى حجزك {reference} يوم {date} الساعة {time}. السبب: {reason}',
     venueNewBooking:
-      'رياضة الأردن: حجز جديد {reference} — {resource}، {date} الساعة {time}، {customer} ({phone}). الدفع بالملعب: {price}.',
+      '{appName}: حجز جديد {reference} — {resource}، {date} الساعة {time}، {customer} ({phone}). الدفع بالملعب: {price}.',
     venueBookingCancelled:
-      'رياضة الأردن: اللاعب لغى الحجز {reference} — {resource}، {date} الساعة {time}.',
+      '{appName}: اللاعب لغى الحجز {reference} — {resource}، {date} الساعة {time}.',
     noPrice: 'السعر مش محدد',
   },
   web: {
     metadata: {
-      title: 'رياضة الأردن',
+      title: BRAND_NAME.ar,
       description: 'احجز ملاعب رياضية بكل الأردن بسهولة.',
     },
     header: {
@@ -201,7 +202,7 @@ export const ar = {
       address: 'العنوان',
       contact: 'اتصل بالملعب',
       share: 'شارك عالواتساب',
-      shareText: '{name} على رياضة الأردن',
+      shareText: '{name} على {appName}',
       combines: 'ملعب كامل (بجمع {count} ملاعب أصغر)',
       photoAlt: 'صورة {n} من {total} لـ {name}',
       photos: 'صور الملعب',
@@ -433,7 +434,7 @@ export const ar = {
   },
   admin: {
     metadata: {
-      title: 'إدارة رياضة الأردن',
+      title: `إدارة ${BRAND_NAME.ar}`,
     },
     home: {
       title: 'إدارة المنصة',

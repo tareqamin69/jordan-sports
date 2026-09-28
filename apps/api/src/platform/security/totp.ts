@@ -1,3 +1,4 @@
+import { BRAND_NAME_LATIN } from '@jordan-sports/brand';
 import { createHmac, randomBytes } from 'node:crypto';
 
 /**
@@ -88,7 +89,7 @@ export function verifyTotp(
 export function otpauthUri(
   secretBase32: string,
   account: string,
-  issuer = 'Jordan Sports',
+  issuer = BRAND_NAME_LATIN,
 ): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
   const params = new URLSearchParams({

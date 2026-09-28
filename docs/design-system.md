@@ -3,6 +3,16 @@
 Adopted 2026-09-27 for every screen (player web, venue-owner dashboard, admin). Source of truth is
 `packages/ui` — apps must use its tokens and components, never raw hex values.
 
+## Brand name
+
+**Jorena** (English) / **جورينا** (Arabic), decided 2026-09-27. Defined once, in
+`packages/brand` (`BRAND_NAME`, `BRAND_NAME_LATIN`) — never hardcode the name in a component,
+message string, template or doc. Every surface reads from it, directly or via
+`common.appName`/`admin.metadata.title` in `packages/i18n`: the header wordmark, page and browser
+tab titles, SMS/notification templates, the WhatsApp share text, the OpenAPI title, the admin
+TOTP issuer, the calendar-file (`.ics`) PRODID, and the PWA manifest. To rename the product again,
+change `packages/brand/src/index.ts` and rebuild.
+
 ## Tokens (`packages/ui/src/tokens.css`, Tailwind v4 `@theme`)
 
 | Token | Value | Use |

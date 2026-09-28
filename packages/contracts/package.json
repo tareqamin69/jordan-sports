@@ -19,6 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@jordan-sports/brand": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {

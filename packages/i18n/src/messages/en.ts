@@ -2,9 +2,11 @@
  * English UI catalog (ICU MessageFormat). The Arabic catalog must have exactly the same
  * keys and placeholders; this is enforced by the type of `ar` and by unit tests.
  */
+import { BRAND_NAME } from '@jordan-sports/brand';
+
 export const en = {
   common: {
-    appName: 'Jordan Sports',
+    appName: BRAND_NAME.en,
     allSports: 'All sports',
     languageSwitcher: {
       label: 'Language',
@@ -74,20 +76,20 @@ export const en = {
   },
   notifications: {
     bookingConfirmed:
-      'Jordan Sports: your booking {reference} at {venue} ({resource}) on {date} at {time} is confirmed. Pay at the venue: {price}.',
+      '{appName}: your booking {reference} at {venue} ({resource}) on {date} at {time} is confirmed. Pay at the venue: {price}.',
     bookingCancelled:
-      'Jordan Sports: your booking {reference} at {venue} on {date} at {time} has been cancelled.',
+      '{appName}: your booking {reference} at {venue} on {date} at {time} has been cancelled.',
     bookingCancelledByVenue:
-      'Jordan Sports: {venue} cancelled your booking {reference} on {date} at {time}. Reason: {reason}',
+      '{appName}: {venue} cancelled your booking {reference} on {date} at {time}. Reason: {reason}',
     venueNewBooking:
-      'Jordan Sports: new booking {reference} — {resource}, {date} at {time}, {customer} ({phone}). Pay at venue: {price}.',
+      '{appName}: new booking {reference} — {resource}, {date} at {time}, {customer} ({phone}). Pay at venue: {price}.',
     venueBookingCancelled:
-      'Jordan Sports: booking {reference} — {resource}, {date} at {time} was cancelled by the player.',
+      '{appName}: booking {reference} — {resource}, {date} at {time} was cancelled by the player.',
     noPrice: 'price not set',
   },
   web: {
     metadata: {
-      title: 'Jordan Sports',
+      title: BRAND_NAME.en,
       description: 'A sports participation and booking platform for Jordan.',
     },
     header: {
@@ -201,7 +203,7 @@ export const en = {
       address: 'Address',
       contact: 'Call the venue',
       share: 'Share on WhatsApp',
-      shareText: '{name} on Jordan Sports',
+      shareText: '{name} on {appName}',
       combines: 'Full size (combines {count} smaller pitches)',
       photoAlt: 'Photo {n} of {total} of {name}',
       photos: 'Venue photos',
@@ -434,7 +436,7 @@ export const en = {
   },
   admin: {
     metadata: {
-      title: 'Jordan Sports Admin',
+      title: `${BRAND_NAME.en} Admin`,
     },
     home: {
       title: 'Platform administration',

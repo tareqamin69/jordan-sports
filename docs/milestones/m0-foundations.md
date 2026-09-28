@@ -54,6 +54,7 @@ accessibility checks (WCAG 2.x A/AA rules) in both locales.
 
 ## Notes
 
-- The Arabic working name shown in the UI is «رياضة الأردن». It is a single catalog entry in
-  `packages/i18n/src/messages/ar.ts` and can be changed when the brand is decided.
+- The brand name is **Jorena** / **جورينا**, decided 2026-09-27. It lives in one place,
+  `packages/brand` (`BRAND_NAME`), and every message catalog, template and doc title reads from
+  it — never hardcode the name again; see `docs/design-system.md`.
 - TypeScript is pinned to 6.0.x because typescript-eslint does not yet support TypeScript 7.

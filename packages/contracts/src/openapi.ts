@@ -1,3 +1,4 @@
+import { BRAND_NAME_LATIN } from '@jordan-sports/brand';
 import { z } from 'zod';
 import type { Endpoint } from './endpoint.js';
 
@@ -64,7 +65,7 @@ export function buildOpenApiDocument(endpoints: readonly Endpoint[], version: st
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'Jordan Sports API', version },
+    info: { title: `${BRAND_NAME_LATIN} API`, version },
     components: {
       securitySchemes: {
         session: { type: 'apiKey', in: 'cookie', name: 'js_session' },

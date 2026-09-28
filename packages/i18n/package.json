@@ -18,6 +18,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@jordan-sports/brand": "workspace:*"
+  },
   "devDependencies": {
     "@formatjs/icu-messageformat-parser": "3.5.20",
     "@jordan-sports/config": "workspace:*",
