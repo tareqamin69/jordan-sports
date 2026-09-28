@@ -415,7 +415,8 @@ export const en = {
         from: 'From',
         to: 'To',
         nextDay: '(next day)',
-        copyToAll: 'Copy to all courts and pitches',
+        copyToAll: 'Apply to all courts and pitches',
+        copyToAllDays: 'Copy to all days',
         saved: 'Opening hours saved.',
       },
       rules: {

@@ -412,7 +412,8 @@ export const ar = {
         from: 'من',
         to: 'إلى',
         nextDay: '(اليوم اللي بعده)',
-        copyToAll: 'انسخ لكل الملاعب',
+        copyToAll: 'طبّق على كل الملاعب',
+        copyToAllDays: 'انسخ لكل الأيام',
         saved: 'انحفظت ساعات الدوام.',
       },
       rules: {

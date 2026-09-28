@@ -75,6 +75,15 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
   const update = (day: number, patch: Partial<DayHours>) =>
     setWeek((w) => ({ ...w, [day]: { ...w[day]!, ...patch } }));
 
+  const copyToAllDays = (day: number) => {
+    const source = week[day]!;
+    setWeek((w) => {
+      const next: Week = { ...w };
+      for (const d of weekdaysInDisplayOrder) next[d] = { ...source };
+      return next;
+    });
+  };
+
   return (
     <Card>
       <p className="mb-4 text-sm text-ink-muted">{t('hours.intro')}</p>
@@ -112,7 +121,7 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
           return (
             <li
               key={day}
-              className="grid items-end gap-3 py-3 sm:grid-cols-[10rem_1fr_1fr]"
+              className="grid items-end gap-3 py-3 sm:grid-cols-[10rem_1fr_1fr_auto]"
               data-testid={`hours-day-${day}`}
             >
               <CheckboxField
@@ -156,6 +165,17 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
                         </option>
                       ))}
                   </SelectField>
+                  {editable ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="whitespace-nowrap"
+                      onClick={() => copyToAllDays(day)}
+                    >
+                      {t('hours.copyToAllDays')}
+                    </Button>
+                  ) : null}
                 </>
               ) : null}
             </li>
