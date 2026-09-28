@@ -8,6 +8,7 @@ import { Suspense, type ReactNode } from 'react';
 import { InstallPrompt } from '@/components/install-prompt';
 import { Providers } from '@/components/providers';
 import { PwaRegister } from '@/components/pwa-register';
+import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
@@ -64,6 +65,7 @@ export default async function LocaleLayout({ children, params }: Props) {
               <SiteHeader />
             </Suspense>
             {children}
+            <SiteFooter />
             <InstallPrompt />
           </Providers>
         </NextIntlClientProvider>

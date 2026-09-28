@@ -102,6 +102,46 @@ export const en = {
       switchToVenue: 'Venue owner mode',
       switchToPlayer: 'Player mode',
     },
+    footer: {
+      about: 'About us',
+      contact: 'Contact us',
+      terms: 'Terms & conditions',
+      privacy: 'Privacy policy',
+      rights: 'All rights reserved © {year}',
+    },
+    about: {
+      title: 'About us',
+      description: 'Why we built {appName}.',
+      body1:
+        '{appName} connects players with venue owners across Jordan — from Amman to Aqaba. We want booking a court to be simple: see free times as they open up, book in minutes, pay at the venue.',
+      body2:
+        'Venue owners can register their own venue, manage prices and opening hours, and take bookings without needing someone answering the phone all day.',
+      body3: 'The platform is early and moving fast based on feedback from players and owners.',
+    },
+    contact: {
+      title: 'Contact us',
+      description: 'Have a question or feedback? Reach out.',
+      whatsapp: 'WhatsApp',
+      whatsappBody: 'The fastest way to reach us.',
+      email: 'Email',
+      placeholderNotice:
+        'The WhatsApp number and email here are placeholders until we confirm the final ones — review before launch.',
+    },
+    legal: {
+      placeholderNotice:
+        'This is placeholder text still under legal review — it should not be treated as final before a lawyer reviews it.',
+      lastUpdated: 'Last updated: {date}',
+    },
+    terms: {
+      title: 'Terms & conditions',
+      description: "{appName}'s terms of use.",
+      body: "By using {appName} you agree to these terms. The platform connects players with independent venue owners; each venue is responsible for the accuracy of its own listing, prices and opening hours. A booking is a direct agreement between the player and the venue owner — {appName} only facilitates the booking. Cancellations and refunds follow each venue's own policy, shown at the time of booking.",
+    },
+    privacy: {
+      title: 'Privacy policy',
+      description: 'How we use your information on {appName}.',
+      body: "We collect your phone number and name so you can make bookings and venues can reach you. We share your phone number only with the venue you book with. We never sell your data to a third party. You can ask us to delete your account and data at any time by contacting us.",
+    },
     home: {
       eyebrow: 'From Aqaba to Irbid',
       title: 'Play better. Book easier.',
