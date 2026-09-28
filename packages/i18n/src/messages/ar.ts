@@ -471,6 +471,7 @@ export const ar = {
       reference: 'رقم الحجز',
       payAtVenue: 'الدفع بالملعب',
       freeUntil: 'الإلغاء مجاني لغاية {date}',
+      freeCancellationUnavailable: 'الإلغاء المجاني مش متاح لهاد الحجز.',
       lateNote: 'بتقدر تلغي بعدها، بس بنسجل الإلغاء كإلغاء متأخر.',
       termsDetails: 'شروط الإلغاء',
       addToCalendar: 'ضيفه عالتقويم',

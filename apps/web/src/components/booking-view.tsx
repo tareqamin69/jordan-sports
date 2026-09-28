@@ -271,7 +271,9 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             </span>
             <p className="flex flex-col text-sm">
               <span className="font-semibold text-ink">{t('payAtVenue')}</span>
-              <span className="text-ink-muted">{t('freeUntil', { date: freeUntilText })}</span>
+              <span className={cx('text-ink-muted', late && 'text-danger')}>
+                {late ? t('freeCancellationUnavailable') : t('freeUntil', { date: freeUntilText })}
+              </span>
             </p>
           </div>
           <details className="group rounded-2xl bg-canvas px-4 py-3 text-sm text-ink-muted">
@@ -386,7 +388,9 @@ export function BookingView({ bookingId }: { bookingId: string }) {
 
       {b.status === 'CONFIRMED' && new Date(b.start).getTime() > now ? (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-ink-muted">{t('freeUntil', { date: freeUntilText })}</p>
+          <p className={cx('text-sm text-ink-muted', late && 'text-danger')}>
+            {late ? t('freeCancellationUnavailable') : t('freeUntil', { date: freeUntilText })}
+          </p>
           {asking ? (
             <Card className="flex flex-col gap-4 p-5">
               <p className="font-medium">{late ? t('lateQuestion') : t('cancelQuestion')}</p>

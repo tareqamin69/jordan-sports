@@ -473,6 +473,7 @@ export const en = {
       reference: 'Booking reference',
       payAtVenue: 'Payment: at the venue.',
       freeUntil: 'Free cancellation until {date}.',
+      freeCancellationUnavailable: 'Free cancellation is no longer available for this booking.',
       lateNote: 'You can still cancel after that, but it is recorded as a late cancellation.',
       termsDetails: 'Cancellation terms',
       addToCalendar: 'Add to calendar',
