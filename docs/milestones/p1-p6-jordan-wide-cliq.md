@@ -204,10 +204,35 @@ confirmation (a "بدك تلغي؟" card with confirm/keep buttons, or a reason 
 never `window.confirm`. Verified against the existing e2e coverage in `bookings.spec.ts`, which
 already drives that exact flow (`Cancel booking` → `Yes, cancel`).
 
-Remaining: performance/Lighthouse pass (item 10) and Arabic map labels (item 11). Cancelling the
-owner's test booking `LULBBS94` on staging is blocked: the staging URL isn't discoverable anywhere
-in this repo or the session environment — needs the owner to share it or cancel it themselves.
-Similarly, items 5 and 6 (demo venue photos and the "(تجريبي)" name suffix) only take effect for
-*newly seeded* venues — staging's existing demo venues won't self-correct from a code push alone,
-since `seed:demo` skips venues that already exist; fixing the already-seeded ones needs either a
-reseed or a direct data fix on staging.
+**Item 11 (Arabic map labels)**: switched `VenueMap` and the registration wizard's `LocationPicker`
+from raster OpenStreetMap tiles (labels baked into the tile image, no way to switch script) to
+OpenFreeMap's free, keyless "Liberty" vector style, with `localizeMapLabels()` pointing every
+label at `name:ar`/`name:en` (falling back to the untagged `name`) once the style loads. Falls
+back to the old raster tiles if the vector style can't be reached. This sandbox's egress policy
+blocks both tile hosts outright (confirmed with a direct `curl`), so this could only be verified
+structurally (typecheck/lint/build, and that the map still finishes loading via the fallback path
+instead of hanging) — worth a visual check on staging.
+
+**Item 10 (performance)**: profiled with Lighthouse (mobile) rather than guessing. Lazy-loaded
+`VenueMap` (MapLibre GL, ~200KB, was in the venue page's initial bundle even though the map sits
+below the booking widget) via `next/dynamic({ ssr: false })`, and added `"sideEffects": false` to
+`@jordan-sports/contracts` (zod schemas for every domain, no `sideEffects` field meant bundlers
+couldn't tree-shake endpoints a given page never calls). Home page's score is ~82–83 in this pass,
+short of the 90+ target; the remaining weight is mostly self-hosted webfonts (Arabic pages still
+render Latin digits/prices, so both scripts' weights load) and baseline Next/React JS — neither
+has a safe, scoped fix without a bigger refactor, so flagging as follow-up rather than risking a
+broad, untested change under time pressure. The venue page's own Lighthouse number is additionally
+skewed low in this sandbox by the blocked tile hosts above (unrelated to the app's code) — re-check
+on staging for a clean read.
+
+All 12 items from the bug list have now been addressed (11 with a code change, item 12 verified as
+already correct) — see the commit log on `claude/dazzling-feynman-iryb1r` / staging
+(`claude/inspect-repo-environment-c0iptd`) for one commit per item, each with full validation
+(lint, typecheck, `check:repo`, unit 90/90, integration 79/79, full Playwright e2e 68/68).
+
+**Two things still need the owner directly**, since neither is reachable from this session:
+1. Cancelling the test booking `LULBBS94` on staging — the staging URL isn't discoverable anywhere
+   in this repo or the session environment.
+2. Staging's *already-seeded* demo venues won't pick up the items 5/6 fixes (correct photos, the
+   "(تجريبي)" suffix) from a code push alone, since `seed:demo` skips venues that already exist —
+   needs either a reseed or a direct data fix on staging.
