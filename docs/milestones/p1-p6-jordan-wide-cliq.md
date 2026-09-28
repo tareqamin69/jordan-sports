@@ -10,7 +10,7 @@ what's shipped so a new session can resume without re-reading everything.
 | Phase | Status |
 |---|---|
 | P1 — Jordan-wide geography + full sports catalog | **Done (2026-09-27)** |
-| P2 — Two interfaces, mode switch | Not started |
+| P2 — Two interfaces, mode switch | **Done (2026-09-28)** |
 | P3 — Venue self-registration wizard, review queue | Not started |
 | P4 — CliQ payment flow | Not started |
 | P5 — Prepaid balance & commission | Not started |
@@ -142,3 +142,24 @@ Verification after every step: lint, typecheck, `check:repo`, unit (90/90), inte
 full Playwright e2e (68/68, mobile + desktop, axe AA). Each item landed as its own commit, pushed
 to both `claude/dazzling-feynman-iryb1r` and the staging branch
 `claude/inspect-repo-environment-c0iptd` (staging auto-deploys from the latter every 5 minutes).
+
+## P2 — two interfaces, one account (2026-09-28)
+
+Implements plan §2 in full. See the commit message on `feat(P2): two interfaces, one account` for
+the detailed change list (migration 0013 `preferred_mode`, sign-up mode question, header switch,
+`VenueNav` shell, venue switcher, account page card, rewritten empty state).
+
+**Deliberately deferred to P3**: "Add your venue" from the empty `/manage` state has no button —
+the self-registration wizard doesn't exist yet. The empty-state hint says so honestly ("once you
+join an organization or register your venue…") instead of linking to something that isn't built.
+Wire it up when P3 lands.
+
+**Design decision**: `preferred_mode` is write-once at signup (no endpoint to change it later).
+The runtime "switch" is pure navigation (`/` ⇄ `/manage`), matching the plan's "presentation
+only, anyone can switch" — nothing needs to persist across sessions for that to work.
+
+Verification: lint, typecheck, check:repo, unit (90/90), integration (79/79), full Playwright
+e2e (68/68, mobile + desktop, axe AA).
+
+Next up: P3 (venue self-registration wizard, review queue with call/WhatsApp, platform settings,
+"chat with us" button).
