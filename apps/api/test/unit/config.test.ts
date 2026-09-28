@@ -34,6 +34,7 @@ describe('parseConfig', () => {
       staging: false,
       trustProxy: ['127.0.0.1', '::1'],
       features: { cliqPayments: false },
+      email: { smtpUrl: null, from: 'Jorena <no-reply@jorena.app>' },
     });
   });
 

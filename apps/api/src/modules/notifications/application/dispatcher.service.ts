@@ -10,6 +10,7 @@ import {
   type BookingMessageFacts,
   type TemplateName,
 } from '../domain/templates.js';
+import { EMAIL_SENDER, type EmailSender } from '../../../platform/email/email-sender.js';
 import { NOTIFICATION_CHANNEL, type NotificationChannel } from './channels.js';
 import type { OutboxEvent } from './outbox.js';
 
@@ -38,6 +39,7 @@ export class OutboxDispatcher {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
     @Inject(NOTIFICATION_CHANNEL) private readonly channel: NotificationChannel,
+    @Inject(EMAIL_SENDER) private readonly email: EmailSender,
   ) {}
 
   /** Processes one batch; returns how many events were handled. */
@@ -103,6 +105,8 @@ export class OutboxDispatcher {
       case 'balance.empty':
         // In-app only until an SMS/WhatsApp provider is connected (plan §4 "Venue notification").
         return;
+      case 'staff.signed_in':
+        return this.staffSignedIn(tx, eventId, event);
       default:
         throw new Error(`Unknown event type ${(event as { type: string }).type}`);
     }
@@ -192,5 +196,58 @@ export class OutboxDispatcher {
         .onConflict((oc) => oc.columns(['event_id', 'recipient', 'template']).doNothing())
         .execute();
     }
+  }
+
+  private async staffSignedIn(
+    tx: Tx,
+    eventId: string,
+    event: Extract<OutboxEvent, { type: 'staff.signed_in' }>,
+  ): Promise<void> {
+    const user = await tx
+      .selectFrom('identity.users')
+      .select(['email', 'platform_role'])
+      .where('id', '=', event.payload.userId)
+      .executeTakeFirst();
+    if (!user?.email || !user.platform_role) return;
+    if (user.platform_role !== 'owner' && !event.payload.newDevice) return;
+    const template = event.payload.newDevice ? 'staffNewDevice' : 'staffSignIn';
+    const already = await tx
+      .selectFrom('notification.deliveries')
+      .select('id')
+      .where('event_id', '=', eventId)
+      .where('template', '=', template)
+      .executeTakeFirst();
+    if (already) return;
+    const when = new Date(event.payload.at).toLocaleString('en-GB', { timeZone: 'Asia/Amman' });
+    const subject = event.payload.newDevice
+      ? 'Jorena admin: sign-in from a new device / تسجيل دخول من جهاز جديد'
+      : 'Jorena admin: new sign-in / تسجيل دخول جديد';
+    const text = [
+      'تم تسجيل الدخول إلى لوحة إدارة Jorena بحسابك.',
+      'A sign-in to your Jorena admin account just happened.',
+      '',
+      `Time (Amman): ${when}`,
+      `IP: ${event.payload.ip ?? 'unknown'}`,
+      `Browser: ${event.payload.userAgent ?? 'unknown'}`,
+      `New device: ${event.payload.newDevice ? 'yes' : 'no'}`,
+      '',
+      'إذا مش إنت، غيّر كلمة السر فورًا وتواصل مع صاحب المنصة.',
+      'If this was not you, contact the platform owner immediately.',
+    ].join('\n');
+    await this.email.send({ to: user.email, subject, text });
+    await tx
+      .insertInto('notification.deliveries')
+      .values({
+        id: uuidv7(),
+        event_id: eventId,
+        channel: 'email',
+        recipient: user.email,
+        template,
+        locale: 'ar',
+        body: text,
+        status: 'sent',
+      })
+      .onConflict((oc) => oc.columns(['event_id', 'recipient', 'template']).doNothing())
+      .execute();
   }
 }

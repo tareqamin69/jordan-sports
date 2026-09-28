@@ -1,5 +1,5 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AccountModule } from './modules/account/account.module.js';
 import { AuditModule } from './modules/audit/index.js';
 import { BookingsModule } from './modules/bookings/index.js';
@@ -7,6 +7,7 @@ import { CatalogModule } from './modules/catalog/index.js';
 import { DirectoryModule } from './modules/directory/index.js';
 import { FinanceModule } from './modules/finance/index.js';
 import { IdentityModule } from './modules/identity/index.js';
+import { RequestAuditInterceptor } from './modules/audit/http/request-audit.interceptor.js';
 import { NotificationsModule } from './modules/notifications/index.js';
 import { PricingModule } from './modules/pricing/index.js';
 import { ResourcesModule } from './modules/resources/index.js';
@@ -64,6 +65,7 @@ export class AppModule {
         // Order matters: reject foreign origins before touching sessions.
         { provide: APP_GUARD, useClass: OriginGuard },
         { provide: APP_GUARD, useClass: AuthGuard },
+        { provide: APP_INTERCEPTOR, useClass: RequestAuditInterceptor },
         TenantResolver,
       ],
     };

@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { sql } from 'kysely';
 import type { PlatformRole } from '@jordan-sports/contracts';
 import type { Actor } from '../../../platform/auth/actor.js';
 import type { AppConfig } from '../../../platform/config/config.js';
@@ -26,15 +27,21 @@ import {
 import { generateTotpSecret, verifyTotp } from '../../../platform/security/totp.js';
 import { AuditService } from '../../audit/index.js';
 import { normalizePhone } from '../domain/phone.js';
+import { enqueue } from '../../notifications/index.js';
 import { OTP_SENDER, type OtpSender } from './otp-sender.js';
 
 export const OTP_TTL_SECONDS = 5 * 60;
 export const OTP_MAX_ATTEMPTS = 5;
 export const SIGNUP_TOKEN_TTL_SECONDS = 15 * 60;
 export const WEB_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
-export const ADMIN_SESSION_TTL_SECONDS = 8 * 60 * 60;
+/** Staff sessions: 4 hours at most, and they end after 30 minutes without activity. */
+export const ADMIN_SESSION_TTL_SECONDS = 4 * 60 * 60;
+export const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+export const ADMIN_LOCKOUT_THRESHOLD = 5;
+export const ADMIN_LOCKOUT_MS = 15 * 60 * 1000;
 const LAST_SEEN_RESOLUTION_MS = 5 * 60 * 1000;
-const TOTP_PURPOSE = 'totp-secret';
+const ADMIN_LAST_SEEN_RESOLUTION_MS = 60 * 1000;
+export const TOTP_PURPOSE = 'totp-secret';
 
 export const rateLimits = {
   otpPhoneBurst: { name: 'otp.request.phone.burst', limit: 1, windowSeconds: 30 },
@@ -52,6 +59,11 @@ export type VerifyResult =
 export interface IssuedSession {
   readonly userId: string;
   readonly sessionToken: string;
+}
+
+export interface IssuedAdminSession extends IssuedSession {
+  /** Set when the browser was not known: store it in the device cookie. */
+  readonly newDeviceToken: string | null;
 }
 
 // A valid Argon2id hash of a random value, verified when the email is unknown so that response
@@ -285,6 +297,8 @@ export class AuthService {
         expires_at: new Date(Date.now() + ttl * 1000),
         ip: meta.ip,
         user_agent: meta.userAgent,
+        // Signing in proves the password and authenticator code, like a re-authentication.
+        reauthenticated_at: kind === 'admin' ? new Date() : null,
       })
       .execute();
     return token;
@@ -296,7 +310,7 @@ export class AuthService {
     const row = await this.db
       .selectFrom('identity.sessions as s')
       .innerJoin('identity.users as u', 'u.id', 's.user_id')
-      .select(['s.id', 's.user_id', 's.last_seen_at', 'u.platform_role'])
+      .select(['s.id', 's.user_id', 's.last_seen_at', 's.reauthenticated_at', 'u.platform_role'])
       .where('s.token_hash', '=', sha256Hex(token))
       .where('s.kind', '=', kind)
       .where('s.revoked_at', 'is', null)
@@ -305,7 +319,16 @@ export class AuthService {
       .executeTakeFirst();
     if (!row) return null;
 
-    if (Date.now() - row.last_seen_at.getTime() > LAST_SEEN_RESOLUTION_MS) {
+    const idle = Date.now() - row.last_seen_at.getTime();
+    if (kind === 'admin' && idle > ADMIN_IDLE_TIMEOUT_MS) {
+      await this.db
+        .updateTable('identity.sessions')
+        .set({ revoked_at: new Date() })
+        .where('id', '=', row.id)
+        .execute();
+      return null;
+    }
+    if (idle > (kind === 'admin' ? ADMIN_LAST_SEEN_RESOLUTION_MS : LAST_SEEN_RESOLUTION_MS)) {
       await this.db
         .updateTable('identity.sessions')
         .set({ last_seen_at: new Date() })
@@ -319,6 +342,7 @@ export class AuthService {
         userId: row.user_id,
         sessionId: row.id,
         platformRole: row.platform_role as PlatformRole,
+        reauthenticatedAt: row.reauthenticated_at,
       };
     }
     return { kind: 'user', userId: row.user_id, sessionId: row.id };
@@ -338,66 +362,188 @@ export class AuthService {
   // Platform staff (admin)
   // ------------------------------------------------------------------------------------------
 
-  async adminSignIn(
-    email: string,
+  /**
+   * Checks a staff member's password and authenticator code. Failed attempts count towards a
+   * temporary lockout; `ACCOUNT_LOCKED` is only revealed to someone who knows the credentials.
+   */
+  private async checkStaffCredentials(
+    where: { email: string } | { userId: string },
     password: string,
     totpCode: string,
-    meta: RequestMeta,
-  ): Promise<IssuedSession> {
-    const normalizedEmail = email.trim().toLowerCase();
-    await this.rateLimiter.enforce([
-      [rateLimits.adminSignInIp, meta.ip ?? 'unknown'],
-      [rateLimits.adminSignInEmail, normalizedEmail],
-    ]);
-
-    const user = await this.db
+  ): Promise<{ userId: string; status: string; step: number }> {
+    let query = this.db
       .selectFrom('identity.users as u')
       .innerJoin('identity.password_credentials as p', 'p.user_id', 'u.id')
       .innerJoin('identity.totp_credentials as t', 't.user_id', 'u.id')
       .select([
         'u.id',
         'u.status',
-        'u.platform_role',
+        'u.locked_until',
         'p.password_hash',
         't.secret_encrypted',
         't.last_used_step',
       ])
-      .where('u.email', '=', normalizedEmail)
-      .where('u.platform_role', 'is not', null)
-      .executeTakeFirst();
+      .where('u.platform_role', 'is not', null);
+    query =
+      'email' in where
+        ? query.where('u.email', '=', where.email)
+        : query.where('u.id', '=', where.userId);
+    const user = await query.executeTakeFirst();
 
     if (!user) {
       dummyHash ??= hashPassword(randomToken());
       await verifyPassword(await dummyHash, password);
       throw new AppError('INVALID_CREDENTIALS', 401);
     }
-    if (!(await verifyPassword(user.password_hash, password))) {
-      throw new AppError('INVALID_CREDENTIALS', 401);
-    }
+    const passwordOk = await verifyPassword(user.password_hash, password);
     const secret = decryptSecret(this.config.authSecret, TOTP_PURPOSE, user.secret_encrypted);
     const step = verifyTotp(secret, totpCode);
-    if (step === null || step <= Number(user.last_used_step)) {
+    const valid = passwordOk && step !== null && step > Number(user.last_used_step);
+    const locked = user.locked_until !== null && user.locked_until.getTime() > Date.now();
+
+    if (!valid) {
+      if (!locked) {
+        await sql`
+          UPDATE identity.users
+             SET failed_sign_ins = CASE WHEN failed_sign_ins + 1 >= ${ADMIN_LOCKOUT_THRESHOLD}
+                                        THEN 0 ELSE failed_sign_ins + 1 END,
+                 locked_until = CASE WHEN failed_sign_ins + 1 >= ${ADMIN_LOCKOUT_THRESHOLD}
+                                     THEN ${new Date(Date.now() + ADMIN_LOCKOUT_MS)}::timestamptz
+                                     ELSE locked_until END
+           WHERE id = ${user.id}`.execute(this.db);
+      }
       throw new AppError('INVALID_CREDENTIALS', 401);
     }
+    if (locked) throw new AppError('ACCOUNT_LOCKED', 423);
+    return { userId: user.id, status: user.status, step: step! };
+  }
+
+  async adminSignIn(
+    email: string,
+    password: string,
+    totpCode: string,
+    meta: RequestMeta,
+    deviceToken: string | null,
+  ): Promise<IssuedAdminSession> {
+    const normalizedEmail = email.trim().toLowerCase();
+    await this.rateLimiter.enforce([
+      [rateLimits.adminSignInIp, meta.ip ?? 'unknown'],
+      [rateLimits.adminSignInEmail, normalizedEmail],
+    ]);
+    const user = await this.checkStaffCredentials({ email: normalizedEmail }, password, totpCode);
     if (user.status !== 'active') throw new AppError('ACCOUNT_SUSPENDED', 403);
 
     return this.db.transaction().execute(async (tx) => {
-      // Conditional update: a code (time step) can be used only once, even concurrently.
-      const accepted = await tx
-        .updateTable('identity.totp_credentials')
-        .set({ last_used_step: String(step) })
-        .where('user_id', '=', user.id)
-        .where('last_used_step', '<', String(step))
-        .executeTakeFirst();
-      if (Number(accepted.numUpdatedRows) !== 1) throw new AppError('INVALID_CREDENTIALS', 401);
+      await this.consumeTotpStep(tx, user.userId, user.step);
+      await tx
+        .updateTable('identity.users')
+        .set({ failed_sign_ins: 0, locked_until: null })
+        .where('id', '=', user.userId)
+        .execute();
 
-      const sessionToken = await this.createSession(user.id, 'admin', meta, tx);
+      const session = await this.startAdminSession(tx, user.userId, meta, deviceToken);
       await this.audit.record(
-        { actorType: 'admin', actorUserId: user.id, action: 'admin.signed_in', meta },
+        {
+          actorType: 'admin',
+          actorUserId: user.userId,
+          action: 'admin.signed_in',
+          details: { newDevice: session.newDeviceToken !== null },
+          meta,
+        },
         tx,
       );
-      return { userId: user.id, sessionToken };
+      return { userId: user.userId, ...session };
     });
+  }
+
+  /**
+   * Opens a staff session, remembers the browser (device cookie) and queues the security email
+   * (every owner sign-in; any sign-in from a new device).
+   */
+  async startAdminSession(
+    tx: DbOrTx,
+    userId: string,
+    meta: RequestMeta,
+    deviceToken: string | null,
+  ): Promise<{ sessionToken: string; newDeviceToken: string | null }> {
+    const usable =
+      deviceToken !== null && deviceToken.length >= 20 && deviceToken.length <= 200
+        ? deviceToken
+        : null;
+    const known = usable
+      ? await tx
+          .updateTable('identity.staff_devices')
+          .set({ last_seen_at: new Date(), user_agent: meta.userAgent })
+          .where('user_id', '=', userId)
+          .where('device_hash', '=', sha256Hex(usable))
+          .executeTakeFirst()
+      : null;
+    let newDeviceToken: string | null = null;
+    if (!known || Number(known.numUpdatedRows) !== 1) {
+      newDeviceToken = usable ?? randomToken();
+      await tx
+        .insertInto('identity.staff_devices')
+        .values({
+          user_id: userId,
+          device_hash: sha256Hex(newDeviceToken),
+          user_agent: meta.userAgent,
+        })
+        .onConflict((oc) => oc.columns(['user_id', 'device_hash']).doNothing())
+        .execute();
+    }
+    const sessionToken = await this.createSession(userId, 'admin', meta, tx);
+    await enqueue(tx, {
+      type: 'staff.signed_in',
+      payload: {
+        userId,
+        newDevice: newDeviceToken !== null,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        at: new Date().toISOString(),
+      },
+    });
+    return { sessionToken, newDeviceToken };
+  }
+
+  /** Conditional update: an authenticator code (time step) can be used only once, even concurrently. */
+  async consumeTotpStep(tx: DbOrTx, userId: string, step: number): Promise<void> {
+    const accepted = await tx
+      .updateTable('identity.totp_credentials')
+      .set({ last_used_step: String(step) })
+      .where('user_id', '=', userId)
+      .where('last_used_step', '<', String(step))
+      .executeTakeFirst();
+    if (Number(accepted.numUpdatedRows) !== 1) throw new AppError('INVALID_CREDENTIALS', 401);
+  }
+
+  /** Fresh password + authenticator check for dangerous actions (docs/rbac-plan.md §6). */
+  async reauthenticate(
+    actor: Extract<Actor, { kind: 'admin' }>,
+    password: string,
+    totpCode: string,
+    meta: RequestMeta,
+  ): Promise<Date> {
+    await this.rateLimiter.enforce([[rateLimits.adminSignInIp, meta.ip ?? 'unknown']]);
+    const user = await this.checkStaffCredentials({ userId: actor.userId }, password, totpCode);
+    const now = new Date();
+    await this.db.transaction().execute(async (tx) => {
+      await this.consumeTotpStep(tx, user.userId, user.step);
+      await tx
+        .updateTable('identity.users')
+        .set({ failed_sign_ins: 0 })
+        .where('id', '=', user.userId)
+        .execute();
+      await tx
+        .updateTable('identity.sessions')
+        .set({ reauthenticated_at: now })
+        .where('id', '=', actor.sessionId)
+        .execute();
+      await this.audit.record(
+        { actorType: 'admin', actorUserId: user.userId, action: 'admin.reauthenticated', meta },
+        tx,
+      );
+    });
+    return now;
   }
 
   /** Creates a platform staff account. Returns the TOTP secret to enrol in an authenticator. */

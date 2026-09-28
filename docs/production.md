@@ -49,13 +49,22 @@ It stops at the first problem and does, in order:
 
 ## Staff accounts
 
-Removing demo data never touches staff. Two things to do by hand, once, on the server:
+Removing demo data never touches staff. Platform staff accounts are separate from player
+accounts, always use an authenticator app, and no password ever goes through the command line,
+configuration, git or chat (docs/rbac-plan.md §6).
 
-- If the staff account created for staging used a placeholder email, create a real one:
-  `docker compose exec -e ADMIN_PASSWORD='...' api node dist/cli/admin.js create --email you@jorena.app --name "Your name"`
-  (it prints the authenticator secret once; scan it into an authenticator app). The preflight fails
-  while addresses such as `@example.com` or `@staging.*` remain.
-- Every staff account must have an authenticator (the preflight checks this).
+- **The owner** is set up with a one-time link (valid 30 minutes) generated on the server:
+  `cd /opt/jordan-sports/app/infra/staging && sudo docker compose exec api node dist/cli/owner-setup-link.js --email you@example.com`
+  Open the printed link on your own device, choose a password and scan the QR code into Google
+  Authenticator. Running it again for the same email resets the owner's password and
+  authenticator (recovery); `--replace-owner` hands ownership to another email (the previous
+  owner becomes an admin).
+- **Other staff** (admin, support, finance) are invited by the owner from the admin panel's team
+  page. `admin.js create` remains for the staging bootstrap only.
+- Set `SMTP_URL` (and optionally `EMAIL_FROM`) in the server env file so owner sign-ins and
+  sign-ins from new devices are emailed; without it the alerts are only logged.
+- The preflight fails while addresses such as `@example.com` or `@staging.*` remain, and every
+  staff account must have an authenticator.
 
 ## What was tested and what was not
 

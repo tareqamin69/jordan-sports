@@ -68,6 +68,12 @@ const envSchema = z.object({
   // CliQ-to-venue payments and the prepaid commission balance (ADR-0018). Off: every venue is
   // pay-at-venue and none is hidden because of its balance (card gateway planned instead).
   FEATURE_CLIQ_PAYMENTS: booleanString.default(false),
+  // Staff security emails (sign-in alerts). Without SMTP_URL they are only logged.
+  SMTP_URL: z
+    .string()
+    .refine((v) => /^smtps?:\/\/.+/.test(v), 'must be an smtp:// or smtps:// URL')
+    .optional(),
+  EMAIL_FROM: z.string().trim().min(3).default('Jorena <no-reply@jorena.app>'),
 });
 
 export type NodeEnv = 'development' | 'test' | 'production';
@@ -101,6 +107,8 @@ export interface AppConfig {
   readonly staging: boolean;
   readonly trustProxy: readonly string[];
   readonly features: { readonly cliqPayments: boolean };
+  /** Outgoing email; `smtpUrl` null means emails are logged instead (development). */
+  readonly email: { readonly smtpUrl: string | null; readonly from: string };
 }
 
 export class ConfigError extends Error {
@@ -149,6 +157,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     staging: e.STAGING,
     trustProxy: e.TRUST_PROXY,
     features: { cliqPayments: e.FEATURE_CLIQ_PAYMENTS },
+    email: { smtpUrl: e.SMTP_URL ?? null, from: e.EMAIL_FROM },
   };
   assertProductionSafe(config);
   return config;

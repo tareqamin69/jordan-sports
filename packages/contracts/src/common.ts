@@ -19,6 +19,10 @@ export const errorCodes = [
   'SIGNUP_TOKEN_INVALID',
   'INVALID_CREDENTIALS',
   'ACCOUNT_SUSPENDED',
+  'ACCOUNT_LOCKED',
+  'REAUTH_REQUIRED',
+  'SETUP_LINK_INVALID',
+  'IP_NOT_ALLOWED',
   // tenancy / catalog / venues
   'SLUG_TAKEN',
   'ALREADY_MEMBER',

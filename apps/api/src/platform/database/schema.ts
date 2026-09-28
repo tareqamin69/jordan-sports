@@ -211,6 +211,22 @@ export interface FinanceBalances {
   updated_at: Generated<Timestamp>;
 }
 
+export interface IdentityAccountSetupTokens {
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  display_name: string | null;
+  email: string;
+  expires_at: Timestamp;
+  id: string;
+  platform_role: string;
+  purpose: string;
+  replace_owner: Generated<boolean>;
+  revoked_at: Timestamp | null;
+  token_hash: string;
+  totp_secret_encrypted: string;
+  used_at: Timestamp | null;
+}
+
 export interface IdentityOtpChallenges {
   attempts: Generated<number>;
   code_hash: string;
@@ -236,8 +252,17 @@ export interface IdentitySessions {
   ip: string | null;
   kind: string;
   last_seen_at: Generated<Timestamp>;
+  reauthenticated_at: Timestamp | null;
   revoked_at: Timestamp | null;
   token_hash: string;
+  user_agent: string | null;
+  user_id: string;
+}
+
+export interface IdentityStaffDevices {
+  device_hash: string;
+  first_seen_at: Generated<Timestamp>;
+  last_seen_at: Generated<Timestamp>;
   user_agent: string | null;
   user_id: string;
 }
@@ -254,8 +279,10 @@ export interface IdentityUsers {
   created_at: Generated<Timestamp>;
   display_name: string | null;
   email: string | null;
+  failed_sign_ins: Generated<number>;
   id: string;
   locale: Generated<string>;
+  locked_until: Timestamp | null;
   phone: string | null;
   platform_role: string | null;
   preferred_mode: Generated<string>;
@@ -547,9 +574,11 @@ export interface DB {
   'catalog.sports': CatalogSports;
   'finance.balance_entries': FinanceBalanceEntries;
   'finance.balances': FinanceBalances;
+  'identity.account_setup_tokens': IdentityAccountSetupTokens;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;
   'identity.sessions': IdentitySessions;
+  'identity.staff_devices': IdentityStaffDevices;
   'identity.totp_credentials': IdentityTotpCredentials;
   'identity.users': IdentityUsers;
   'notification.deliveries': NotificationDeliveries;

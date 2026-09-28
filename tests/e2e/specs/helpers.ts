@@ -100,6 +100,30 @@ export function createAdmin(): AdminAccount {
   return { email, password, totpSecret };
 }
 
+/**
+ * Sets up the platform owner through the real one-time link (owner-setup-link.js), taking over
+ * ownership from any previous e2e run. Returns the account and the page signed in.
+ */
+export async function setUpOwner(page: Page, locale: 'ar' | 'en' = 'en'): Promise<AdminAccount> {
+  const email = `e2e-owner-${Date.now()}-${randomInt(0, 1e6)}@example.com`;
+  const out = execFileSync(
+    'node',
+    ['apps/api/dist/cli/owner-setup-link.js', '--email', email, '--replace-owner'],
+    { cwd: ROOT, env: process.env, encoding: 'utf8' },
+  );
+  const token = /#token=([A-Za-z0-9_-]+)/.exec(out)![1]!;
+  await page.goto(`http://127.0.0.1:3001/${locale}/setup#token=${token}`);
+  const totpSecret = (await page.getByTestId('totp-secret').textContent())!.trim();
+  const password = 'e2e owner password 123';
+  await page.locator('input[name="displayName"]').fill('E2E Owner');
+  await page.locator('input[name="password"]').fill(password);
+  await page.locator('input[name="confirm"]').fill(password);
+  await page.locator('input[name="totpCode"]').fill(totp(totpSecret));
+  await page.locator('form button[type="submit"]').click();
+  await expect(page).toHaveURL(new RegExp(`/${locale}$`));
+  return { email, password, totpSecret };
+}
+
 export async function signInAdmin(page: Page, account: AdminAccount, locale: 'ar' | 'en' = 'en') {
   await page.goto(`http://127.0.0.1:3001/${locale}/sign-in`);
   await page.locator('input[name="email"]').fill(account.email);

@@ -7,6 +7,8 @@ export type Actor =
       readonly userId: string;
       readonly sessionId: string;
       readonly platformRole: PlatformRole;
+      /** Last password + authenticator confirmation on this session (sign-in or re-auth). */
+      readonly reauthenticatedAt: Date | null;
     };
 
 declare module 'fastify' {

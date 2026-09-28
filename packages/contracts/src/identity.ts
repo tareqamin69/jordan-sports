@@ -132,6 +132,53 @@ export const adminSignIn = endpoint({
   response: adminMeSchema,
 });
 
+const staffPasswordSchema = z.string().min(12).max(200);
+
+export const adminReauth = endpoint({
+  method: 'POST',
+  path: '/v1/admin/auth/reauth',
+  summary: 'Confirm password and authenticator code again before a dangerous action',
+  auth: 'admin',
+  body: z.object({ password: z.string().min(1).max(200), totpCode: otpCodeSchema }),
+  response: z.object({ reauthenticatedUntil: z.string() }),
+});
+
+export const accountSetupSchema = z.object({
+  email: z.string(),
+  displayName: z.string().nullable(),
+  platformRole: platformRoleSchema,
+  /** Authenticator secret to enrol (base32) and the matching otpauth:// URI for a QR code. */
+  totpSecret: z.string(),
+  otpauthUri: z.string(),
+  expiresAt: z.string(),
+});
+export type AccountSetup = z.infer<typeof accountSetupSchema>;
+
+const setupTokenSchema = z.string().min(20).max(200);
+
+export const inspectAccountSetup = endpoint({
+  method: 'POST',
+  path: '/v1/admin/setup/inspect',
+  summary: 'Details of a one-time staff setup link (owner setup or invitation)',
+  auth: 'public',
+  body: z.object({ token: setupTokenSchema }),
+  response: accountSetupSchema,
+});
+
+export const completeAccountSetup = endpoint({
+  method: 'POST',
+  path: '/v1/admin/setup/complete',
+  summary: 'Set the password and confirm the authenticator; signs the staff member in',
+  auth: 'public',
+  body: z.object({
+    token: setupTokenSchema,
+    displayName: displayNameSchema,
+    password: staffPasswordSchema,
+    totpCode: otpCodeSchema,
+  }),
+  response: adminMeSchema,
+});
+
 export const adminSignOut = endpoint({
   method: 'POST',
   path: '/v1/admin/auth/sign-out',

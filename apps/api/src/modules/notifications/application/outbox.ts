@@ -14,7 +14,19 @@ export type OutboxEvent =
   | { type: 'dispute.opened'; payload: { disputeId: string; bookingId: string } }
   | { type: 'refund.due'; payload: { bookingId: string; paymentId: string } }
   | { type: 'balance.low'; payload: { organizationId: string; balance: number } }
-  | { type: 'balance.empty'; payload: { organizationId: string; balance: number } };
+  | { type: 'balance.empty'; payload: { organizationId: string; balance: number } }
+  // Staff security alert (docs/rbac-plan.md §6): every owner sign-in, and any staff sign-in from
+  // a new device, is emailed to the account's address.
+  | {
+      type: 'staff.signed_in';
+      payload: {
+        userId: string;
+        newDevice: boolean;
+        ip: string | null;
+        userAgent: string | null;
+        at: string;
+      };
+    };
 
 /** Writes an event in the caller's transaction (ADR-0007): it exists if and only if the change committed. */
 export async function enqueue(tx: DbOrTx, event: OutboxEvent): Promise<void> {

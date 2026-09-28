@@ -9,6 +9,7 @@ import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAdminMe } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { ReauthDialog } from './reauth-dialog';
 
 const sections = [
   { href: '/', key: 'dashboard' },
@@ -86,6 +87,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
       <main className="min-w-0 flex-1">{children}</main>
+      <ReauthDialog />
     </div>
   );
 }

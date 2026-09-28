@@ -4,6 +4,7 @@ import { AuthService } from './application/auth.service.js';
 import { ConsoleOtpSender, OTP_SENDER, type OtpSender } from './application/otp-sender.js';
 import { ReleansOtpSender } from './application/releans-otp-sender.js';
 import { ReleansClient } from '../../platform/sms/releans.js';
+import { StaffSetupService } from './application/staff-setup.service.js';
 import { UsersService } from './application/users.service.js';
 import { AdminAuthController } from './http/admin-auth.controller.js';
 import { AdminUsersController } from './http/admin-users.controller.js';
@@ -20,6 +21,7 @@ export class IdentityModule {
       global: true,
       providers: [
         AuthService,
+        StaffSetupService,
         UsersService,
         {
           provide: OTP_SENDER,
@@ -33,7 +35,7 @@ export class IdentityModule {
         AdminUsersController,
         ...(devOnly ? [DevOtpController] : []),
       ],
-      exports: [AuthService, UsersService],
+      exports: [AuthService, StaffSetupService, UsersService],
     };
   }
 }

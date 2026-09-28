@@ -6,6 +6,7 @@ import {
   expectHeaderDirection,
   expectNoAccessibilityViolations,
 } from './support';
+import { setUpOwner } from './helpers';
 
 test.describe('admin skeleton', () => {
   test('/ redirects to Arabic and asks staff to sign in', async ({ page }) => {
@@ -47,4 +48,20 @@ test.describe('admin skeleton', () => {
       await expectNoAccessibilityViolations(page);
     });
   }
+});
+
+test.describe('owner account setup', () => {
+  test('the owner chooses a password and enrols an authenticator from a one-time link', async ({
+    page,
+  }) => {
+    await setUpOwner(page, 'ar');
+    await expect(page.getByRole('navigation', { name: 'الإدارة' })).toBeVisible();
+    // The link is spent and gone from the address bar.
+    expect(page.url()).not.toContain('token=');
+  });
+
+  test('an incomplete link explains what to do', async ({ page }) => {
+    await page.goto(`${ADMIN}/en/setup`);
+    await expect(page.getByText('The link is incomplete.')).toBeVisible();
+  });
 });

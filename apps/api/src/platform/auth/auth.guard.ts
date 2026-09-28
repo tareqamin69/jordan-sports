@@ -2,8 +2,13 @@ import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/com
 import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 import { AuthService } from '../../modules/identity/application/auth.service.js';
-import { hasOrgPermission, hasPlatformPermission } from '@jordan-sports/contracts';
-import { Errors } from '../http/errors.js';
+import {
+  hasOrgPermission,
+  hasPlatformPermission,
+  REAUTH_WINDOW_MINUTES,
+  reauthPermissions,
+} from '@jordan-sports/contracts';
+import { AppError, Errors } from '../http/errors.js';
 import { ADMIN_SESSION_COOKIE, WEB_SESSION_COOKIE } from './cookies.js';
 import { AUTH_REQUIREMENT, type AuthRequirement } from './decorators.js';
 import { endpointFor } from './endpoint-registry.js';
@@ -44,6 +49,13 @@ export class AuthGuard implements CanActivate {
       if (!contract && !permission) throw Errors.forbidden();
       if (permission && !hasPlatformPermission(actor.platformRole, permission)) {
         throw Errors.forbidden();
+      }
+      // Dangerous actions need a recent password + authenticator confirmation.
+      if (permission && reauthPermissions.includes(permission)) {
+        const at = actor.reauthenticatedAt?.getTime() ?? 0;
+        if (Date.now() - at > REAUTH_WINDOW_MINUTES * 60_000) {
+          throw new AppError('REAUTH_REQUIRED', 403);
+        }
       }
       request.actor = actor;
       return true;
