@@ -61,7 +61,6 @@ export function MainNav({ overlay }: { overlay: boolean }) {
   return (
     <nav
       aria-label={t('navLabel')}
-      data-bottom-nav
       className={cx(
         'fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex h-16 items-center rounded-full bg-night px-2.5 shadow-float',
         'md:static md:flex md:h-auto md:gap-1 md:rounded-none md:bg-transparent md:px-0 md:shadow-none',

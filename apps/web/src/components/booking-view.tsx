@@ -170,7 +170,15 @@ export function BookingView({ bookingId }: { bookingId: string }) {
   const cell = 'flex min-w-0 flex-col gap-0.5 px-4 py-3';
 
   return (
-    <div className={cx('flex animate-rise flex-col gap-4', holding && 'pb-36 md:pb-0')}>
+    <div className={cx('flex flex-col gap-4', holding && 'pb-44 md:pb-0')}>
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="-ms-2 flex h-10 w-fit items-center gap-1.5 rounded-full px-2 text-sm font-medium text-ink-muted transition-colors hover:bg-canvas hover:text-ink"
+      >
+        <Icon name="chevron" className="size-4 rotate-180 rtl:rotate-0" />
+        {tc('actions.back')}
+      </button>
       <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-[2.25rem] leading-[1.2] sm:text-[2.75rem]">
@@ -281,10 +289,18 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             checked={accepted}
             onChange={(e) => setAccepted(e.target.checked)}
           />
-          <div
-            data-sticky-cta
-            className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 rounded-card border border-line bg-surface p-2.5 shadow-float md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none"
-          >
+          {/*
+            The confirm bar is `fixed` on mobile (so it stays reachable while the page scrolls),
+            which takes it out of normal flow — this invisible spacer of the same size keeps the
+            rest of the card (the "release" link below) from sliding up underneath it.
+          */}
+          <div aria-hidden className="invisible rounded-card border border-line p-2.5 md:hidden">
+            <div className="flex items-center gap-3">
+              <span className="h-12 w-32 shrink-0 rounded-full" />
+              <span className="h-14 flex-1 rounded-full" />
+            </div>
+          </div>
+          <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 rounded-card border border-line bg-surface p-2.5 shadow-float md:static md:inset-auto md:bottom-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
             <div className="flex items-center gap-3">
               <span
                 data-testid="hold-countdown"

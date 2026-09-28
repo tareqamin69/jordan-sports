@@ -16,10 +16,14 @@ export function SiteHeader() {
   return (
     <header
       className={cx(
-        'z-30',
+        'relative z-30',
         overlay
           ? 'absolute inset-x-0 top-0 text-canvas'
-          : 'sticky top-0 border-b border-line bg-canvas/90 text-ink backdrop-blur-md',
+          : // The frosted background lives on a ::before layer, not the header itself: a
+            // backdrop-filter on the header would make it the containing block for MainNav's
+            // `fixed` bottom pill on mobile (it would render pinned to the header, not the
+            // viewport). See https://www.w3.org/TR/filter-effects-1/#FilterProperty.
+            'sticky top-0 text-ink before:absolute before:inset-0 before:-z-10 before:border-b before:border-line before:bg-canvas/90 before:backdrop-blur-md',
       )}
     >
       <div className="mx-auto flex h-18 max-w-6xl items-center gap-6 px-5 sm:px-8">
