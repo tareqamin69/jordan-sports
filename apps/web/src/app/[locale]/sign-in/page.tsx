@@ -14,9 +14,11 @@ export default function SignInPage({ params, searchParams }: Props) {
   const { locale } = use(params);
   const { next } = use(searchParams);
   setRequestLocale(locale);
-  // The development console channel is the only OTP channel until an SMS/WhatsApp provider is
-  // chosen, so the notice is shown unless another channel is configured.
-  const devNotice = (process.env.OTP_CHANNEL ?? 'console') === 'console';
+  // The sign-in code is shown on screen only with the console channel, and in a production build
+  // only on staging (STAGING=true) — the same rule as the API's dev-only code endpoint.
+  const devNotice =
+    (process.env.OTP_CHANNEL ?? 'console') === 'console' &&
+    (process.env.NODE_ENV !== 'production' || process.env.STAGING === 'true');
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-6 sm:px-8 sm:pt-12">
       <SignInFlow devNotice={devNotice} next={typeof next === 'string' ? next : undefined} />
