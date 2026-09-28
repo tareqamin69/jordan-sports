@@ -31,8 +31,8 @@ const paths: Record<string, string> = {
   'ball-generic': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM5 7c4 2 10 2 14 0M5 17c4-2 10-2 14 0',
   'ball-bounce':
     'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3v18M6 5.5c2.3 3 2.3 10.5 0 13.5M18 5.5c-2.3 3-2.3 10.5 0 13.5',
-  'ball-volley':
-    'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM4 9c5-2.3 11-2.3 16 0M4 15c5 2.3 11 2.3 16 0M12 3v18',
+  // Volleyball: a tri-panel "star" seam from the center (distinct from basketball's cross).
+  'ball-volley': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 12V3.3M12 12l6.8 3.6M12 12l-6.8 3.6',
   'racket-squash':
     'M9.5 3.5a5 5 0 0 1 7 7l-2.8 2.8a3 3 0 0 1-4.2 0l-2.8-2.8a5 5 0 0 1 2.8-7zM11.2 13.2L4 20.5',
   shuttlecock:
@@ -40,6 +40,8 @@ const paths: Record<string, string> = {
   'paddle-tt':
     'M9 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zM7.5 12.5L4 20M17 16.7a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4',
   'cue-ball': 'M9 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM20 20L11.8 11.8',
+  // Futsal: a mini goal frame (indoor football's distinguishing mark, vs. football's pentagon ball).
+  'goal-net': 'M4 20V6h16v14M4 10.5h16M4 15h16M9 6v14M15 6v14',
   wave: 'M3 8.5c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 14.5c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 20.5c2-2 4-2 6 0s4 2 6 0 4-2 6 0',
   dumbbell: 'M4 12h16M4 9v6M7 7v10M17 7v10M20 9v6',
   'bowling-pin':
