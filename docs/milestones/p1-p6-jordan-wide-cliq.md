@@ -333,3 +333,15 @@ parked with it.
 - **Domain:** `docs/domain.md` (what to buy, DNS records). `infra/staging/domain.env` switches the
   host names with one commit once DNS points at the server. Fixed `robots.txt` and the static info
   pages using `http://localhost:3000` for absolute URLs on the deployed server.
+
+## Launch preparation (2026-09-28)
+
+- **Releans SMS adapter** (ADR-0019): built behind `OtpSender` / `NotificationChannel`, tested
+  against a local fake server; waiting for the company registration, the API key and the approved
+  sender `Jorena`. `sms-test` CLI for the first real message. Request shape unverified with the real
+  service.
+- **Owner checklist in Arabic:** `docs/launch-checklist.md` (order and dependencies).
+- **Production switch:** `remove-demo` (dry run unless `--yes`), daily encrypted off-server backups
+  with a tested restore (`docs/backups.md`), `preflight` and `infra/production/go-live.sh`
+  (`docs/production.md`), config refuses test addresses in production, compose seeds demo data only
+  on staging. `go-live.sh` and the Docker-mode backup are unrun (no Docker in the sandbox).

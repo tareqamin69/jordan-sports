@@ -27,7 +27,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
 
-  # Runs on every deploy: migrations, demo data (idempotent), the staging admin account.
+  # Runs on every deploy: migrations always; demo data only when STAGING=true; the staff account
+  # only when ADMIN_EMAIL is set (a production server has neither; see docs/production.md).
   init:
     <<: *app
     build: { context: ../.., dockerfile: infra/staging/Dockerfile }
@@ -39,8 +40,9 @@ services:
       - -c
       - >-
         node dist/platform/database/cli.js migrate &&
-        node dist/cli/seed-demo.js &&
-        node dist/cli/admin.js create --if-missing --email "$$ADMIN_EMAIL" --name "مدير التجربة"
+        if [ "$$STAGING" = true ]; then node dist/cli/seed-demo.js; fi &&
+        if [ -n "$$ADMIN_EMAIL" ]; then
+        node dist/cli/admin.js create --if-missing --email "$$ADMIN_EMAIL" --name "مدير التجربة"; fi
     volumes: [media:/data/media]
     depends_on:
       postgres: { condition: service_healthy }

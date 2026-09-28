@@ -169,6 +169,15 @@ export function assertProductionSafe(config: AppConfig): void {
   for (const origin of [...config.webOrigins, ...config.adminOrigins]) {
     if (!origin.startsWith('https://')) problems.push(`origin ${origin} must use https`);
   }
+  if (!config.staging) {
+    // A real launch is served from the real domain, never a throwaway test address.
+    for (const origin of [...config.webOrigins, ...config.adminOrigins]) {
+      const host = new URL(origin).hostname;
+      if (/(^|\.)sslip\.io$|^localhost$|^127\.|\.localhost$/.test(host)) {
+        problems.push(`origin ${origin} is a test address, not a real domain`);
+      }
+    }
+  }
   if (problems.length > 0) {
     throw new ConfigError(`Unsafe production configuration: ${problems.join('; ')}`);
   }

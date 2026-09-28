@@ -83,6 +83,25 @@ describe('production safety', () => {
     expect(() => parseConfig({ ...production, WEB_ORIGINS: 'http://example.jo' })).toThrow(/https/);
   });
 
+  it('refuses test addresses as origins unless this is staging', () => {
+    const releans = { ...production, OTP_CHANNEL: 'releans', RELEANS_API_KEY: 'key-12345678' };
+    for (const origin of [
+      'https://1-2-3-4.sslip.io',
+      'https://localhost',
+      'https://web.localhost',
+    ]) {
+      expect(() => parseConfig({ ...releans, WEB_ORIGINS: origin })).toThrow(/test address/);
+    }
+    expect(() =>
+      parseConfig({ ...releans, ADMIN_ORIGINS: 'https://admin.1-2-3-4.sslip.io' }),
+    ).toThrow(/test address/);
+    expect(parseConfig({ ...releans, WEB_ORIGINS: 'https://jorena.app' })).toBeTruthy();
+    expect(
+      parseConfig({ ...production, STAGING: 'true', WEB_ORIGINS: 'https://1-2-3-4.sslip.io' })
+        .staging,
+    ).toBe(true);
+  });
+
   it('accepts Releans in production and requires its key', () => {
     const releans = { ...production, OTP_CHANNEL: 'releans' };
     expect(() => parseConfig(releans)).toThrow(/RELEANS_API_KEY/);
