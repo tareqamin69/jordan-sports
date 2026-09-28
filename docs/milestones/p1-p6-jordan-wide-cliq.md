@@ -163,3 +163,40 @@ e2e (68/68, mobile + desktop, axe AA).
 
 Next up: P3 (venue self-registration wizard, review queue with call/WhatsApp, platform settings,
 "chat with us" button).
+
+## Staging bug-fix pass (2026-09-28)
+
+Owner did a full manual test on staging and filed a numbered list (CRITICAL/IMPORTANT/MINOR),
+fixed in order, one commit per item, pushed to both `claude/dazzling-feynman-iryb1r` and staging
+(`claude/inspect-repo-environment-c0iptd`) after each.
+
+1. **Venue self-registration wizard** (this doubles as P3's wizard — done ahead of schedule).
+   New owner-facing multi-step wizard at `/manage/register`: info → location (governorate/area,
+   address, draggable MapLibre pin) → photos → courts → payment/contact (WhatsApp, CliQ alias +
+   holder name, deposit %) → review & submit. Creates a `draft` venue on step 1, edits it via
+   `PATCH /v1/manage/venues/:id` through the remaining steps, then `POST .../submit` moves it to
+   `submitted`. Hours/pricing stay on the existing `/manage/[venueId]` dashboard tabs (reused
+   as-is — editing while in review is allowed per the plan). Admin gets a cross-org review queue
+   at `/venues` (`GET /v1/admin/venues?status=`) with owner name/phone and call/WhatsApp
+   (`tel:`/`wa.me`) links; approve/reject-with-reason reuses the existing venue editor's status
+   panel. The venue dashboard now shows a status banner (draft/submitted/rejected/suspended) with
+   a link back into the wizard to continue or resubmit. Migration 0014 adds
+   `cliq_alias`/`cliq_alias_holder`/`deposit_percentage`/`whatsapp_phone`/`status_reason` to
+   `venue.venues`; `rejected → submitted` is now a valid transition (resubmit without going
+   through `draft`).
+   - Bug found and fixed while smoke-testing the wizard end to end: the register endpoint passed
+     `slug: ''` to `VenuesService.create` instead of generating one, which fails the venue table's
+     slug format constraint on every single registration. Now generates a real slug the same way
+     `OrganizationsService.createForUser` already did (`slugify(name.en ?? name.ar)`).
+   - Verification: lint, typecheck, `check:repo`, unit (90/90), integration (79/79), full
+     Playwright e2e (68/68, mobile + desktop, axe AA), plus a manual Playwright smoke run of the
+     full register → submit → admin-approve flow (written, run, and removed — not part of the
+     committed suite).
+
+Remaining items from the list (in order): free-cancellation deadline display, header logo on hero
+pages, hero art layering, per-sport venue illustrations, "(تجريبي)" on all demo venues, PWA
+install-prompt timing, public footer, owner-dashboard tabs hidden pre-approval, performance/
+Lighthouse pass, Arabic map labels, and an in-page cancel-booking confirmation dialog. Cancelling
+the owner's test booking `LULBBS94` on staging is blocked: the staging URL isn't discoverable
+anywhere in this repo or the session environment — needs the owner to share it or cancel it
+themselves.
