@@ -6,6 +6,7 @@ import {
   getMyVenueProfile,
   registerVenue,
   submitMyVenue,
+  updateMyResource,
   updateMyVenue,
   uploadMyVenueMedia,
   type AdminVenue,
@@ -14,8 +15,10 @@ import {
 import {
   Alert,
   Button,
+  buttonClass,
   Card,
   CheckboxField,
+  cx,
   PageHeader,
   SelectField,
   Spinner,
@@ -24,12 +27,15 @@ import {
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
+import { allIssuesMatched, fieldErrors } from '@/lib/field-errors';
+import { governorateCenter, isNearGovernorate } from '@/lib/governorate-geo';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { VenueMap } from '@/components/venue-map';
 import { LocationPicker } from './location-picker';
 
 type Localized = { ar?: string; en?: string };
@@ -142,6 +148,7 @@ export function RegisterWizard({ venueId: initialVenueId }: { venueId?: string }
       {step === 'location' && venue ? (
         <LocationStep
           venue={venue}
+          catalog={catalog.data}
           onBack={() => setStep('info')}
           onNext={(v) => {
             setVenue(v);
@@ -183,6 +190,7 @@ export function RegisterWizard({ venueId: initialVenueId }: { venueId?: string }
       {step === 'review' && venue ? (
         <ReviewStep
           venue={venue}
+          catalog={catalog.data}
           onBack={() => setStep('payment')}
           onSubmitted={() => {
             void queryClient.invalidateQueries({ queryKey: ['managed-venues'] });
@@ -266,6 +274,8 @@ function InfoStep({
           }),
     onSuccess: onNext,
   });
+  const fieldError = fieldErrors(create.error);
+  const knownFields = ['name', 'governorateId', 'areaId', 'contactPhone'] as const;
 
   return (
     <Card>
@@ -276,7 +286,7 @@ function InfoStep({
           create.mutate();
         }}
       >
-        {create.isError ? (
+        {create.isError && !allIssuesMatched(create.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(create.error)}
           </Alert>
@@ -289,6 +299,7 @@ function InfoStep({
           lang="ar"
           required
           name="nameAr"
+          error={fieldError('name')}
         />
         <TextField
           label={t('nameEn')}
@@ -303,6 +314,7 @@ function InfoStep({
           value={f.governorateId}
           onChange={(e) => setF((s) => ({ ...s, governorateId: e.target.value, areaId: '' }))}
           name="governorateId"
+          error={fieldError('governorateId')}
         >
           {catalog.governorates.map((g) => (
             <option key={g.id} value={g.id}>
@@ -310,7 +322,13 @@ function InfoStep({
             </option>
           ))}
         </SelectField>
-        <SelectField label={t('area')} value={f.areaId} onChange={set('areaId')} name="areaId">
+        <SelectField
+          label={t('area')}
+          value={f.areaId}
+          onChange={set('areaId')}
+          name="areaId"
+          error={fieldError('areaId')}
+        >
           <option value="">{t('noArea')}</option>
           {areas.map((a) => (
             <option key={a.id} value={a.id}>
@@ -327,6 +345,7 @@ function InfoStep({
           dir="ltr"
           required
           name="contactPhone"
+          error={fieldError('contactPhone')}
         />
         <StepActions busy={create.isPending} nextLabel={t('next')} />
       </form>
@@ -336,14 +355,18 @@ function InfoStep({
 
 function LocationStep({
   venue,
+  catalog,
   onBack,
   onNext,
 }: {
   venue: AdminVenue;
+  catalog: Catalog;
   onBack: () => void;
   onNext: (venue: AdminVenue) => void;
 }) {
   const t = useTranslations('web.manage.register');
+  const tv = useTranslations('web.venue');
+  const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const [f, setF] = useState({
@@ -355,6 +378,10 @@ function LocationStep({
   const [location, setLocation] = useState(venue.location);
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
+  const governorateKey = catalog.governorates.find((g) => g.id === venue.governorateId)?.key;
+  const defaultCenter = governorateKey ? governorateCenter(governorateKey) : null;
+  const outsideGovernorate =
+    location !== null && governorateKey !== undefined && !isNearGovernorate(location, governorateKey);
 
   const save = useMutation({
     mutationFn: () =>
@@ -368,6 +395,8 @@ function LocationStep({
       }),
     onSuccess: onNext,
   });
+  const fieldError = fieldErrors(save.error);
+  const knownFields = ['description', 'address', 'location'] as const;
 
   return (
     <Card>
@@ -378,7 +407,7 @@ function LocationStep({
           save.mutate();
         }}
       >
-        {save.isError ? (
+        {save.isError && !allIssuesMatched(save.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
           </Alert>
@@ -389,6 +418,7 @@ function LocationStep({
           onChange={set('descriptionAr')}
           dir="rtl"
           lang="ar"
+          error={fieldError('description')}
         />
         <TextAreaField
           label={t('descriptionEn')}
@@ -403,6 +433,7 @@ function LocationStep({
           onChange={set('addressAr')}
           dir="rtl"
           lang="ar"
+          error={fieldError('address')}
         />
         <TextField
           label={`${t('address')} (EN)`}
@@ -412,7 +443,20 @@ function LocationStep({
           lang="en"
         />
         <div className="sm:col-span-2">
-          <LocationPicker location={location} onChange={setLocation} />
+          <LocationPicker
+            location={location}
+            onChange={setLocation}
+            defaultCenter={defaultCenter}
+            markerLabel={tv('mapMarkerLabel', { name: pick(venue.name, locale) })}
+          />
+          {outsideGovernorate ? (
+            <Alert tone="warning" className="mt-3">
+              {t('locationOutsideGovernorate')}
+            </Alert>
+          ) : null}
+          {fieldError('location') ? (
+            <p className="mt-2 text-sm text-danger">{fieldError('location')}</p>
+          ) : null}
         </div>
         <StepActions onBack={onBack} busy={save.isPending} nextLabel={t('next')} />
       </form>
@@ -433,6 +477,7 @@ function PhotosStep({
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
+  const inputId = useId();
   const [current, setCurrent] = useState(venue);
   const upload = useMutation({
     mutationFn: (file: File) => api(uploadMyVenueMedia, { params: { venueId: venue.id }, file }),
@@ -475,13 +520,13 @@ function PhotosStep({
           </figure>
         ))}
       </div>
-      <label className="mt-4 block">
-        <span className="text-sm font-medium">{t('uploadPhoto')}</span>
+      <div className="mt-4">
         <input
           type="file"
+          id={inputId}
           accept="image/jpeg,image/png,image/webp"
           name="photo"
-          className="mt-2 block w-full text-sm"
+          className="sr-only"
           disabled={upload.isPending}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -489,8 +534,17 @@ function PhotosStep({
             e.target.value = '';
           }}
         />
-        <span className="mt-1 block text-xs text-ink-muted">{t('uploadHint')}</span>
-      </label>
+        <label
+          htmlFor={inputId}
+          className={cx(
+            buttonClass({ variant: 'secondary', size: 'sm' }),
+            upload.isPending && 'pointer-events-none opacity-60',
+          )}
+        >
+          {t('uploadPhoto')}
+        </label>
+        <p className="mt-1 text-xs text-ink-muted">{t('uploadHint')}</p>
+      </div>
       <div className="mt-6 flex gap-2">
         <Button type="button" onClick={() => onNext(current)}>
           {t('next')}
@@ -523,12 +577,15 @@ function CourtsStep({
   const [nameAr, setNameAr] = useState('');
   const [nameEn, setNameEn] = useState('');
   const [formatIds, setFormatIds] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const type = catalog.resourceTypes.find((rt) => rt.id === typeId);
   const formats = catalog.sports.flatMap((s) =>
     s.formats
       .filter((fm) => type?.sportFormatIds.includes(fm.id))
       .map((fm) => ({ ...fm, sport: s })),
   );
+  // Archived courts (soft-deleted) never counted toward "has a court" — they can't be booked.
+  const courts = current.resources.filter((r) => r.status !== 'archived');
 
   const add = useMutation({
     mutationFn: () =>
@@ -549,19 +606,58 @@ function CourtsStep({
       setFormatIds([]);
     },
   });
+  const fieldError = fieldErrors(add.error);
+  const knownFields = ['name', 'resourceTypeId', 'sportFormatIds', 'attributes'] as const;
+
+  const remove = useMutation({
+    mutationFn: (resourceId: string) =>
+      api(updateMyResource, { params: { resourceId }, body: { status: 'archived' } }),
+    onSuccess: setCurrent,
+  });
 
   return (
     <Card>
       <p className="text-ink-muted">{t('courtsIntro')}</p>
-      {current.resources.length === 0 ? (
+      {courts.length === 0 ? (
         <p className="mt-2 text-sm text-ink-muted">{t('noCourts')}</p>
       ) : (
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {current.resources.map((r) => (
-            <li key={r.id} className="rounded-full border border-line px-3 py-1.5 text-sm">
-              {pick(r.name, locale)}
-            </li>
-          ))}
+        <ul className="mt-3 flex flex-col gap-2">
+          {courts.map((r) =>
+            editingId === r.id ? (
+              <li key={r.id}>
+                <EditCourtForm
+                  resource={r}
+                  catalog={catalog}
+                  onDone={(v) => {
+                    setCurrent(v);
+                    setEditingId(null);
+                  }}
+                  onCancel={() => setEditingId(null)}
+                />
+              </li>
+            ) : (
+              <li
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-tile border border-line px-3 py-2 text-sm"
+              >
+                <span>{pick(r.name, locale)}</span>
+                <span className="flex gap-1">
+                  <Button size="sm" variant="ghost" type="button" onClick={() => setEditingId(r.id)}>
+                    {t('editCourt')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghostDanger"
+                    type="button"
+                    onClick={() => remove.mutate(r.id)}
+                    busy={remove.isPending && remove.variables === r.id}
+                  >
+                    {t('deleteCourt')}
+                  </Button>
+                </span>
+              </li>
+            ),
+          )}
         </ul>
       )}
       <form
@@ -571,7 +667,7 @@ function CourtsStep({
           add.mutate();
         }}
       >
-        {add.isError ? (
+        {add.isError && !allIssuesMatched(add.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(add.error)}
           </Alert>
@@ -584,6 +680,7 @@ function CourtsStep({
             setFormatIds([]);
           }}
           name="resourceType"
+          error={fieldError('resourceTypeId')}
         >
           {catalog.resourceTypes.map((rt) => (
             <option key={rt.id} value={rt.id}>
@@ -598,6 +695,7 @@ function CourtsStep({
           dir="rtl"
           lang="ar"
           name="courtNameAr"
+          error={fieldError('name')}
         />
         <TextField
           label={t('courtNameEn')}
@@ -623,6 +721,9 @@ function CourtsStep({
               />
             ))}
           </div>
+          {fieldError('sportFormatIds') ? (
+            <p className="mt-2 text-sm text-danger">{fieldError('sportFormatIds')}</p>
+          ) : null}
         </fieldset>
         <div className="sm:col-span-2">
           <Button
@@ -636,21 +737,107 @@ function CourtsStep({
         </div>
       </form>
       <div className="mt-6 flex gap-2">
-        <Button
-          type="button"
-          onClick={() => onNext(current)}
-          disabled={current.resources.length === 0}
-        >
+        <Button type="button" onClick={() => onNext(current)} disabled={courts.length === 0}>
           {t('next')}
         </Button>
         <Button type="button" variant="secondary" onClick={onBack}>
           {t('back')}
         </Button>
       </div>
-      {current.resources.length === 0 ? (
-        <p className="mt-2 text-sm text-warning">{t('needsCourt')}</p>
-      ) : null}
+      {courts.length === 0 ? <p className="mt-2 text-sm text-warning">{t('needsCourt')}</p> : null}
     </Card>
+  );
+}
+
+function EditCourtForm({
+  resource,
+  catalog,
+  onDone,
+  onCancel,
+}: {
+  resource: AdminVenue['resources'][number];
+  catalog: Catalog;
+  onDone: (venue: AdminVenue) => void;
+  onCancel: () => void;
+}) {
+  const t = useTranslations('web.manage.register');
+  const locale = useLocale();
+  const api = useApi();
+  const errorMessage = useErrorMessage();
+  const [nameAr, setNameAr] = useState(resource.name.ar ?? '');
+  const [nameEn, setNameEn] = useState(resource.name.en ?? '');
+  const [formatIds, setFormatIds] = useState<string[]>(resource.formats.map((f) => f.id));
+  const type = catalog.resourceTypes.find((rt) => rt.id === resource.resourceTypeId);
+  const formats = catalog.sports.flatMap((s) =>
+    s.formats
+      .filter((fm) => type?.sportFormatIds.includes(fm.id))
+      .map((fm) => ({ ...fm, sport: s })),
+  );
+
+  const save = useMutation({
+    mutationFn: () =>
+      api(updateMyResource, {
+        params: { resourceId: resource.id },
+        body: { name: localized(nameAr, nameEn) ?? {}, sportFormatIds: formatIds },
+      }),
+    onSuccess: onDone,
+  });
+  const fieldError = fieldErrors(save.error);
+
+  return (
+    <form
+      className="grid gap-4 rounded-tile border border-line-strong bg-canvas p-3 sm:grid-cols-2"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        save.mutate();
+      }}
+    >
+      {save.isError && !allIssuesMatched(save.error, ['name', 'sportFormatIds']) ? (
+        <Alert tone="error" className="sm:col-span-2">
+          {errorMessage(save.error)}
+        </Alert>
+      ) : null}
+      <TextField
+        label={t('courtNameAr')}
+        value={nameAr}
+        onChange={(e) => setNameAr(e.target.value)}
+        dir="rtl"
+        lang="ar"
+        error={fieldError('name')}
+      />
+      <TextField
+        label={t('courtNameEn')}
+        value={nameEn}
+        onChange={(e) => setNameEn(e.target.value)}
+        dir="ltr"
+        lang="en"
+      />
+      <fieldset className="sm:col-span-2">
+        <legend className="mb-2 text-sm font-medium">{t('courtFormats')}</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {formats.map((fm) => (
+            <CheckboxField
+              key={fm.id}
+              label={`${pick(fm.sport.name, locale)} — ${pick(fm.name, locale)}`}
+              checked={formatIds.includes(fm.id)}
+              onChange={(e) =>
+                setFormatIds((ids) =>
+                  e.target.checked ? [...ids, fm.id] : ids.filter((id) => id !== fm.id),
+                )
+              }
+            />
+          ))}
+        </div>
+      </fieldset>
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit" size="sm" busy={save.isPending} disabled={formatIds.length === 0}>
+          {t('saveCourt')}
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={onCancel}>
+          {t('back')}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -688,6 +875,8 @@ function PaymentStep({
       }),
     onSuccess: onNext,
   });
+  const fieldError = fieldErrors(save.error);
+  const knownFields = ['whatsapp', 'cliqAlias', 'cliqAliasHolderName', 'depositPercentage'] as const;
 
   return (
     <Card>
@@ -699,7 +888,7 @@ function PaymentStep({
         }}
       >
         <p className="text-ink-muted sm:col-span-2">{t('paymentIntro')}</p>
-        {save.isError ? (
+        {save.isError && !allIssuesMatched(save.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
           </Alert>
@@ -712,20 +901,24 @@ function PaymentStep({
           type="tel"
           dir="ltr"
           name="whatsapp"
+          error={fieldError('whatsapp')}
         />
         <TextField
           label={t('cliqAlias')}
           hint={t('cliqAliasHint')}
           value={f.cliqAlias}
           onChange={set('cliqAlias')}
+          type="text"
           dir="ltr"
           name="cliqAlias"
+          error={fieldError('cliqAlias')}
         />
         <TextField
           label={t('cliqHolder')}
           value={f.cliqAliasHolderName}
           onChange={set('cliqAliasHolderName')}
           name="cliqAliasHolderName"
+          error={fieldError('cliqAliasHolderName')}
         />
         <TextField
           label={t('depositPercentage')}
@@ -735,6 +928,7 @@ function PaymentStep({
           inputMode="numeric"
           dir="ltr"
           name="depositPercentage"
+          error={fieldError('depositPercentage')}
         />
         <StepActions onBack={onBack} busy={save.isPending} nextLabel={t('next')} />
       </form>
@@ -744,10 +938,12 @@ function PaymentStep({
 
 function ReviewStep({
   venue,
+  catalog,
   onBack,
   onSubmitted,
 }: {
   venue: AdminVenue;
+  catalog: Catalog;
   onBack: () => void;
   onSubmitted: () => void;
 }) {
@@ -755,6 +951,9 @@ function ReviewStep({
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
+  const courts = venue.resources.filter((r) => r.status !== 'archived');
+  const governorate = catalog.governorates.find((g) => g.id === venue.governorateId);
+  const area = governorate?.areas.find((a) => a.id === venue.areaId);
 
   const submit = useMutation({
     mutationFn: () => api(submitMyVenue, { params: { venueId: venue.id } }),
@@ -777,16 +976,82 @@ function ReviewStep({
           </dd>
         </div>
         <div>
+          <dt className="text-sm text-ink-muted">{t('governorate')}</dt>
+          <dd className="font-medium">
+            {governorate ? pick(governorate.name, locale) : '—'}
+            {area ? ` — ${pick(area.name, locale)}` : ''}
+          </dd>
+        </div>
+        <div>
           <dt className="text-sm text-ink-muted">{t('address')}</dt>
           <dd className="font-medium">{pick(venue.address, locale) || '—'}</dd>
         </div>
         <div>
-          <dt className="text-sm text-ink-muted">{t('courtType')}</dt>
+          <dt className="text-sm text-ink-muted">{t('whatsapp')}</dt>
+          <dd className="font-medium" dir="ltr">
+            {venue.whatsapp || '—'}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm text-ink-muted">{t('cliqAlias')}</dt>
           <dd className="font-medium">
-            {venue.resources.map((r) => pick(r.name, locale)).join('، ') || '—'}
+            {venue.cliqAlias || '—'}
+            {venue.cliqAliasHolderName ? ` (${venue.cliqAliasHolderName})` : ''}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm text-ink-muted">{t('depositPercentage')}</dt>
+          <dd className="font-medium">
+            {venue.depositPercentage !== null ? `${venue.depositPercentage}%` : '—'}
           </dd>
         </div>
       </dl>
+
+      {venue.location ? (
+        <div>
+          <p className="text-sm text-ink-muted">{t('reviewLocationLabel')}</p>
+          <VenueMap location={venue.location} name={pick(venue.name, locale)} />
+        </div>
+      ) : null}
+
+      <div>
+        <p className="text-sm text-ink-muted">{t('courtsIntro')}</p>
+        {courts.length === 0 ? (
+          <p className="mt-1 font-medium">—</p>
+        ) : (
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {courts.map((r) => (
+              <li key={r.id} className="rounded-tile border border-line px-3 py-2 text-sm">
+                <span className="font-medium">{pick(r.name, locale)}</span>
+                <span className="text-ink-muted">
+                  {' — '}
+                  {r.formats.map((fm) => `${pick(fm.sportName, locale)} (${pick(fm.name, locale)})`).join('، ')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {venue.media.length > 0 ? (
+        <div>
+          <p className="text-sm text-ink-muted">{t('photosIntro')}</p>
+          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {venue.media.map((m) => (
+              // eslint-disable-next-line @next/next/no-img-element -- owner preview of a private, unapproved photo
+              <img
+                key={m.id}
+                src={`/api/v1/manage/media/${m.id}`}
+                alt={pick(venue.name, locale)}
+                width={m.width}
+                height={m.height}
+                className="aspect-video w-full rounded-tile object-cover"
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <a
         href={`/manage/${venue.id}?tab=hours`}
         className="text-sm font-medium text-primary hover:underline"

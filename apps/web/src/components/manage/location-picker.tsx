@@ -6,16 +6,21 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 import { attachStyleFallback, localizeMapLabels, MAP_STYLE_URL } from '@/lib/map-style';
 
-/** Amman, roughly centered — used when the owner hasn't set a pin yet. */
-const defaultCenter = { lat: 31.9539, lng: 35.9106 };
+/** Amman, roughly centered — used when neither a pin nor a governorate center is available. */
+const fallbackCenter = { lat: 31.9539, lng: 35.9106 };
 
 /** A draggable pin for the registration wizard's location step: click or drag to set the venue's map position. */
 export function LocationPicker({
   location,
   onChange,
+  defaultCenter,
+  markerLabel,
 }: {
   location: { lat: number; lng: number } | null;
   onChange: (location: { lat: number; lng: number }) => void;
+  /** Centers the map here when the owner hasn't dropped a pin yet — the selected governorate. */
+  defaultCenter?: { lat: number; lng: number } | null;
+  markerLabel?: string;
 }) {
   const t = useTranslations('web.manage.register');
   const locale = useLocale() as 'ar' | 'en';
@@ -29,7 +34,7 @@ export function LocationPicker({
 
   useEffect(() => {
     if (!container.current) return;
-    const center = location ?? defaultCenter;
+    const center = location ?? defaultCenter ?? fallbackCenter;
     const m = new MapLibreMap({
       container: container.current,
       style: MAP_STYLE_URL,
@@ -44,6 +49,7 @@ export function LocationPicker({
     const mk = new Marker({ color: '#0f4d34', draggable: true })
       .setLngLat([center.lng, center.lat])
       .addTo(m);
+    if (markerLabel) mk.getElement().setAttribute('aria-label', markerLabel);
     mk.on('dragend', () => {
       const { lat, lng } = mk.getLngLat();
       onChangeRef.current({ lat, lng });

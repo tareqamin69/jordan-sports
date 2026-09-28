@@ -30,7 +30,10 @@ export function VenueMap({
       cooperativeGestures: true,
     });
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
-    new Marker({ color: '#0f4d34' }).setLngLat([location.lng, location.lat]).addTo(map);
+    const marker = new Marker({ color: '#0f4d34' })
+      .setLngLat([location.lng, location.lat])
+      .addTo(map);
+    marker.getElement().setAttribute('aria-label', t('mapMarkerLabel', { name }));
     attachStyleFallback(map);
     // `style.load` (not `load`) so this still fires if the vector style fails and
     // attachStyleFallback swaps in the raster one — `load` only ever fires for the first style.
@@ -39,7 +42,7 @@ export function VenueMap({
       setReady(true);
     });
     return () => map.remove();
-  }, [location.lat, location.lng, locale]);
+  }, [location.lat, location.lng, locale, name, t]);
 
   return (
     <div className="relative mt-4 aspect-[4/3] w-full overflow-hidden rounded-card border border-line bg-canvas-deep">
