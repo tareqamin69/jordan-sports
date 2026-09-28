@@ -316,3 +316,20 @@ disabled by `FEATURE_CLIQ_PAYMENTS` (default off): all venues are pay-at-venue, 
 for its balance, and the CliQ fields/tabs are hidden in the wizard, dashboard and admin. Details in
 ADR-0018 "Switched off". The "Deferred" and "Open decisions" lists of the P4/P5 section above are
 parked with it.
+
+## Pilot readiness (2026-09-28)
+
+- **On-screen sign-in code only on staging:** the API already refused the console OTP channel in
+  production unless `STAGING=true`; the web sign-in page now follows the same rule (it used to
+  decide on `OTP_CHANNEL` alone).
+- **SMS provider — waiting for the owner's choice.** Options presented: Twilio (~US$0.22/SMS to
+  Jordan, best API, WhatsApp on the same account), Unifonic (regional, SMS + WhatsApp, quote-based),
+  Releans (Jordanian, direct operator routes, local-rate pricing). All need a registered
+  alphanumeric sender ID (commercial registration). Integrate behind `OtpSender` /
+  `NotificationChannel` once chosen; keep `ConsoleOtpSender` for development and staging.
+- **Admin venue review verified end to end** (`tests/e2e/specs/venue-review.spec.ts`): submit →
+  hidden → reject with a reason → owner sees it → resubmit → approve → listed and page opens. The
+  owner's /manage card now shows "منشور" / "Live" when approved.
+- **Domain:** `docs/domain.md` (what to buy, DNS records). `infra/staging/domain.env` switches the
+  host names with one commit once DNS points at the server. Fixed `robots.txt` and the static info
+  pages using `http://localhost:3000` for absolute URLs on the deployed server.
