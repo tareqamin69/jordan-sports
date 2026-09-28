@@ -31,3 +31,6 @@ test-results/
 
 # local media storage (development)
 .data/
+
+# Local Redis snapshot (dev sandbox)
+dump.rdb
