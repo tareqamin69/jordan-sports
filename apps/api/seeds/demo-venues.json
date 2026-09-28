@@ -2,8 +2,8 @@
   {
     "slug": "demo-padel-club",
     "name": {
-      "ar": "نادي سماش للبادل",
-      "en": "Smash Padel Club"
+      "ar": "نادي سماش للبادل (تجريبي)",
+      "en": "Smash Padel Club (Demo)"
     },
     "description": {
       "ar": "ثلاث ملاعب بادل مغطاة بإضاءة ممتازة، غرف تبديل ومواقف سيارات. (بيانات تجريبية)",
@@ -78,8 +78,8 @@
   {
     "slug": "demo-football-arena",
     "name": {
-      "ar": "ملاعب النجوم",
-      "en": "Stars Football Arena"
+      "ar": "ملاعب النجوم (تجريبي)",
+      "en": "Stars Football Arena (Demo)"
     },
     "description": {
       "ar": "ملعب عشب صناعي بينقسم لملعبين خماسي أو بينحجز كامل سباعي. (بيانات تجريبية)",
@@ -152,8 +152,8 @@
   {
     "slug": "demo-tennis-center",
     "name": {
-      "ar": "مركز دابوق للتنس",
-      "en": "Dabouq Tennis Center"
+      "ar": "مركز دابوق للتنس (تجريبي)",
+      "en": "Dabouq Tennis Center (Demo)"
     },
     "description": {
       "ar": "ملعبين تنس بأرضية ترابية، مدربين متوفرين عند الطلب. (بيانات تجريبية)",
@@ -201,8 +201,8 @@
   {
     "slug": "jubeiha-five-a-side",
     "name": {
-      "ar": "ملعب الجبيهة الخماسي",
-      "en": "Jubeiha Five-a-side"
+      "ar": "ملعب الجبيهة الخماسي (تجريبي)",
+      "en": "Jubeiha Five-a-side (Demo)"
     },
     "description": {
       "ar": "ملعبين خماسي قريبين من الجامعة الأردنية، أسعار مناسبة للطلاب. (بيانات تجريبية)",
@@ -258,8 +258,8 @@
   {
     "slug": "abdoun-padel",
     "name": {
-      "ar": "بادل عبدون",
-      "en": "Abdoun Padel"
+      "ar": "بادل عبدون (تجريبي)",
+      "en": "Abdoun Padel (Demo)"
     },
     "description": {
       "ar": "ملعبين بادل بانوراما مع كافيه. (بيانات تجريبية)",
@@ -317,8 +317,8 @@
   {
     "slug": "tla-al-ali-sports",
     "name": {
-      "ar": "نادي تلاع العلي الرياضي",
-      "en": "Tla' Al-Ali Sports Club"
+      "ar": "نادي تلاع العلي الرياضي (تجريبي)",
+      "en": "Tla' Al-Ali Sports Club (Demo)"
     },
     "description": {
       "ar": "ملعب خماسي وملعب تنس بنفس المكان. (بيانات تجريبية)",
