@@ -33,6 +33,7 @@ import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
 import { allIssuesMatched, fieldErrors } from '@/lib/field-errors';
 import { governorateCenter, isNearGovernorate } from '@/lib/governorate-geo';
+import { wizardSteps, type WizardStep } from '@/lib/wizard-steps';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { VenueMap } from '@/components/venue-map';
@@ -47,8 +48,8 @@ function localized(ar: string, en: string): Localized | undefined {
   return value.ar || value.en ? value : undefined;
 }
 
-const steps = ['info', 'location', 'photos', 'courts', 'payment', 'review'] as const;
-type Step = (typeof steps)[number];
+const steps = wizardSteps;
+type Step = WizardStep;
 
 function Stepper({ current }: { current: Step }) {
   const t = useTranslations('web.manage.register');
@@ -86,7 +87,14 @@ function Stepper({ current }: { current: Step }) {
  * uses to edit hours/pricing — those stay reachable from the review step and from the dashboard
  * itself while the venue is still in review (plan: "editing while in review: allowed").
  */
-export function RegisterWizard({ venueId: initialVenueId }: { venueId?: string }) {
+export function RegisterWizard({
+  venueId: initialVenueId,
+  initialStep = 'info',
+}: {
+  venueId?: string;
+  /** Deep-links the onboarding checklist into a specific step (e.g. photos) of an existing draft. */
+  initialStep?: Step;
+}) {
   const t = useTranslations('web.manage.register');
   const api = useApi();
   const router = useRouter();
@@ -94,7 +102,7 @@ export function RegisterWizard({ venueId: initialVenueId }: { venueId?: string }
   const errorMessage = useErrorMessage();
   const catalog = useCatalog();
   const [venue, setVenue] = useState<AdminVenue | null>(null);
-  const [step, setStep] = useState<Step>('info');
+  const [step, setStep] = useState<Step>(initialStep);
   const [submitted, setSubmitted] = useState(false);
 
   const existing = useQuery({

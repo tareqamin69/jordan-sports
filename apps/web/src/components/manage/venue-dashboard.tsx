@@ -23,6 +23,7 @@ import { BookingsPanel } from './bookings-panel';
 import { CalendarView } from './calendar-view';
 import { ClosuresEditor } from './closures-editor';
 import { HoursEditor } from './hours-editor';
+import { OnboardingChecklist } from './onboarding-checklist';
 import { PricingEditor } from './pricing-editor';
 import { RulesEditor } from './rules-editor';
 
@@ -120,6 +121,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
         actions={<VenueSwitcher venueId={venueId} tab={tab} />}
       />
       <VenueStatusBanner venueId={venueId} status={s.venue.status} />
+      <OnboardingChecklist schedule={s} />
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
         <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
           {tabs.map((key) => (

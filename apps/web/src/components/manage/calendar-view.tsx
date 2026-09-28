@@ -8,10 +8,11 @@ import {
   type CalendarEntry,
   type VenueSchedule,
 } from '@jordan-sports/contracts';
-import { Alert, Button, Card, SelectField, Spinner, TextField, cx } from '@jordan-sports/ui';
+import { Alert, Button, buttonClass, Card, SelectField, Spinner, TextField, cx } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
+import { Link } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
@@ -39,6 +40,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const venueId = schedule.venue.id;
+  const noHoursConfigured = schedule.resources.every((r) => r.weeklyHours.length === 0);
   const today = businessToday(schedule.venue.timezone, schedule.venue.businessDayStartMinute);
   const [date, setDate] = useState(today);
   const key = ['calendar', venueId, date];
@@ -120,7 +122,18 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
       {calendar.isError ? <Alert tone="error">{errorMessage(calendar.error)}</Alert> : null}
       {remove.isError ? <Alert tone="error">{errorMessage(remove.error)}</Alert> : null}
 
-      {calendar.data ? (
+      {noHoursConfigured ? (
+        <Card className="flex flex-col items-start gap-2">
+          <p className="font-semibold text-ink">{t('calendar.noHoursTitle')}</p>
+          <p className="text-sm text-ink-muted">{t('calendar.noHoursBody')}</p>
+          <Link
+            href={{ pathname: `/manage/${venueId}`, query: { tab: 'hours' } }}
+            className={buttonClass({ size: 'sm', className: 'mt-2' })}
+          >
+            {t('calendar.noHoursCta')}
+          </Link>
+        </Card>
+      ) : calendar.data ? (
         <Card className="overflow-x-auto p-0">
           <div className="flex min-w-max">
             <div className="sticky start-0 z-10 w-14 shrink-0 border-e border-line bg-surface">

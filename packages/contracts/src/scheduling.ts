@@ -67,9 +67,12 @@ export const managedVenueSchema = z.object({
   slug: z.string(),
   name: localizedSchema,
   status: venueStatusSchema,
+  statusReason: z.string().nullable(),
   organizationId: uuidSchema,
   organizationName: localizedSchema,
   role: membershipRoleSchema,
+  /** First uploaded photo, if any — fetch via GET /v1/manage/media/:id (owner-scoped, works pre-approval). */
+  coverMediaId: uuidSchema.nullable(),
 });
 
 export const listManagedVenues = endpoint({

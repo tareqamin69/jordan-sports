@@ -80,9 +80,19 @@ export class ManageScheduleService {
         'v.slug',
         'v.name',
         'v.status',
+        'v.status_reason',
         'o.id as organization_id',
         'o.name as organization_name',
         'm.role',
+        (eb) =>
+          eb
+            .selectFrom('venue.media as med')
+            .select('med.id')
+            .whereRef('med.venue_id', '=', 'v.id')
+            .orderBy('med.sort_order')
+            .orderBy('med.created_at')
+            .limit(1)
+            .as('cover_media_id'),
       ])
       .where('m.user_id', '=', userId)
       .where('o.status', '=', 'active')
@@ -95,9 +105,11 @@ export class ManageScheduleService {
         slug: r.slug,
         name: r.name as Localized,
         status: r.status as VenueSchedule['venue']['status'],
+        statusReason: r.status_reason,
         organizationId: r.organization_id,
         organizationName: r.organization_name as Localized,
         role: r.role as VenueSchedule['role'],
+        coverMediaId: r.cover_media_id,
       })),
     };
   }

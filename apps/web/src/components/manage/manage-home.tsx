@@ -43,32 +43,48 @@ export function ManageHome() {
         </Card>
       ) : null}
       <ul className="grid gap-3 sm:grid-cols-2">
-        {venues.data?.items.map((v) => (
-          <li key={v.id} className="min-w-0">
-            <Link
-              href={`/manage/${v.id}`}
-              data-testid="managed-venue"
-              className="group flex h-full items-center gap-4 rounded-card border border-line bg-surface p-4 pe-5 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-lift"
-            >
-              <span className="relative size-20 shrink-0 overflow-hidden rounded-tile bg-night">
-                <CourtArt variant="top" />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="eyebrow truncate">{pick(v.organizationName, locale)}</span>
-                <span className="truncate text-lg font-bold group-hover:text-primary">
-                  {pick(v.name, locale)}
+        {venues.data?.items.map((v) => {
+          // Self-registered owners have one venue per organization, auto-named from it — showing
+          // the org name above the (identical) venue name would just repeat it.
+          const sameName = pick(v.organizationName, locale) === pick(v.name, locale);
+          return (
+            <li key={v.id} className="min-w-0">
+              <Link
+                href={`/manage/${v.id}`}
+                data-testid="managed-venue"
+                className="group flex h-full items-center gap-4 rounded-card border border-line bg-surface p-4 pe-5 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-lift"
+              >
+                <span className="relative size-20 shrink-0 overflow-hidden rounded-tile bg-night">
+                  {v.coverMediaId ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- owner-scoped preview, works pre-approval
+                    <img
+                      src={`/api/v1/manage/media/${v.coverMediaId}`}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <CourtArt variant="top" />
+                  )}
                 </span>
-                <span className="flex flex-wrap gap-2">
-                  <Badge>{tc(`roles.${v.role}`)}</Badge>
-                  {v.status !== 'approved' ? (
-                    <Badge className="bg-accent-300/70">{t('notPublic')}</Badge>
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  {!sameName ? (
+                    <span className="eyebrow truncate">{pick(v.organizationName, locale)}</span>
                   ) : null}
+                  <span className="truncate text-lg font-bold group-hover:text-primary">
+                    {pick(v.name, locale)}
+                  </span>
+                  <span className="flex flex-wrap gap-2">
+                    <Badge>{tc(`roles.${v.role}`)}</Badge>
+                    {v.status !== 'approved' ? (
+                      <Badge className="bg-accent-300/70">{t(`statusBadge.${v.status}`)}</Badge>
+                    ) : null}
+                  </span>
                 </span>
-              </span>
-              <Icon name="chevron" className="size-5 shrink-0 text-ink-muted rtl:rotate-180" />
-            </Link>
-          </li>
-        ))}
+                <Icon name="chevron" className="size-5 shrink-0 text-ink-muted rtl:rotate-180" />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </>
   );
