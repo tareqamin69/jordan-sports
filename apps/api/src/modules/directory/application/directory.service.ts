@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { PublicVenue, VenueSummary } from '@jordan-sports/contracts';
+import { APP_CONFIG } from '../../../platform/config/config.module.js';
+import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { Errors } from '../../../platform/http/errors.js';
@@ -26,6 +28,7 @@ function minutesOf(time: string): number {
 export class DirectoryService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
     private readonly venues: VenuesService,
     private readonly views: VenueViewsService,
     private readonly availability: AvailabilityViewService,
@@ -48,7 +51,7 @@ export class DirectoryService {
       .select('v.id')
       .where('v.status', '=', 'approved')
       .where('v.archived_at', 'is', null)
-      .where(takesOnlineBookingsFilter())
+      .where(takesOnlineBookingsFilter(this.config.features.cliqPayments))
       .orderBy('v.id', 'desc')
       .limit(filters.limit + 1);
     if (filters.cursor) query = query.where('v.id', '<', filters.cursor);
@@ -140,7 +143,8 @@ export class DirectoryService {
   async get(slug: string): Promise<PublicVenue> {
     const venue = await this.venues.findBySlug(slug);
     if (!venue || venue.status !== 'approved') throw Errors.notFound();
-    if (!(await takesOnlineBookings(this.db, venue))) throw Errors.notFound();
+    if (!(await takesOnlineBookings(this.db, venue, this.config.features.cliqPayments)))
+      throw Errors.notFound();
     return this.views.publicVenue(venue);
   }
 }

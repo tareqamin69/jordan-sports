@@ -59,6 +59,11 @@ export const catalogSchema = z.object({
   ),
   /** Sports with at least one active resource at an approved venue — what players should see. */
   offeredSportIds: z.array(uuidSchema),
+  /** Platform switches the apps need to know about (server configuration). */
+  features: z.object({
+    /** CliQ-to-venue payments and the commission balance (ADR-0018); off while a card gateway is planned. */
+    cliqPayments: z.boolean(),
+  }),
 });
 export type Catalog = z.infer<typeof catalogSchema>;
 

@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Booking } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
+import { APP_CONFIG } from '../../../platform/config/config.module.js';
+import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { pgConstraint, pgErrorCode, PgError } from '../../../platform/database/errors.js';
@@ -39,9 +41,6 @@ export interface HoldRequest {
   readonly durationMinutes: number;
 }
 
-/** The only payment provider at launch (plan §4); a card gateway would be chosen per venue. */
-const provider: PaymentProvider = cliqManualProvider;
-
 /** A unique reference collision is astronomically rare; retry with a new one. */
 function isReferenceCollision(error: unknown): boolean {
   return (
@@ -67,12 +66,21 @@ function isPaymentReferenceReuse(error: unknown): boolean {
 export class BookingsService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
     private readonly venues: VenuesService,
     private readonly resources: ResourcesService,
     private readonly availability: AvailabilityService,
     private readonly occupancy: OccupancyService,
     private readonly pricing: PricingService,
   ) {}
+
+  /**
+   * The online payment provider, if any (ADR-0018). CliQ is built but switched off
+   * (FEATURE_CLIQ_PAYMENTS); without a provider every booking is paid at the venue.
+   */
+  private get provider(): PaymentProvider | null {
+    return this.config.features.cliqPayments ? cliqManualProvider : null;
+  }
 
   async get(userId: string, bookingId: string): Promise<Booking> {
     const row = await bookingQuery(this.db)
@@ -112,7 +120,7 @@ export class BookingsService {
     const venue = await this.venues.find(resource.venueId);
     if (venue.status !== 'approved' || resource.status !== 'active') throw Errors.notFound();
     // A CliQ venue with an empty balance or an overdue refund takes no new online bookings (D2, D4).
-    if (!(await takesOnlineBookings(this.db, venue, now))) {
+    if (!(await takesOnlineBookings(this.db, venue, this.config.features.cliqPayments, now))) {
       throw new AppError('VENUE_NOT_ACCEPTING_BOOKINGS', 409);
     }
 
@@ -135,7 +143,7 @@ export class BookingsService {
 
     const policy: CancellationPolicy = { cutoffHours: venue.cancellationCutoffHours };
     const during = occupiedRange(slot.start, slot.end, ctx.policy);
-    const payment = provider.start(venue, price);
+    const payment = this.provider?.start(venue, price) ?? null;
     // A CliQ hold lasts long enough for a bank-app transfer (plan §4: 30 minutes by default).
     const holdMinutes = payment ? venue.paymentHoldMinutes : ctx.policy.holdMinutes;
     const holdExpiresAt = new Date(now.getTime() + holdMinutes * 60_000);

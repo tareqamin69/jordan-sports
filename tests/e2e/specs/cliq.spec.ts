@@ -10,6 +10,15 @@ import {
 import { API, WEB, expectNoAccessibilityViolations } from './support';
 
 test.describe('CliQ payments (plan §4–§5)', () => {
+  // CliQ is built but switched off (FEATURE_CLIQ_PAYMENTS, ADR-0018): runs only against an API
+  // started with the feature on.
+  test.beforeEach(async ({ request }) => {
+    const catalog = (await (await request.get(`${API}/v1/catalog`)).json()) as {
+      features: { cliqPayments: boolean };
+    };
+    test.skip(!catalog.features.cliqPayments, 'CliQ payments are switched off');
+  });
+
   test('player pays the deposit by CliQ, the venue confirms, the commission leaves the balance', async ({
     page,
     browser,

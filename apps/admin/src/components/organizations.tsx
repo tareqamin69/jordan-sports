@@ -23,6 +23,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
+import { useCatalog } from '@/lib/catalog';
 import { dmyTime } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -198,6 +199,8 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
+  // The commission balance only matters while CliQ payments are switched on (ADR-0018).
+  const cliqEnabled = useCatalog().data?.features.cliqPayments ?? false;
   const org = useQuery({
     queryKey: ['organization', organizationId],
     queryFn: () => api(adminGetOrganization, { params: { organizationId } }),
@@ -288,9 +291,11 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
             </Button>
           </form>
         </Card>
-        <div className="lg:col-span-2">
-          <BalanceCard organizationId={organizationId} />
-        </div>
+        {cliqEnabled ? (
+          <div className="lg:col-span-2">
+            <BalanceCard organizationId={organizationId} />
+          </div>
+        ) : null}
         <div className="lg:col-span-2">
           <VenueList organizationId={organizationId} />
         </div>

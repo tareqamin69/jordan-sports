@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { attributeFieldSchema, type AttributeField, type Catalog } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import { z } from 'zod';
+import { APP_CONFIG } from '../../../platform/config/config.module.js';
+import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
@@ -22,7 +24,10 @@ const KEY_PATTERN = /^[a-z0-9_]+$/;
 export class CatalogService {
   private cached?: { at: number; value: Catalog };
 
-  constructor(@Inject(DATABASE) private readonly db: Db) {}
+  constructor(
+    @Inject(DATABASE) private readonly db: Db,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
+  ) {}
 
   /** Reference data changes rarely; cached briefly in memory. */
   async get(): Promise<Catalog> {
@@ -110,6 +115,7 @@ export class CatalogService {
           .map((a) => ({ id: a.id, key: a.key, name: a.name as Localized })),
       })),
       offeredSportIds: [...new Set(offered.map((o) => o.sport_id))],
+      features: { cliqPayments: this.config.features.cliqPayments },
     };
     this.cached = { at: Date.now(), value };
     return value;

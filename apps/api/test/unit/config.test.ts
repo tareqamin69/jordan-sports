@@ -32,6 +32,7 @@ describe('parseConfig', () => {
       rateLimitScale: 1,
       staging: false,
       trustProxy: ['127.0.0.1', '::1'],
+      features: { cliqPayments: false },
     });
   });
 

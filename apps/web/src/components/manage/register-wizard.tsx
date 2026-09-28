@@ -51,7 +51,7 @@ function localized(ar: string, en: string): Localized | undefined {
 const steps = wizardSteps;
 type Step = WizardStep;
 
-function Stepper({ current }: { current: Step }) {
+function Stepper({ current, cliqEnabled }: { current: Step; cliqEnabled: boolean }) {
   const t = useTranslations('web.manage.register');
   const index = steps.indexOf(current);
   return (
@@ -74,7 +74,7 @@ function Stepper({ current }: { current: Step }) {
           >
             {i + 1}
           </span>
-          {t(`steps.${s}`)}
+          {s === 'payment' && !cliqEnabled ? t('steps.contact') : t(`steps.${s}`)}
         </li>
       ))}
     </ol>
@@ -142,7 +142,7 @@ export function RegisterWizard({
         title={t('title')}
         description={t('stepOf', { step: steps.indexOf(step) + 1, total: steps.length })}
       />
-      <Stepper current={step} />
+      <Stepper current={step} cliqEnabled={catalog.data.features.cliqPayments} />
       {step === 'info' ? (
         <InfoStep
           venue={venue}
@@ -188,6 +188,7 @@ export function RegisterWizard({
       {step === 'payment' && venue ? (
         <PaymentStep
           venue={venue}
+          cliqEnabled={catalog.data.features.cliqPayments}
           onBack={() => setStep('courts')}
           onNext={(v) => {
             setVenue(v);
@@ -198,6 +199,7 @@ export function RegisterWizard({
       {step === 'review' && venue ? (
         <ReviewStep
           venue={venue}
+          cliqEnabled={catalog.data.features.cliqPayments}
           catalog={catalog.data}
           onBack={() => setStep('payment')}
           onSubmitted={() => {
@@ -389,7 +391,9 @@ function LocationStep({
   const governorateKey = catalog.governorates.find((g) => g.id === venue.governorateId)?.key;
   const defaultCenter = governorateKey ? governorateCenter(governorateKey) : null;
   const outsideGovernorate =
-    location !== null && governorateKey !== undefined && !isNearGovernorate(location, governorateKey);
+    location !== null &&
+    governorateKey !== undefined &&
+    !isNearGovernorate(location, governorateKey);
 
   const save = useMutation({
     mutationFn: () =>
@@ -650,7 +654,12 @@ function CourtsStep({
               >
                 <span>{pick(r.name, locale)}</span>
                 <span className="flex gap-1">
-                  <Button size="sm" variant="ghost" type="button" onClick={() => setEditingId(r.id)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    type="button"
+                    onClick={() => setEditingId(r.id)}
+                  >
                     {t('editCourt')}
                   </Button>
                   <Button
@@ -849,12 +858,18 @@ function EditCourtForm({
   );
 }
 
+/**
+ * Contact and (when CliQ payments are switched on) payment details. With CliQ off the CliQ fields
+ * are hidden and not sent, so values saved earlier are kept for when it returns (ADR-0018).
+ */
 function PaymentStep({
   venue,
+  cliqEnabled,
   onBack,
   onNext,
 }: {
   venue: AdminVenue;
+  cliqEnabled: boolean;
   onBack: () => void;
   onNext: (venue: AdminVenue) => void;
 }) {
@@ -876,15 +891,24 @@ function PaymentStep({
         params: { venueId: venue.id },
         body: {
           whatsapp: f.whatsapp.trim() || null,
-          cliqAlias: f.cliqAlias.trim() || null,
-          cliqAliasHolderName: f.cliqAliasHolderName.trim() || null,
-          depositPercentage: f.depositPercentage.trim() ? Number(f.depositPercentage) : null,
+          ...(cliqEnabled
+            ? {
+                cliqAlias: f.cliqAlias.trim() || null,
+                cliqAliasHolderName: f.cliqAliasHolderName.trim() || null,
+                depositPercentage: f.depositPercentage.trim() ? Number(f.depositPercentage) : null,
+              }
+            : {}),
         },
       }),
     onSuccess: onNext,
   });
   const fieldError = fieldErrors(save.error);
-  const knownFields = ['whatsapp', 'cliqAlias', 'cliqAliasHolderName', 'depositPercentage'] as const;
+  const knownFields = [
+    'whatsapp',
+    'cliqAlias',
+    'cliqAliasHolderName',
+    'depositPercentage',
+  ] as const;
 
   return (
     <Card>
@@ -895,7 +919,9 @@ function PaymentStep({
           save.mutate();
         }}
       >
-        <p className="text-ink-muted sm:col-span-2">{t('paymentIntro')}</p>
+        <p className="text-ink-muted sm:col-span-2">
+          {cliqEnabled ? t('paymentIntro') : t('contactIntro')}
+        </p>
         {save.isError && !allIssuesMatched(save.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
@@ -911,33 +937,37 @@ function PaymentStep({
           name="whatsapp"
           error={fieldError('whatsapp')}
         />
-        <TextField
-          label={t('cliqAlias')}
-          hint={t('cliqAliasHint')}
-          value={f.cliqAlias}
-          onChange={set('cliqAlias')}
-          type="text"
-          dir="ltr"
-          name="cliqAlias"
-          error={fieldError('cliqAlias')}
-        />
-        <TextField
-          label={t('cliqHolder')}
-          value={f.cliqAliasHolderName}
-          onChange={set('cliqAliasHolderName')}
-          name="cliqAliasHolderName"
-          error={fieldError('cliqAliasHolderName')}
-        />
-        <TextField
-          label={t('depositPercentage')}
-          hint={t('depositHint')}
-          value={f.depositPercentage}
-          onChange={set('depositPercentage')}
-          inputMode="numeric"
-          dir="ltr"
-          name="depositPercentage"
-          error={fieldError('depositPercentage')}
-        />
+        {cliqEnabled ? (
+          <>
+            <TextField
+              label={t('cliqAlias')}
+              hint={t('cliqAliasHint')}
+              value={f.cliqAlias}
+              onChange={set('cliqAlias')}
+              type="text"
+              dir="ltr"
+              name="cliqAlias"
+              error={fieldError('cliqAlias')}
+            />
+            <TextField
+              label={t('cliqHolder')}
+              value={f.cliqAliasHolderName}
+              onChange={set('cliqAliasHolderName')}
+              name="cliqAliasHolderName"
+              error={fieldError('cliqAliasHolderName')}
+            />
+            <TextField
+              label={t('depositPercentage')}
+              hint={t('depositHint')}
+              value={f.depositPercentage}
+              onChange={set('depositPercentage')}
+              inputMode="numeric"
+              dir="ltr"
+              name="depositPercentage"
+              error={fieldError('depositPercentage')}
+            />
+          </>
+        ) : null}
         <StepActions onBack={onBack} busy={save.isPending} nextLabel={t('next')} />
       </form>
     </Card>
@@ -946,11 +976,13 @@ function PaymentStep({
 
 function ReviewStep({
   venue,
+  cliqEnabled,
   catalog,
   onBack,
   onSubmitted,
 }: {
   venue: AdminVenue;
+  cliqEnabled: boolean;
   catalog: Catalog;
   onBack: () => void;
   onSubmitted: () => void;
@@ -1000,19 +1032,23 @@ function ReviewStep({
             {venue.whatsapp || '—'}
           </dd>
         </div>
-        <div>
-          <dt className="text-sm text-ink-muted">{t('cliqAlias')}</dt>
-          <dd className="font-medium">
-            {venue.cliqAlias || '—'}
-            {venue.cliqAliasHolderName ? ` (${venue.cliqAliasHolderName})` : ''}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm text-ink-muted">{t('depositPercentage')}</dt>
-          <dd className="font-medium">
-            {venue.depositPercentage !== null ? `${venue.depositPercentage}%` : '—'}
-          </dd>
-        </div>
+        {cliqEnabled ? (
+          <>
+            <div>
+              <dt className="text-sm text-ink-muted">{t('cliqAlias')}</dt>
+              <dd className="font-medium">
+                {venue.cliqAlias || '—'}
+                {venue.cliqAliasHolderName ? ` (${venue.cliqAliasHolderName})` : ''}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-ink-muted">{t('depositPercentage')}</dt>
+              <dd className="font-medium">
+                {venue.depositPercentage !== null ? `${venue.depositPercentage}%` : '—'}
+              </dd>
+            </div>
+          </>
+        ) : null}
       </dl>
 
       {venue.location ? (
@@ -1033,7 +1069,9 @@ function ReviewStep({
                 <span className="font-medium">{pick(r.name, locale)}</span>
                 <span className="text-ink-muted">
                   {' — '}
-                  {r.formats.map((fm) => `${pick(fm.sportName, locale)} (${pick(fm.name, locale)})`).join('، ')}
+                  {r.formats
+                    .map((fm) => `${pick(fm.sportName, locale)} (${pick(fm.name, locale)})`)
+                    .join('، ')}
                 </span>
               </li>
             ))}

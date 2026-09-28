@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Balance } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
+import { APP_CONFIG } from '../../../platform/config/config.module.js';
+import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { bypassTenant, setTenant } from '../../../platform/database/tenant.js';
@@ -23,6 +25,7 @@ const HISTORY_SHOWN = 50;
 export class FinanceService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
     private readonly access: VenueAccessService,
     private readonly audit: AuditService,
   ) {}
@@ -94,7 +97,11 @@ export class FinanceService {
     const { venue } = await this.access.require(userId, venueId, 'venue.manage');
     return transaction(this.db, async (tx) => {
       await setTenant(tx, venue.organizationId);
-      return this.view(tx, venue.organizationId, venue.cliqAlias !== null);
+      return this.view(
+        tx,
+        venue.organizationId,
+        this.config.features.cliqPayments && venue.cliqAlias !== null,
+      );
     });
   }
 

@@ -302,6 +302,7 @@ export const en = {
           photos: 'Photos',
           courts: 'Courts',
           payment: 'Payment & contact',
+          contact: 'Contact',
           review: 'Review & submit',
         },
         nameAr: 'Venue name (Arabic)',
@@ -332,6 +333,8 @@ export const en = {
         courtFormats: 'Available formats',
         noCourts: 'You have not added any courts yet.',
         paymentIntro: 'This information is for future payment collection — not active yet.',
+        contactIntro:
+          'A WhatsApp number helps players and the Jorena team reach you. Players pay at the venue for now.',
         whatsapp: 'WhatsApp number',
         whatsappHint: 'International format, e.g. +9627XXXXXXXX. Optional.',
         cliqAlias: 'CliQ alias',

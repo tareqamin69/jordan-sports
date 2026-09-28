@@ -55,6 +55,9 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   RATE_LIMIT_SCALE: z.coerce.number().int().min(1).max(1000).default(1),
+  // CliQ-to-venue payments and the prepaid commission balance (ADR-0018). Off: every venue is
+  // pay-at-venue and none is hidden because of its balance (card gateway planned instead).
+  FEATURE_CLIQ_PAYMENTS: booleanString.default(false),
 });
 
 export type NodeEnv = 'development' | 'test' | 'production';
@@ -81,6 +84,7 @@ export interface AppConfig {
   /** Test deployment with demo data (see STAGING). */
   readonly staging: boolean;
   readonly trustProxy: readonly string[];
+  readonly features: { readonly cliqPayments: boolean };
 }
 
 export class ConfigError extends Error {
@@ -119,6 +123,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     rateLimitScale: e.RATE_LIMIT_SCALE,
     staging: e.STAGING,
     trustProxy: e.TRUST_PROXY,
+    features: { cliqPayments: e.FEATURE_CLIQ_PAYMENTS },
   };
   assertProductionSafe(config);
   return config;

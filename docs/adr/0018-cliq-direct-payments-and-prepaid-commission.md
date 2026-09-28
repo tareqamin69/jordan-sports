@@ -1,6 +1,7 @@
 # 0018. CliQ straight to the venue, commission from a prepaid balance
 
-- **Status:** Accepted
+- **Status:** Accepted, **switched off** (2026-09-28): the owner chose a card gateway (MEPS)
+  instead. Kept behind `FEATURE_CLIQ_PAYMENTS` (default `false`); see "Switched off" below.
 - **Date:** 2026-09-28
 - **Related:** [plan §4–§5](../plans/jordan-wide-cliq-marketplace.md), [0005](./0005-booking-state-model.md),
   [0006](./0006-money-and-ledger.md), [0008](./0008-tenancy-and-row-level-security.md),
@@ -62,3 +63,19 @@ commission for — without ever blocking a player who has already paid.
   lever against non-payment; the prepaid balance was chosen (plan §5).
 - **A booking state for "awaiting venue":** would leak payment concerns into the booking state
   machine (ADR-0005); the payment row carries it instead.
+
+## Switched off (2026-09-28)
+
+The owner moved to a card gateway (MEPS). The CliQ code stays behind the `PaymentProvider`
+abstraction, disabled by `FEATURE_CLIQ_PAYMENTS=false` (the default):
+
+- no payment rows are created; every booking is pay-at-venue;
+- the balance/overdue-refund visibility gate is bypassed, so no venue is hidden for its balance;
+- `GET /v1/catalog` returns `features.cliqPayments`; the web hides the CliQ fields in the
+  registration wizard (the step becomes "Contact"), the owner's Payments and Balance tabs and the
+  balance banner; admin hides the balance card. Saved CliQ values are kept, not cleared.
+- Tests: `payments.test.ts` runs with the flag on; `payments-disabled.test.ts` covers the default;
+  `tests/e2e/specs/cliq.spec.ts` skips itself unless the API reports the feature on.
+
+A MEPS adapter should be a second `PaymentProvider`; the ledger and commission code can be reused
+if the commission model stays prepaid.

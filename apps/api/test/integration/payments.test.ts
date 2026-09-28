@@ -84,7 +84,8 @@ describe('CliQ payments and the commission balance', () => {
   const inThreeDays = DateTime.now().setZone(ZONE).plus({ days: 3 }).toISODate()!;
 
   beforeAll(async () => {
-    t = await createTestApp({ DATABASE_POOL_MAX: '20' });
+    // CliQ is built but switched off by default (ADR-0018); these tests exercise it switched on.
+    t = await createTestApp({ DATABASE_POOL_MAX: '20', FEATURE_CLIQ_PAYMENTS: 'true' });
     admin = await signInAdmin(t.app);
   });
 

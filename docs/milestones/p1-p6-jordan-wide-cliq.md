@@ -12,8 +12,8 @@ what's shipped so a new session can resume without re-reading everything.
 | P1 — Jordan-wide geography + full sports catalog | **Done (2026-09-27)** |
 | P2 — Two interfaces, mode switch | **Done (2026-09-28)** |
 | P3 — Venue self-registration wizard, review queue | **Mostly done** (wizard + review queue; platform settings screen and "chat with us" button still open) |
-| P4 — CliQ payment flow | **Core loop done (2026-09-28)**; receipts, player/venue problem reports, admin disputes list open |
-| P5 — Prepaid balance & commission | **Core done (2026-09-28)**; venue top-up requests, admin balances overview, overdue-refunds list open |
+| P4 — CliQ payment flow | Core loop built, then **switched off** (owner chose MEPS cards) — `FEATURE_CLIQ_PAYMENTS` |
+| P5 — Prepaid balance & commission | Core built, **switched off** with CliQ (no venue hidden for balance) |
 | P6 — Gateway questions doc (done, in the plan §Appendix B), full e2e run, ADRs | Not started |
 
 ## P1 — done
@@ -308,3 +308,11 @@ catches them (it did). E2E `tests/e2e/specs/cliq.spec.ts` drives the whole flow 
 3. Venue staff (not just owners/managers) can confirm payments (`booking.manage`). Restrict?
 4. On staging, venues registered through the wizard have a CliQ alias and a zero balance, so they
    are hidden from search until an admin credits them from the organization page.
+
+## Change of plan: CliQ switched off (2026-09-28)
+
+The owner is going with a card gateway (MEPS). CliQ and the commission balance stay in the code,
+disabled by `FEATURE_CLIQ_PAYMENTS` (default off): all venues are pay-at-venue, none is hidden
+for its balance, and the CliQ fields/tabs are hidden in the wizard, dashboard and admin. Details in
+ADR-0018 "Switched off". The "Deferred" and "Open decisions" lists of the P4/P5 section above are
+parked with it.

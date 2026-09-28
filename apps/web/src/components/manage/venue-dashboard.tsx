@@ -18,6 +18,7 @@ import { isApiError, useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { can, useManagedVenues, useVenueSchedule } from '@/lib/manage';
 import { tabs, type Tab } from '@/lib/manage-tabs';
+import { useCatalog } from '@/lib/catalog';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { BalanceBanner, BalancePanel, useVenueBalance } from './balance-panel';
 import { BookingsPanel } from './bookings-panel';
@@ -106,7 +107,9 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   const router = useRouter();
   const errorMessage = useErrorMessage();
   const schedule = useVenueSchedule(venueId);
-  const seesMoney = can(schedule.data, 'venue.manage');
+  // CliQ payments and the commission balance are built but switched off (ADR-0018).
+  const cliqEnabled = useCatalog().data?.features.cliqPayments ?? false;
+  const seesMoney = cliqEnabled && can(schedule.data, 'venue.manage');
   const balance = useVenueBalance(venueId, seesMoney);
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
         <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
           {tabs
-            .filter((key) => key !== 'balance' || seesMoney)
+            .filter((key) => (key === 'payments' ? cliqEnabled : key !== 'balance' || seesMoney))
             .map((key) => (
               <li key={key}>
                 <Link
@@ -154,7 +157,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       </nav>
       {tab === 'calendar' ? <CalendarView schedule={s} /> : null}
       {tab === 'bookings' ? <BookingsPanel schedule={s} /> : null}
-      {tab === 'payments' ? <PaymentsPanel schedule={s} /> : null}
+      {tab === 'payments' && cliqEnabled ? <PaymentsPanel schedule={s} /> : null}
       {tab === 'balance' && seesMoney ? (
         <BalancePanel venueId={venueId} timezone={s.venue.timezone} />
       ) : null}
