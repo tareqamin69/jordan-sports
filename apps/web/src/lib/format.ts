@@ -1,3 +1,5 @@
+import { BRAND_NAME_LATIN } from '@jordan-sports/brand';
+
 /** Jordanian numeric date: DD/MM/YYYY (Western digits) from a YYYY-MM-DD calendar date. */
 export function dmy(date: string): string {
   const [y, m, d] = date.split('-');
@@ -37,13 +39,6 @@ export function directionsUrl(location: Place, fallbackQuery: string): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
 }
 
-/** OpenStreetMap embed centred on a point (no API key). */
-export function mapEmbedUrl(location: { lat: number; lng: number }): string {
-  const d = 0.006;
-  const bbox = [location.lng - d, location.lat - d, location.lng + d, location.lat + d].join(',');
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${location.lat},${location.lng}`;
-}
-
 export function whatsappShareUrl(text: string): string {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
@@ -76,7 +71,7 @@ export function icsFile(e: CalendarEvent): string {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Jordan Sports//Booking//EN',
+    `PRODID:-//${BRAND_NAME_LATIN}//Booking//EN`,
     'BEGIN:VEVENT',
     `UID:${e.uid}`,
     `DTSTAMP:${icsStamp(new Date())}`,

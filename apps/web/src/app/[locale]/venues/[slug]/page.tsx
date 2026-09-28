@@ -10,7 +10,8 @@ import { CourtArt } from '@/components/court-art';
 import { Icon } from '@/components/icons';
 import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
-import { directionsUrl, mapEmbedUrl } from '@/lib/format';
+import { VenueMap } from '@/components/venue-map';
+import { directionsUrl } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
 
@@ -101,6 +102,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
   const venue = await loadVenue(slug);
   if (!venue) notFound();
   const t = await getTranslations('web.venue');
+  const tc = await getTranslations('common');
   const name = pick(venue.name, locale);
   const url = `${siteUrl}/${locale}/venues/${slug}`;
   const place = [
@@ -108,7 +110,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
     venue.area ? pick(venue.area.name, locale) : '',
     pick(venue.governorate.name, locale),
   ].filter(Boolean);
-  const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${t('shareText', { name })} ${url}`)}`;
+  const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${t('shareText', { name, appName: tc('appName') })} ${url}`)}`;
 
   const address = joinList(place, locale);
   const directions = directionsUrl(venue.location, `${name} ${address}`);
@@ -302,14 +304,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
               <section>
                 <h2 className="font-display text-2xl">{t('address')}</h2>
                 <p className="mt-2 text-ink">{address}</p>
-                {venue.location ? (
-                  <iframe
-                    title={t('mapTitle', { name })}
-                    src={mapEmbedUrl(venue.location)}
-                    loading="lazy"
-                    className="mt-4 aspect-[4/3] w-full rounded-card border border-line bg-canvas-deep"
-                  />
-                ) : null}
+                {venue.location ? <VenueMap location={venue.location} name={name} /> : null}
                 <a
                   href={directions}
                   target="_blank"
