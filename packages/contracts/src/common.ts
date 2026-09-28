@@ -37,6 +37,13 @@ export const errorCodes = [
   'REQUEST_IN_PROGRESS',
   'IDEMPOTENCY_KEY_REQUIRED',
   'CANCELLATION_NOT_ALLOWED',
+  // payments / balance
+  'PAYMENT_REQUIRED',
+  'PAYMENT_REFERENCE_USED',
+  'PAYMENT_NOT_PENDING',
+  'PAYMENT_AWAITING_VENUE',
+  'REFUND_NOT_DUE',
+  'VENUE_NOT_ACCEPTING_BOOKINGS',
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];
 

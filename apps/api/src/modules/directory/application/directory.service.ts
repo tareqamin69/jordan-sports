@@ -3,6 +3,7 @@ import type { PublicVenue, VenueSummary } from '@jordan-sports/contracts';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { Errors } from '../../../platform/http/errors.js';
+import { takesOnlineBookings, takesOnlineBookingsFilter } from '../../finance/index.js';
 import { VenuesService } from '../../venues/index.js';
 import { AvailabilityViewService } from './availability-view.service.js';
 import { VenueViewsService } from './views.service.js';
@@ -17,7 +18,10 @@ function minutesOf(time: string): number {
   return (h ?? 0) * 60 + (m ?? 0);
 }
 
-/** Public marketplace queries. Only approved, non-archived venues are ever returned. */
+/**
+ * Public marketplace queries. Only approved, non-archived venues that can take online bookings
+ * (commission balance above zero, no overdue refund) are ever returned.
+ */
 @Injectable()
 export class DirectoryService {
   constructor(
@@ -44,6 +48,7 @@ export class DirectoryService {
       .select('v.id')
       .where('v.status', '=', 'approved')
       .where('v.archived_at', 'is', null)
+      .where(takesOnlineBookingsFilter())
       .orderBy('v.id', 'desc')
       .limit(filters.limit + 1);
     if (filters.cursor) query = query.where('v.id', '<', filters.cursor);
@@ -135,6 +140,7 @@ export class DirectoryService {
   async get(slug: string): Promise<PublicVenue> {
     const venue = await this.venues.findBySlug(slug);
     if (!venue || venue.status !== 'approved') throw Errors.notFound();
+    if (!(await takesOnlineBookings(this.db, venue))) throw Errors.notFound();
     return this.views.publicVenue(venue);
   }
 }

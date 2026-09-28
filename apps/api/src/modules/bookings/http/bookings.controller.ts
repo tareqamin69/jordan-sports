@@ -5,6 +5,7 @@ import {
   createBookingHold,
   getBooking,
   listMyBookings,
+  submitPaymentProof,
   type Booking,
 } from '@jordan-sports/contracts';
 import type { FastifyRequest } from 'fastify';
@@ -80,6 +81,28 @@ export class BookingsController {
       idempotencyKey(request),
       IdempotencyService.hash(['confirm', bookingId, input]),
       async () => ({ status: 200, body: await this.bookings.confirm(actor.userId, bookingId) }),
+    );
+    return unwrapStored(response);
+  }
+
+  @Post(submitPaymentProof.path)
+  @HttpCode(200)
+  async submitProof(
+    @Param() params: unknown,
+    @Body() body: unknown,
+    @CurrentActor() actor: Actor,
+    @Req() request: FastifyRequest,
+  ): Promise<Booking> {
+    const { bookingId } = parseInput(submitPaymentProof.params, params);
+    const { reference } = parseInput(submitPaymentProof.body, body);
+    const response = await this.idempotency.run<Booking>(
+      actor.userId,
+      idempotencyKey(request),
+      IdempotencyService.hash(['payment-proof', bookingId, reference]),
+      async () => ({
+        status: 200,
+        body: await this.bookings.submitProof(actor.userId, bookingId, reference),
+      }),
     );
     return unwrapStored(response);
   }

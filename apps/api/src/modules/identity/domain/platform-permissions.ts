@@ -11,6 +11,8 @@ export const platformPermissions = [
   'venues.manage',
   'bookings.read',
   'audit.read',
+  'finance.read',
+  'finance.manage',
 ] as const;
 export type PlatformPermission = (typeof platformPermissions)[number];
 
@@ -20,13 +22,21 @@ const read: PlatformPermission[] = [
   'venues.read',
   'bookings.read',
   'audit.read',
+  'finance.read',
 ];
 
 export const platformRolePermissions: Record<PlatformRole, readonly PlatformPermission[]> = {
   super_admin: platformPermissions,
   admin: platformPermissions,
   support: read,
-  finance: ['organizations.read', 'venues.read', 'bookings.read', 'audit.read'],
+  finance: [
+    'organizations.read',
+    'venues.read',
+    'bookings.read',
+    'audit.read',
+    'finance.read',
+    'finance.manage',
+  ],
 };
 
 export function hasPlatformPermission(role: PlatformRole, permission: PlatformPermission): boolean {

@@ -191,6 +191,26 @@ export interface CatalogSports {
   sort_order: Generated<number>;
 }
 
+export interface FinanceBalanceEntries {
+  amount: Int8;
+  balance_after: Int8;
+  booking_id: string | null;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  currency: string;
+  id: string;
+  kind: string;
+  organization_id: string;
+  reason: string | null;
+}
+
+export interface FinanceBalances {
+  balance: Generated<Int8>;
+  currency: Generated<string>;
+  organization_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface IdentityOtpChallenges {
   attempts: Generated<number>;
   code_hash: string;
@@ -253,6 +273,48 @@ export interface NotificationDeliveries {
   recipient: string;
   status: string;
   template: string;
+}
+
+export interface PaymentDisputes {
+  booking_id: string;
+  created_at: Generated<Timestamp>;
+  id: string;
+  kind: string;
+  opened_by_role: string;
+  organization_id: string;
+  payment_id: string | null;
+  resolution: string | null;
+  resolved_at: Timestamp | null;
+  resolved_by: string | null;
+  status: Generated<string>;
+  venue_id: string;
+}
+
+export interface PaymentPayments {
+  amount: Int8;
+  booking_id: string;
+  confirmed_at: Timestamp | null;
+  confirmed_by: string | null;
+  created_at: Generated<Timestamp>;
+  currency: string;
+  id: string;
+  organization_id: string;
+  payee_alias: string;
+  payee_holder: string | null;
+  provider: string;
+  reference: string | null;
+  reference_key: string | null;
+  refund_due_at: Timestamp | null;
+  refund_status: string | null;
+  refunded_at: Timestamp | null;
+  refunded_by: string | null;
+  reject_reason: string | null;
+  rejected_at: Timestamp | null;
+  rejected_by: string | null;
+  status: string;
+  submitted_at: Timestamp | null;
+  updated_at: Generated<Timestamp>;
+  venue_id: string;
 }
 
 export interface PlatformIdempotencyKeys {
@@ -449,6 +511,7 @@ export interface VenueVenues {
   cliq_alias: string | null;
   cliq_alias_holder: string | null;
   closed_on_public_holidays: Generated<boolean>;
+  commission_bps: Generated<number>;
   contact_phone: string | null;
   created_at: Generated<Timestamp>;
   currency: Generated<string>;
@@ -458,6 +521,7 @@ export interface VenueVenues {
   location: string | null;
   name: Json;
   organization_id: string;
+  payment_hold_minutes: Generated<number>;
   slug: string;
   status: Generated<string>;
   status_reason: string | null;
@@ -481,12 +545,16 @@ export interface DB {
   'catalog.sport_formats': CatalogSportFormats;
   'catalog.sport_requests': CatalogSportRequests;
   'catalog.sports': CatalogSports;
+  'finance.balance_entries': FinanceBalanceEntries;
+  'finance.balances': FinanceBalances;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;
   'identity.sessions': IdentitySessions;
   'identity.totp_credentials': IdentityTotpCredentials;
   'identity.users': IdentityUsers;
   'notification.deliveries': NotificationDeliveries;
+  'payment.disputes': PaymentDisputes;
+  'payment.payments': PaymentPayments;
   'platform.idempotency_keys': PlatformIdempotencyKeys;
   'platform.outbox_events': PlatformOutboxEvents;
   'pricing.price_rule_amounts': PricingPriceRuleAmounts;

@@ -33,6 +33,10 @@ export interface VenueRow {
   cliqAlias: string | null;
   cliqAliasHolder: string | null;
   depositPercentage: number | null;
+  /** Platform commission, basis points of the booking price. */
+  commissionBps: number;
+  /** CliQ hold: time for the player's transfer, and again for the venue's confirmation. */
+  paymentHoldMinutes: number;
   whatsappPhone: string | null;
   statusReason: string | null;
   createdAt: Date;
@@ -81,6 +85,8 @@ export class VenuesService {
         'cliq_alias',
         'cliq_alias_holder',
         'deposit_percentage',
+        'commission_bps',
+        'payment_hold_minutes',
         'whatsapp_phone',
         'status_reason',
         'created_at',
@@ -113,6 +119,8 @@ export class VenuesService {
       cliqAlias: r.cliq_alias,
       cliqAliasHolder: r.cliq_alias_holder,
       depositPercentage: r.deposit_percentage,
+      commissionBps: r.commission_bps,
+      paymentHoldMinutes: r.payment_hold_minutes,
       whatsappPhone: r.whatsapp_phone,
       statusReason: r.status_reason,
       createdAt: r.created_at,

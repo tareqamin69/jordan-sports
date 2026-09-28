@@ -25,7 +25,7 @@ import {
 } from '../../scheduling/index.js';
 import { VenueAccessService, type VenueRow } from '../../venues/index.js';
 import { canTransition, newReference, type BookingStatus } from '../domain/booking-rules.js';
-import { recordStatus, releaseOccupancies } from './booking-store.js';
+import { recordStatus, refundDeposit, releaseOccupancies } from './booking-store.js';
 import { bookingQuery, toVenueBooking } from './booking-views.js';
 
 export interface StaffActor {
@@ -336,6 +336,9 @@ export class VenueBookingsService {
           .where('id', '=', bookingId)
           .execute();
         await releaseOccupancies(tx, [bookingId]);
+        // The venue cancelled: it owes the player's deposit back, and the commission returns (D2, D3).
+        await setTenant(tx, venue.organizationId);
+        await refundDeposit(tx, bookingId, now);
         await recordStatus(tx, [
           {
             bookingId,

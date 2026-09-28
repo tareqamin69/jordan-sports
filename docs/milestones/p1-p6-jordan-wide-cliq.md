@@ -11,9 +11,9 @@ what's shipped so a new session can resume without re-reading everything.
 |---|---|
 | P1 — Jordan-wide geography + full sports catalog | **Done (2026-09-27)** |
 | P2 — Two interfaces, mode switch | **Done (2026-09-28)** |
-| P3 — Venue self-registration wizard, review queue | Not started |
-| P4 — CliQ payment flow | Not started |
-| P5 — Prepaid balance & commission | Not started |
+| P3 — Venue self-registration wizard, review queue | **Mostly done** (wizard + review queue; platform settings screen and "chat with us" button still open) |
+| P4 — CliQ payment flow | **Core loop done (2026-09-28)**; receipts, player/venue problem reports, admin disputes list open |
+| P5 — Prepaid balance & commission | **Core done (2026-09-28)**; venue top-up requests, admin balances overview, overdue-refunds list open |
 | P6 — Gateway questions doc (done, in the plan §Appendix B), full e2e run, ADRs | Not started |
 
 ## P1 — done
@@ -236,3 +236,75 @@ already correct) — see the commit log on `claude/dazzling-feynman-iryb1r` / st
 2. Staging's *already-seeded* demo venues won't pick up the items 5/6 fixes (correct photos, the
    "(تجريبي)" suffix) from a code push alone, since `seed:demo` skips venues that already exist —
    needs either a reseed or a direct data fix on staging.
+
+## Second owner manual test — owner-side fixes (2026-09-28)
+
+All 12 items fixed and pushed (items 1–6 in one commit because they all live in the wizard, 7–8
+together, then one commit each): wizard map centres on the governorate and warns when the pin is
+outside it; styled bilingual photo-upload button; CliQ alias is a text field; validation errors
+sit under the exact field; the review step shows everything; courts can be edited and removed;
+venue card shows "قيد المراجعة", no duplicate name, and the cover photo; onboarding checklist
+(hours, prices, rules, photos) and a "set opening hours first" calendar state; "apply to all
+courts" + "copy to all days" in working hours; booking card art matches the booked sport; more
+room between the hero art and the Arabic subtitle; translated map-marker labels.
+
+The item-8 changes altered the dashboard for venues without hours, which broke two assertions in
+`manage.spec.ts` (found in the full e2e run below and fixed: the test now expects the new empty
+state and clicks tabs by exact name).
+
+## P4/P5 core — CliQ payments and the commission balance (2026-09-28)
+
+Design and rationale: [ADR-0018](../adr/0018-cliq-direct-payments-and-prepaid-commission.md).
+
+**Shipped**
+- Migration `0015_cliq_payments_and_ledger.sql`: `payment.payments`, `payment.disputes`,
+  `finance.balances`, `finance.balance_entries` (append-only, RLS), `venue.commission_bps` (800),
+  `venue.payment_hold_minutes` (30), `finance.org_takes_online_bookings()`.
+- API: hold creates the CliQ payment (deposit, payee snapshot, 30-minute hold);
+  `POST /v1/bookings/:id/payment-proof`; venue `GET /v1/manage/venues/:id/payments`,
+  `POST /v1/manage/payments/:id/{confirm,reject,refunded}`; `GET /v1/manage/venues/:id/balance`;
+  admin `GET/POST /v1/admin/organizations/:id/balance[/adjustments]` (new `finance.read` /
+  `finance.manage` permissions). Expiry sweep closes payments and opens the D1 dispute. Player and
+  venue cancellations return the commission and mark the deposit refund due. Search, venue page,
+  availability and holds hide CliQ venues with an empty balance or a refund overdue 48 hours.
+- Web: CliQ checkout (deposit, remainder, alias + copy, the Arabic steps, reference field,
+  countdown, "waiting for the venue" state polled every 10 s), paid/refund lines on the booking;
+  owner dashboard "Payments" tab (confirm / not received with reason / mark refunded, polled every
+  20 s) and "Balance" tab with history; low/empty/overdue banner on every tab (CliQ venues only).
+- Admin: balance card on the organization page (level, visibility, credit/debit with reason,
+  history).
+- Outbox events `payment.submitted|rejected`, `dispute.opened`, `refund.due`, `balance.low|empty`
+  are recorded but not delivered (no SMS/WhatsApp provider yet).
+
+**Tests** — unit `test/unit/finance.test.ts` (deposit and commission rounding, property tests for
+bounds, exact deposit + remainder, monotonic commission, balance levels, reference keys) and
+integration `test/integration/payments.test.ts` (24 tests): expired hold (before/after the sweep,
+no dispute, slot freed); duplicate reference (cosmetic variants refused, retries allowed, other
+organizations allowed); venue never confirms (dispute opened once, no commission, player can't
+walk away while pending); venue can't confirm/reject after the deadline; confirmation racing
+expiry; six concurrent confirmations → one commission; "not received" then resend; tenancy of
+payment actions; refunds in the free window, late cancellation, venue cancellation, 48-hour
+overdue hiding; empty balance hides the venue but manual bookings still work; low-balance event
+once; the confirmation that goes below zero is allowed and then the venue hides; top-up restores
+it; append-only + RLS on the ledger; admin adjustment permissions, validation and audit; cached
+balance = sum of entries after every flow. Two deliberate bugs were planted to check the suite
+catches them (it did). E2E `tests/e2e/specs/cliq.spec.ts` drives the whole flow in the browser.
+
+**Deferred (next)**
+- Receipt upload with private storage (reference only for now).
+- "Report a problem" for players/venues and the admin disputes list (disputes table exists; only
+  the automatic D1 dispute is created).
+- Venue top-up requests (amount + CliQ reference + receipt → admin approves). Until then admins
+  credit balances by hand from the organization page.
+- Admin: balances overview with low/empty filters, "refunds overdue" list, per-venue commission
+  edit, platform settings screen for the defaults.
+- No-show button for venues; sound/vibration badge for pending payments.
+
+**Open decisions for the owner**
+1. A 0% deposit is treated as "full price now" (D5 says every online booking needs a payment).
+   Alternative: forbid 0% in the wizard.
+2. Venues without a CliQ alias (demo and admin-created) still use pay-at-venue and aren't gated.
+   D5 removes pay-at-venue — decide when to require an alias for every venue.
+3. Venue staff (not just owners/managers) can confirm payments (`booking.manage`). Restrict?
+4. On staging, venues registered through the wizard have a CliQ alias and a zero balance, so they
+   are hidden from search until an admin credits them from the organization page.

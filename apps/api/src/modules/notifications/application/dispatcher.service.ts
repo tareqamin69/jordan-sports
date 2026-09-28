@@ -95,12 +95,24 @@ export class OutboxDispatcher {
       case 'booking.confirmed':
       case 'booking.cancelled':
         return this.bookingEvent(tx, eventId, event);
+      case 'payment.submitted':
+      case 'payment.rejected':
+      case 'dispute.opened':
+      case 'refund.due':
+      case 'balance.low':
+      case 'balance.empty':
+        // In-app only until an SMS/WhatsApp provider is connected (plan §4 "Venue notification").
+        return;
       default:
         throw new Error(`Unknown event type ${(event as { type: string }).type}`);
     }
   }
 
-  private async bookingEvent(tx: Tx, eventId: string, event: OutboxEvent): Promise<void> {
+  private async bookingEvent(
+    tx: Tx,
+    eventId: string,
+    event: Extract<OutboxEvent, { type: 'booking.confirmed' | 'booking.cancelled' }>,
+  ): Promise<void> {
     // The worker reads across organizations (venue customer names) — explicit bypass.
     await bypassTenant(tx);
     const b = await tx

@@ -30,6 +30,7 @@ import {
 import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { CliqCheckout, CliqPaymentSummary } from './cliq-checkout';
 import { CourtArt } from './court-art';
 import { Icon } from './icons';
 
@@ -82,6 +83,11 @@ export function BookingView({ bookingId }: { bookingId: string }) {
   const booking = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => api(getBooking, { params: { bookingId } }),
+    // While the venue checks a CliQ transfer, pick up its answer without a reload.
+    refetchInterval: (q) =>
+      q.state.data?.status === 'HELD' && q.state.data.payment?.status === 'SUBMITTED'
+        ? 10_000
+        : false,
   });
   const data = booking.data;
   const now = useNow(data?.status === 'HELD');
@@ -170,7 +176,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
   const cell = 'flex min-w-0 flex-col gap-0.5 px-4 py-3';
 
   return (
-    <div className={cx('flex flex-col gap-4', holding && 'pb-44 md:pb-0')}>
+    <div className={cx('flex flex-col gap-4', holding && !b.payment && 'pb-44 md:pb-0')}>
       <button
         type="button"
         onClick={() => router.back()}
@@ -189,7 +195,9 @@ export function BookingView({ bookingId }: { bookingId: string }) {
           data-testid="booking-status"
           className={cx('mb-2 rounded-full px-4 py-1.5 text-sm font-semibold', statusTone[status])}
         >
-          {t(`statuses.${status}`)}
+          {holding && b.payment?.status === 'SUBMITTED'
+            ? t('awaitingVenue')
+            : t(`statuses.${status}`)}
         </span>
       </div>
 
@@ -208,6 +216,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
       {b.status === 'CANCELLED' && b.cancelledBy === 'venue' ? (
         <Alert tone="warning">{t('cancelledByVenue', { reason: b.cancelReason ?? '' })}</Alert>
       ) : null}
+      <CliqPaymentSummary booking={b} />
       {notice ? <Alert tone="info">{notice}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
@@ -263,7 +272,20 @@ export function BookingView({ bookingId }: { bookingId: string }) {
         </p>
       </article>
 
-      {holding ? (
+      {holding && b.payment ? (
+        <CliqCheckout
+          booking={b}
+          payment={b.payment}
+          holdLeft={holdLeft}
+          freeUntilText={freeUntilText}
+          late={late}
+          onUpdate={update}
+          onRelease={() => void cancel(t('released'))}
+          releasing={busy === 'cancel'}
+        />
+      ) : null}
+
+      {holding && !b.payment ? (
         <Card className="flex flex-col gap-4 p-5">
           <div className="flex items-start gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">

@@ -1,5 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { PricedAvailability } from '@jordan-sports/contracts';
+import type { Db } from '../../../platform/database/database.js';
+import { DATABASE } from '../../../platform/database/database.module.js';
+import { Errors } from '../../../platform/http/errors.js';
+import { takesOnlineBookings } from '../../finance/index.js';
 import { PricingService } from '../../pricing/index.js';
 import { AvailabilityService, toApiSlot } from '../../scheduling/index.js';
 
@@ -10,12 +14,14 @@ import { AvailabilityService, toApiSlot } from '../../scheduling/index.js';
 @Injectable()
 export class AvailabilityViewService {
   constructor(
+    @Inject(DATABASE) private readonly db: Db,
     private readonly availability: AvailabilityService,
     private readonly pricing: PricingService,
   ) {}
 
   async forVenue(slug: string, date: string, now = new Date()): Promise<PricedAvailability> {
     const { venue, resources } = await this.availability.slotsForVenue(slug, date, now);
+    if (!(await takesOnlineBookings(this.db, venue, now))) throw Errors.notFound();
     const rules = await this.pricing.rulesFor(resources.map((r) => r.resource.id));
     return {
       date,

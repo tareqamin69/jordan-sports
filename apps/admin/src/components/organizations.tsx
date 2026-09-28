@@ -26,6 +26,7 @@ import { useApi } from '@/lib/api';
 import { dmyTime } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { BalanceCard } from './balance-card';
 import { VenueList } from './venues/venue-list';
 
 export function OrganizationsPage() {
@@ -287,6 +288,9 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
             </Button>
           </form>
         </Card>
+        <div className="lg:col-span-2">
+          <BalanceCard organizationId={organizationId} />
+        </div>
         <div className="lg:col-span-2">
           <VenueList organizationId={organizationId} />
         </div>

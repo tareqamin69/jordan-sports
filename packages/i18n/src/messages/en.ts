@@ -72,6 +72,14 @@ export const en = {
       IDEMPOTENCY_KEY_REQUIRED:
         'Something went wrong with this request. Reload the page and try again.',
       CANCELLATION_NOT_ALLOWED: 'This booking can no longer be cancelled online.',
+      PAYMENT_REQUIRED: 'This venue asks for a CliQ deposit before the booking is confirmed.',
+      PAYMENT_REFERENCE_USED:
+        'This transfer reference was already used for another booking. Please check it.',
+      PAYMENT_NOT_PENDING: 'There is no payment waiting on this booking.',
+      PAYMENT_AWAITING_VENUE:
+        'The venue is checking your transfer right now. Please wait for their answer.',
+      REFUND_NOT_DUE: 'Nothing is owed back on this booking.',
+      VENUE_NOT_ACCEPTING_BOOKINGS: 'This venue is not taking online bookings right now.',
     },
   },
   notifications: {
@@ -140,7 +148,7 @@ export const en = {
     privacy: {
       title: 'Privacy policy',
       description: 'How we use your information on {appName}.',
-      body: "We collect your phone number and name so you can make bookings and venues can reach you. We share your phone number only with the venue you book with. We never sell your data to a third party. You can ask us to delete your account and data at any time by contacting us.",
+      body: 'We collect your phone number and name so you can make bookings and venues can reach you. We share your phone number only with the venue you book with. We never sell your data to a third party. You can ask us to delete your account and data at any time by contacting us.',
     },
     home: {
       eyebrow: 'From Aqaba to Irbid',
@@ -362,6 +370,57 @@ export const en = {
         closures: 'Closures',
         pricing: 'Prices',
         bookings: 'Bookings',
+        payments: 'Payments',
+        balance: 'Balance',
+      },
+      payments: {
+        intro:
+          'Players send the deposit straight to your CliQ. Confirm as soon as the transfer arrives.',
+        toConfirmTitle: 'Transfers waiting for you',
+        toConfirmEmpty: 'No transfers waiting right now.',
+        refundsTitle: 'Deposits to refund',
+        refundsEmpty: 'Nothing to refund.',
+        reference: 'Reference',
+        deadline: 'Confirm before',
+        received: 'Payment arrived',
+        notReceived: 'Not received',
+        reasonLabel: 'What is wrong? (sent to the player)',
+        reasonDefault: 'The transfer has not reached us yet.',
+        sendRejection: 'Send to the player',
+        confirmedDone: 'Booking confirmed; the commission was deducted from your balance.',
+        rejectedDone: 'The booking is back to awaiting payment and the player was told why.',
+        markRefunded: 'I refunded it',
+        refundedDone: 'Marked as refunded.',
+        refundSince: 'Due since',
+        overdue: 'Over 48 hours late — your venue is hidden from search until you mark it.',
+      },
+      balance: {
+        intro:
+          'The Jorena commission is deducted from this balance for every online booking you confirm. Bookings you add yourself carry no commission.',
+        current: 'Current balance',
+        threshold: 'We warn you below {amount}',
+        visible: 'Your venue appears in search and takes online bookings.',
+        hidden:
+          'Your venue is hidden from search and takes no online bookings until you top up or mark the overdue refund.',
+        howToTopUp: 'To top up, contact the Jorena team on WhatsApp.',
+        history: 'History',
+        noEntries: 'No entries yet.',
+        booking: 'Booking',
+        open: 'See balance',
+        overdueRefunds:
+          'You have {count, plural, one {an overdue deposit} other {# overdue deposits}} to refund — your venue is hidden until you mark {count, plural, one {it} other {them}}.',
+        levels: {
+          ok: 'Your balance is {amount}.',
+          low: 'Your balance is low ({amount}) — top up soon so your venue stays visible.',
+          empty:
+            'Your balance is used up ({amount}) — your venue is hidden from search and takes no online bookings.',
+        },
+        kinds: {
+          topup: 'Top-up',
+          commission: 'Booking commission',
+          commission_reversal: 'Commission returned',
+          adjustment: 'Adjustment by Jorena',
+        },
       },
       onboarding: {
         title: 'Finish setting up your venue',
@@ -565,6 +624,36 @@ export const en = {
         'The free cancellation period has ended. If you cancel now it is recorded as a late cancellation.',
       lateCancelled: 'Cancelled late.',
       callVenue: 'Call the venue',
+      awaitingVenue: 'Waiting for the venue',
+      cliq: {
+        dueNow: 'Pay now by CliQ',
+        remainder: 'The remaining {amount} is paid at the venue.',
+        fullNow: 'The full price is paid now.',
+        payTo: 'Send to the CliQ alias',
+        holder: 'Account name: {name}',
+        copy: 'Copy',
+        copied: 'Copied',
+        steps: 'Open your bank app → CliQ → send to the alias → come back here',
+        referenceLabel: 'CliQ transfer reference',
+        referenceHint: 'You will find it on the transfer receipt in your bank app.',
+        send: 'I sent the transfer',
+        rejected:
+          'The venue says the payment did not arrive: {reason}. Please check and send the reference again.',
+        awaitingTitle: 'Waiting for the venue to confirm',
+        awaitingBody:
+          'We sent your transfer reference {reference} to the venue. Your booking is confirmed as soon as they confirm it arrived.',
+        awaitingCountdown: 'The venue has {time} to confirm',
+        paid: 'You paid a {amount} deposit by CliQ; the remaining {remainder} is paid at the venue.',
+        paidFull: 'You paid the full {amount} by CliQ.',
+        refundDue: 'The venue owes you {amount} back by CliQ.',
+        refunded: 'The venue refunded {amount}.',
+        unconfirmed:
+          'The venue did not confirm your transfer in time. We opened a case and will contact you.',
+        terms:
+          'The deposit goes straight to the venue. Cancel before {date} and the venue refunds it.',
+        termsLate:
+          'Free cancellation is not available for this booking; the deposit is not refunded if you cancel.',
+      },
       statuses: {
         HELD: 'Awaiting confirmation',
         CONFIRMED: 'Confirmed',
@@ -618,6 +707,30 @@ export const en = {
       password: 'Password',
       totp: 'Authenticator code',
       totpHint: 'The 6-digit code from your authenticator app.',
+    },
+    balance: {
+      title: 'Commission balance',
+      visible: 'Their CliQ venues appear in search.',
+      hidden: 'Their CliQ venues are hidden from search.',
+      overdueRefunds: '{count, plural, one {# overdue refund} other {# overdue refunds}}',
+      levels: { ok: 'OK', low: 'Low', empty: 'Empty' },
+      adjust: 'Adjust balance',
+      adjusted: 'Adjustment recorded.',
+      direction: 'Type',
+      credit: 'Credit (top-up received)',
+      debit: 'Debit (correction)',
+      amount: 'Amount ({currency})',
+      invalidAmount: 'Enter a valid amount, e.g. 10 or 12.500',
+      reason: 'Reason (kept in the audit log)',
+      save: 'Record',
+      history: 'History',
+      noEntries: 'No entries yet.',
+      kinds: {
+        topup: 'Top-up',
+        commission: 'Booking commission',
+        commission_reversal: 'Commission returned',
+        adjustment: 'Manual adjustment',
+      },
     },
     organizations: {
       title: 'Organizations',

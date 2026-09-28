@@ -26,3 +26,4 @@ To add a decision, copy [`template.md`](./template.md) to `NNNN-short-title.md` 
 | [0015](./0015-manual-payouts.md) | Manual payouts in the MVP | Accepted |
 | [0016](./0016-custom-resource-calendar.md) | Custom day/week resource calendar | Accepted |
 | [0017](./0017-in-house-authentication.md) | In-house authentication module instead of Better Auth | Accepted |
+| [0018](./0018-cliq-direct-payments-and-prepaid-commission.md) | CliQ straight to the venue, commission from a prepaid balance | Accepted |
