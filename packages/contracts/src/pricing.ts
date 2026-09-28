@@ -69,6 +69,7 @@ export const getVenuePricing = endpoint({
   path: '/v1/manage/venues/:venueId/pricing',
   summary: 'Active price rules of a venue',
   auth: 'user',
+  orgPermission: 'pricing.read',
   params: venueParams,
   response: venuePricingSchema,
 });
@@ -78,6 +79,7 @@ export const createPriceRules = endpoint({
   path: '/v1/manage/venues/:venueId/pricing',
   summary: 'Create a price band for one or more resources',
   auth: 'user',
+  orgPermission: 'pricing.manage',
   params: venueParams,
   body: z.object({ resourceIds: z.array(uuidSchema).min(1).max(50), rule: ruleInput }),
   response: venuePricingSchema,
@@ -88,6 +90,7 @@ export const replacePriceRule = endpoint({
   path: '/v1/manage/price-rules/:ruleId',
   summary: 'Change a price band (the old rule is archived, a new one is created)',
   auth: 'user',
+  orgPermission: 'pricing.manage',
   params: z.object({ ruleId: uuidSchema }),
   body: z.object({ rule: ruleInput }),
   response: venuePricingSchema,
@@ -98,6 +101,7 @@ export const archivePriceRule = endpoint({
   path: '/v1/manage/price-rules/:ruleId',
   summary: 'Remove a price band',
   auth: 'user',
+  orgPermission: 'pricing.manage',
   params: z.object({ ruleId: uuidSchema }),
   response: venuePricingSchema,
 });
@@ -107,6 +111,7 @@ export const previewQuote = endpoint({
   path: '/v1/manage/resources/:resourceId/quote',
   summary: 'What would this slot cost? (price preview)',
   auth: 'user',
+  orgPermission: 'pricing.read',
   params: z.object({ resourceId: uuidSchema }),
   /** Business date and venue-local start time (times before the business-day start are after midnight). */
   query: z.object({

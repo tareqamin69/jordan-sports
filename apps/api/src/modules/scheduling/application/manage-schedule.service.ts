@@ -114,7 +114,11 @@ export class ManageScheduleService {
     };
   }
 
-  private async resourceVenue(userId: string, resourceId: string, permission: 'schedule.manage') {
+  private async resourceVenue(
+    userId: string,
+    resourceId: string,
+    permission: 'schedule.hours' | 'schedule.rules',
+  ) {
     const resource = await this.resources.find(resourceId);
     const { venue } = await this.access.require(userId, resource.venueId, permission);
     return { resource, venue };
@@ -163,7 +167,7 @@ export class ManageScheduleService {
     resourceId: string,
     windows: WeeklyWindow[],
   ): Promise<VenueSchedule> {
-    const { venue } = await this.resourceVenue(actor.userId, resourceId, 'schedule.manage');
+    const { venue } = await this.resourceVenue(actor.userId, resourceId, 'schedule.hours');
     assertWindowsDoNotOverlap(windows);
     await this.db.transaction().execute(async (tx) => {
       await tx
@@ -206,7 +210,7 @@ export class ManageScheduleService {
     resourceId: string,
     policy: BookingPolicy,
   ): Promise<VenueSchedule> {
-    const { venue } = await this.resourceVenue(actor.userId, resourceId, 'schedule.manage');
+    const { venue } = await this.resourceVenue(actor.userId, resourceId, 'schedule.rules');
     await this.db.transaction().execute(async (tx) => {
       await tx
         .updateTable('resource.booking_policies')
@@ -243,7 +247,7 @@ export class ManageScheduleService {
     venueId: string,
     settings: { closedOnPublicHolidays?: boolean; cancellationCutoffHours?: number },
   ): Promise<VenueSchedule> {
-    const { venue } = await this.access.require(actor.userId, venueId, 'schedule.manage');
+    const { venue } = await this.access.require(actor.userId, venueId, 'schedule.rules');
     const { closedOnPublicHolidays, cancellationCutoffHours } = settings;
     if (closedOnPublicHolidays === undefined && cancellationCutoffHours === undefined) {
       return this.schedule(actor.userId, venueId);
@@ -290,7 +294,7 @@ export class ManageScheduleService {
       note?: string;
     },
   ): Promise<VenueSchedule> {
-    const { venue } = await this.access.require(actor.userId, venueId, 'schedule.manage');
+    const { venue } = await this.access.require(actor.userId, venueId, 'schedule.closures');
     if (input.dateTo < input.dateFrom || input.dateTo > addDays(input.dateFrom, 366)) {
       throw new AppError('VALIDATION_FAILED', 400, 'Invalid date range');
     }
@@ -341,7 +345,7 @@ export class ManageScheduleService {
       .where('id', '=', overrideId)
       .executeTakeFirst();
     if (!row) throw Errors.notFound();
-    const { venue } = await this.access.require(actor.userId, row.venue_id, 'schedule.manage');
+    const { venue } = await this.access.require(actor.userId, row.venue_id, 'schedule.closures');
     await this.db.transaction().execute(async (tx) => {
       await tx.deleteFrom('scheduling.date_overrides').where('id', '=', overrideId).execute();
       await this.audit.record(
@@ -470,7 +474,7 @@ export class ManageScheduleService {
     date: string,
     now = new Date(),
   ): Promise<VenueCalendar> {
-    const { venue } = await this.access.require(userId, venueId, 'venue.read');
+    const { venue } = await this.access.require(userId, venueId, 'booking.read');
     this.availability.assertBusinessDate(venue, date, now);
     const resources = await this.resources.listForVenue(venueId);
     const day = businessDayRange(date, venue.businessDayStartMinute, venue.timezone);

@@ -33,7 +33,7 @@ export class VenuePaymentsService {
     venueId: string,
     now = new Date(),
   ): Promise<{ toConfirm: VenueBooking[]; refundsDue: VenueBooking[] }> {
-    const { venue } = await this.access.require(userId, venueId, 'booking.read');
+    const { venue } = await this.access.require(userId, venueId, 'payments.manage');
     return transaction(this.db, async (tx) => {
       await setTenant(tx, venue.organizationId);
       const toConfirm = await bookingQuery(tx)
@@ -59,7 +59,7 @@ export class VenuePaymentsService {
 
   /** "وصلت الدفعة". Idempotent: confirming twice charges the commission once. */
   async confirm(actor: StaffActor, paymentId: string, now = new Date()): Promise<VenueBooking> {
-    return this.withPayment(actor, paymentId, 'booking.manage', async (tx, venue, p) => {
+    return this.withPayment(actor, paymentId, 'payments.manage', async (tx, venue, p) => {
       if (p.status === 'CONFIRMED') return;
       if (p.status !== 'SUBMITTED') throw new AppError('PAYMENT_NOT_PENDING', 409);
       if (p.booking_status !== 'HELD') throw new AppError('INVALID_STATE_TRANSITION', 409);
@@ -130,7 +130,7 @@ export class VenuePaymentsService {
     reason: string,
     now = new Date(),
   ): Promise<VenueBooking> {
-    return this.withPayment(actor, paymentId, 'booking.manage', async (tx, venue, p) => {
+    return this.withPayment(actor, paymentId, 'payments.manage', async (tx, venue, p) => {
       if (p.status !== 'SUBMITTED') throw new AppError('PAYMENT_NOT_PENDING', 409);
       if (p.booking_status !== 'HELD') throw new AppError('INVALID_STATE_TRANSITION', 409);
       if (!p.hold_expires_at || p.hold_expires_at <= now) throw new AppError('HOLD_EXPIRED', 409);
@@ -171,7 +171,7 @@ export class VenuePaymentsService {
     paymentId: string,
     now = new Date(),
   ): Promise<VenueBooking> {
-    return this.withPayment(actor, paymentId, 'booking.manage', async (tx, venue, p) => {
+    return this.withPayment(actor, paymentId, 'payments.manage', async (tx, venue, p) => {
       if (p.refund_status === 'REFUNDED') return;
       if (p.refund_status !== 'DUE') throw new AppError('REFUND_NOT_DUE', 409);
       await tx

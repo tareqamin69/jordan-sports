@@ -90,7 +90,7 @@ export function PaymentsPanel({ schedule }: { schedule: VenueSchedule }) {
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
-  const editable = can(schedule, 'booking.manage');
+  const editable = can(schedule, 'payments.manage');
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [notice, setNotice] = useState<string | null>(null);

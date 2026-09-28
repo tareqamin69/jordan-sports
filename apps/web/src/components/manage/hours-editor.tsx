@@ -56,7 +56,7 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
   const [resourceId, setResourceId] = useState(resources[0]?.id ?? '');
   const resource = resources.find((r) => r.id === resourceId);
   const [week, setWeek] = useState<Week>(() => toWeek(resource?.weeklyHours ?? []));
-  const editable = can(schedule, 'schedule.manage');
+  const editable = can(schedule, 'schedule.hours');
 
   const save = useMutation({
     mutationFn: async (targets: string[]) => {

@@ -11,3 +11,4 @@ export * from './scheduling.js';
 export * from './pricing.js';
 export * from './bookings.js';
 export * from './finance.js';
+export * from './permissions.js';

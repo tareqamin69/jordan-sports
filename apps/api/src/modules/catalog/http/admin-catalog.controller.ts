@@ -16,7 +16,7 @@ import { CatalogService } from '../application/catalog.service.js';
  * reorder governorates and areas without a code release. Never deletes — a venue may reference
  * an area. */
 @Controller()
-@AdminAuth('catalog.manage')
+@AdminAuth()
 export class AdminCatalogController {
   constructor(private readonly catalog: CatalogService) {}
 

@@ -17,7 +17,7 @@ export class AdminUsersController {
   constructor(private readonly users: UsersService) {}
 
   @Get(adminListUsers.path)
-  @AdminAuth('users.read')
+  @AdminAuth()
   list(@Query() query: unknown): Promise<EndpointOutput<typeof adminListUsers>> {
     const q = parseInput(adminListUsers.query, query);
     return this.users.adminList({
@@ -29,7 +29,7 @@ export class AdminUsersController {
 
   @Post(adminSetUserStatus.path)
   @HttpCode(200)
-  @AdminAuth('users.manage')
+  @AdminAuth()
   setStatus(
     @Param() params: unknown,
     @Body() body: unknown,

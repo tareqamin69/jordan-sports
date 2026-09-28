@@ -86,7 +86,7 @@ describe('CliQ payments and the commission balance', () => {
   beforeAll(async () => {
     // CliQ is built but switched off by default (ADR-0018); these tests exercise it switched on.
     t = await createTestApp({ DATABASE_POOL_MAX: '20', FEATURE_CLIQ_PAYMENTS: 'true' });
-    admin = await signInAdmin(t.app);
+    admin = await signInAdmin(t.app, 'owner');
   });
 
   afterAll(async () => {
@@ -913,24 +913,25 @@ describe('CliQ payments and the commission balance', () => {
     expect(r.statusCode).toBe(404);
   });
 
-  it('admin adjustments need a reason and the finance permission, and are audited', async () => {
+  it('balance adjustments are owner-only, need a reason, and are audited; finance can read', async () => {
     const v = await arrange();
     const support = await signInAdmin(t.app, 'support');
     const finance = await signInAdmin(t.app, 'finance');
     expect((await adjust(v.orgId, 5_000, 'Top-up', support.cookie)).statusCode).toBe(403);
+    expect((await adjust(v.orgId, 5_000, 'Top-up', finance.cookie)).statusCode).toBe(403);
     expect((await adjust(v.orgId, 0, 'Nothing')).statusCode).toBe(400);
     expect((await adjust(v.orgId, 5_000, '')).statusCode).toBe(400);
     expect((await adjust(randomUUID(), 5_000, 'Unknown org')).statusCode).toBe(404);
 
-    const credit = await adjust(v.orgId, 5_000, 'Top-up received', finance.cookie);
+    const credit = await adjust(v.orgId, 5_000, 'Top-up received');
     expect(credit.statusCode, credit.body).toBe(201);
-    const debit = await adjust(v.orgId, -2_000, 'Correction', finance.cookie);
+    const debit = await adjust(v.orgId, -2_000, 'Correction');
     expect((debit.json() as BalanceBody).balance.amount).toBe(3_000);
-    const read = await call(t.app, {
-      method: 'GET',
-      url: `/v1/admin/organizations/${v.orgId}/balance`,
-      cookie: support.cookie,
-    });
+    const balanceUrl = `/v1/admin/organizations/${v.orgId}/balance`;
+    expect(
+      (await call(t.app, { method: 'GET', url: balanceUrl, cookie: support.cookie })).statusCode,
+    ).toBe(403);
+    const read = await call(t.app, { method: 'GET', url: balanceUrl, cookie: finance.cookie });
     expect(read.statusCode).toBe(200);
     expect((read.json() as BalanceBody).entries.map((e) => e.amount.amount)).toEqual([
       -2_000, 5_000,

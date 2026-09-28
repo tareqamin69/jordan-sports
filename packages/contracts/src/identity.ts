@@ -107,7 +107,7 @@ export const updateMe = endpoint({
 // Admin
 // ---------------------------------------------------------------------------------------------
 
-export const platformRoleSchema = z.enum(['super_admin', 'admin', 'support', 'finance']);
+export const platformRoleSchema = z.enum(['owner', 'admin', 'support', 'finance']);
 export type PlatformRole = z.infer<typeof platformRoleSchema>;
 
 export const adminMeSchema = z.object({
@@ -164,6 +164,7 @@ export const adminListUsers = endpoint({
   path: '/v1/admin/users',
   summary: 'Search users',
   auth: 'admin',
+  permission: 'users.read',
   query: pageQuerySchema.extend({ q: z.string().trim().max(100).optional() }),
   response: page(adminUserSchema),
 });
@@ -175,6 +176,7 @@ export const adminSetUserStatus = endpoint({
   path: '/v1/admin/users/:userId/status',
   summary: 'Suspend or reactivate a user (audited, reason required)',
   auth: 'admin',
+  permission: 'users.manage',
   params: z.object({ userId: uuidSchema }),
   body: reasonSchema.extend({ status: z.enum(['active', 'suspended']) }),
   response: adminUserSchema,
@@ -200,6 +202,7 @@ export const adminListAuditLogs = endpoint({
   path: '/v1/admin/audit-logs',
   summary: 'Audit log (newest first)',
   auth: 'admin',
+  permission: 'audit.read',
   query: pageQuerySchema.extend({ organizationId: uuidSchema.optional() }),
   response: page(auditLogSchema),
 });

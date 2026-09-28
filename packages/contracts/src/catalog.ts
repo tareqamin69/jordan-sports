@@ -85,6 +85,7 @@ export const adminCreateGovernorate = endpoint({
   path: '/v1/admin/geography/governorates',
   summary: 'Add a governorate',
   auth: 'admin',
+  permission: 'catalog.manage',
   body: z.object({
     key: z
       .string()
@@ -100,6 +101,7 @@ export const adminUpdateGovernorate = endpoint({
   path: '/v1/admin/geography/governorates/:governorateId',
   summary: 'Rename or reorder a governorate',
   auth: 'admin',
+  permission: 'catalog.manage',
   params: z.object({ governorateId: uuidSchema }),
   body: z.object({ name: localizedSchema.optional(), sortOrder: z.number().int().optional() }),
   response: catalogSchema,
@@ -110,6 +112,7 @@ export const adminCreateArea = endpoint({
   path: '/v1/admin/geography/governorates/:governorateId/areas',
   summary: 'Add an area to a governorate',
   auth: 'admin',
+  permission: 'catalog.manage',
   params: z.object({ governorateId: uuidSchema }),
   body: z.object({
     key: z
@@ -126,6 +129,7 @@ export const adminUpdateArea = endpoint({
   path: '/v1/admin/geography/areas/:areaId',
   summary: 'Rename or reorder an area',
   auth: 'admin',
+  permission: 'catalog.manage',
   params: z.object({ areaId: uuidSchema }),
   body: z.object({ name: localizedSchema.optional(), sortOrder: z.number().int().optional() }),
   response: catalogSchema,
@@ -146,6 +150,7 @@ export const adminCreateSport = endpoint({
   path: '/v1/admin/sports',
   summary: 'Add a sport, its first format and its resource type',
   auth: 'admin',
+  permission: 'catalog.manage',
   body: z.object({
     key: keySchema,
     name: localizedSchema,
@@ -167,6 +172,7 @@ export const adminUpdateSport = endpoint({
   path: '/v1/admin/sports/:sportId',
   summary: 'Rename or re-icon a sport',
   auth: 'admin',
+  permission: 'catalog.manage',
   params: z.object({ sportId: uuidSchema }),
   body: z.object({ name: localizedSchema.optional(), icon: z.string().max(60).optional() }),
   response: catalogSchema,

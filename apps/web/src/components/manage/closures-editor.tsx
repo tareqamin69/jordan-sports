@@ -26,7 +26,7 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
   const api = useApi();
   const setSchedule = useSetSchedule(schedule.venue.id);
   const errorMessage = useErrorMessage();
-  const editable = can(schedule, 'schedule.manage');
+  const editable = can(schedule, 'schedule.closures');
   const today = businessToday(schedule.venue.timezone, schedule.venue.businessDayStartMinute);
   const [form, setForm] = useState({
     resourceId: '',

@@ -33,7 +33,7 @@ describe('scheduling: hours, blocks, overrides, availability, calendar', () => {
 
   beforeAll(async () => {
     t = await createTestApp();
-    admin = (await signInAdmin(t.app)).cookie;
+    admin = (await signInAdmin(t.app, 'owner')).cookie;
     const fx = await catalogFixture(t.app);
     const org = await createOrganization(t.app, admin);
 

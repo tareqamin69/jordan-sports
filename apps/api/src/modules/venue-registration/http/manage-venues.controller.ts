@@ -100,7 +100,7 @@ export class ManageVenuesController {
   ): Promise<AdminVenue> {
     const { venueId } = parseInput(updateMyVenue.params, params);
     const input = parseInput(updateMyVenue.body, body);
-    await this.access.require(requireUserId(actor), venueId, 'venue.manage');
+    await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     await this.venues.update(venueId, input, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }
@@ -112,7 +112,7 @@ export class ManageVenuesController {
     @Req() request: FastifyRequest,
   ): Promise<AdminVenue> {
     const { venueId } = parseInput(submitMyVenue.params, params);
-    await this.access.require(requireUserId(actor), venueId, 'venue.manage');
+    await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     await this.venues.setStatus(venueId, 'submitted', '', userActor(actor, request), (id) =>
       this.resources.hasActiveResource(id),
     );
@@ -128,7 +128,7 @@ export class ManageVenuesController {
   ): Promise<AdminVenue> {
     const { venueId } = parseInput(createMyFacility.params, params);
     const input = parseInput(createMyFacility.body, body);
-    await this.access.require(requireUserId(actor), venueId, 'venue.manage');
+    await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     await this.venues.addFacility(venueId, input.name, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }
@@ -142,7 +142,7 @@ export class ManageVenuesController {
   ): Promise<AdminVenue> {
     const { venueId } = parseInput(createMyResource.params, params);
     const input = parseInput(createMyResource.body, body);
-    const { venue } = await this.access.require(requireUserId(actor), venueId, 'venue.manage');
+    const { venue } = await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     await this.resources.create(
       venueId,
       venue.organizationId,
@@ -172,7 +172,7 @@ export class ManageVenuesController {
     const { venue } = await this.access.require(
       requireUserId(actor),
       resource.venueId,
-      'venue.manage',
+      'venue.edit',
     );
     const patch = Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined));
     await this.resources.update(resourceId, venue.organizationId, patch, userActor(actor, request));
@@ -187,7 +187,7 @@ export class ManageVenuesController {
     @Req() request: FastifyRequest,
   ): Promise<AdminVenue> {
     const { venueId } = parseInput(uploadMyVenueMedia.params, params);
-    const { venue } = await this.access.require(requireUserId(actor), venueId, 'venue.manage');
+    const { venue } = await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     const contentType = String(request.headers['content-type'] ?? '')
       .split(';')[0]!
       .trim();
@@ -210,7 +210,7 @@ export class ManageVenuesController {
     const { mediaId } = parseInput(deleteMyVenueMedia.params, params);
     const userId = requireUserId(actor);
     const owningVenueId = await this.media.venueIdOf(mediaId);
-    await this.access.require(userId, owningVenueId, 'venue.manage');
+    await this.access.require(userId, owningVenueId, 'venue.edit');
     const venueId = await this.media.delete(mediaId, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }

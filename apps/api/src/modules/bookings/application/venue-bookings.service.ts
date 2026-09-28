@@ -26,7 +26,7 @@ import {
 import { VenueAccessService, type VenueRow } from '../../venues/index.js';
 import { canTransition, newReference, type BookingStatus } from '../domain/booking-rules.js';
 import { recordStatus, refundDeposit, releaseOccupancies } from './booking-store.js';
-import { bookingQuery, toVenueBooking } from './booking-views.js';
+import { bookingQuery, forVenueRole, toVenueBooking } from './booking-views.js';
 
 export interface StaffActor {
   readonly userId: string;
@@ -82,7 +82,7 @@ export class VenueBookingsService {
     from: string,
     to: string,
   ): Promise<{ items: VenueBooking[] }> {
-    const { venue } = await this.access.require(userId, venueId, 'booking.read');
+    const { venue, role } = await this.access.require(userId, venueId, 'booking.read');
     if (to < from || to > addDays(from, MAX_RANGE_DAYS)) {
       throw new AppError('VALIDATION_FAILED', 400, 'Invalid date range');
     }
@@ -96,7 +96,7 @@ export class VenueBookingsService {
         .orderBy(sql`lower(b.during)`)
         .limit(1000)
         .execute();
-      return rows.map(toVenueBooking);
+      return rows.map((r) => forVenueRole(toVenueBooking(r), role));
     });
     return { items };
   }
@@ -112,7 +112,7 @@ export class VenueBookingsService {
     input: ManualBookingInput,
     now = new Date(),
   ) {
-    const { venue } = await this.access.require(actor.userId, venueId, 'booking.manage');
+    const { venue, role } = await this.access.require(actor.userId, venueId, 'booking.create');
     const resource = await this.resources.find(input.resourceId);
     if (resource.venueId !== venueId || resource.status === 'archived') throw Errors.notFound();
     const phone = input.customer.phone ? normalizePhone(input.customer.phone) : null;
@@ -259,7 +259,9 @@ export class VenueBookingsService {
         tx,
       );
       return {
-        created: await this.loadForVenue(tx, venue.organizationId, created),
+        created: (await this.loadForVenue(tx, venue.organizationId, created)).map((b) =>
+          forVenueRole(b, role),
+        ),
         skipped,
         seriesId: seriesId && created.length > 0 ? seriesId : null,
       };
@@ -308,7 +310,7 @@ export class VenueBookingsService {
       .where('id', '=', bookingId)
       .executeTakeFirst();
     if (!found) throw Errors.notFound();
-    const { venue } = await this.access.require(actor.userId, found.venue_id, 'booking.manage');
+    const { venue } = await this.access.require(actor.userId, found.venue_id, 'booking.cancel');
 
     return transaction(this.db, async (tx) => {
       const booking = await tx

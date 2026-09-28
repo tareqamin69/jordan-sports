@@ -10,7 +10,8 @@ import type { Db } from '../platform/database/database.js';
 import { otpauthUri } from '../platform/security/totp.js';
 
 /**
- * Creates a platform staff account (there is no self-signup for admins).
+ * Creates a platform staff account (admin, support or finance; the owner is set up only through
+ * owner-setup-link.js). There is no self-signup for staff.
  *
  *   ADMIN_PASSWORD='…' node dist/cli/admin.js create --email a@b.jo --name "Name" [--role admin]
  *
@@ -22,7 +23,7 @@ async function main(): Promise<number> {
     options: {
       email: { type: 'string' },
       name: { type: 'string' },
-      role: { type: 'string', default: 'super_admin' },
+      role: { type: 'string', default: 'admin' },
       json: { type: 'boolean', default: false },
       // Do nothing if a user with this email exists (idempotent provisioning).
       'if-missing': { type: 'boolean', default: false },
@@ -36,6 +37,12 @@ async function main(): Promise<number> {
     return 2;
   }
   const role = platformRoleSchema.parse(values.role);
+  if (role === 'owner') {
+    console.error(
+      'The owner account is set up only through owner-setup-link.js (docs/rbac-plan.md §6).',
+    );
+    return 2;
+  }
 
   loadDotEnv();
   const config = parseConfig(process.env);

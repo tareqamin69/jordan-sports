@@ -39,7 +39,7 @@ describe('go-live preflight', () => {
       email: 'owner@jorena.app',
       displayName: 'Owner',
       password: randomUUID() + randomUUID(),
-      role: 'super_admin',
+      role: 'owner',
     });
     // Dirty: a test staff account, plus a demo organization and venue.
     const admin = await signInAdmin(dirty.app);

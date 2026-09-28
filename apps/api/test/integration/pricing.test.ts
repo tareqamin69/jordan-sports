@@ -208,12 +208,11 @@ describe('pricing', () => {
     expect(await priceAt(thursday, '19:00', 60)).toBe(15000);
   });
 
-  it('previews prices for staff and archives instead of editing', async () => {
-    const preview = await call(t.app, {
-      method: 'GET',
-      url: `/v1/manage/resources/${court}/quote?date=${friday}&startTime=19:00&durationMinutes=60`,
-      cookie: staff,
-    });
+  it('hides prices from front-desk staff, previews them for the owner, and archives instead of editing', async () => {
+    const quoteUrl = `/v1/manage/resources/${court}/quote?date=${friday}&startTime=19:00&durationMinutes=60`;
+    const hidden = await call(t.app, { method: 'GET', url: quoteUrl, cookie: staff });
+    expect(hidden.statusCode).toBe(403);
+    const preview = await call(t.app, { method: 'GET', url: quoteUrl, cookie: owner });
     expect(preview.json()).toMatchObject({ price: { amount: 25000, currency: 'JOD' } });
 
     const pricing = (

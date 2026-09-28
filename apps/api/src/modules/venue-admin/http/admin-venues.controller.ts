@@ -39,7 +39,7 @@ export class AdminVenuesController {
   ) {}
 
   @Get(adminListPendingVenues.path)
-  @AdminAuth('venues.read')
+  @AdminAuth()
   async listPending(
     @Query() query: unknown,
   ): Promise<EndpointOutput<typeof adminListPendingVenues>> {
@@ -49,7 +49,7 @@ export class AdminVenuesController {
   }
 
   @Get(adminListVenues.path)
-  @AdminAuth('venues.read')
+  @AdminAuth()
   async list(@Param() params: unknown): Promise<EndpointOutput<typeof adminListVenues>> {
     const { organizationId } = parseInput(adminListVenues.params, params);
     const venues = await this.venues.listByOrganization(organizationId);
@@ -67,7 +67,7 @@ export class AdminVenuesController {
   }
 
   @Post(adminCreateVenue.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async create(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -81,14 +81,14 @@ export class AdminVenuesController {
   }
 
   @Get(adminGetVenue.path)
-  @AdminAuth('venues.read')
+  @AdminAuth()
   get(@Param() params: unknown): Promise<AdminVenue> {
     const { venueId } = parseInput(adminGetVenue.params, params);
     return this.views.adminVenue(venueId);
   }
 
   @Patch(adminUpdateVenue.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async update(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -102,7 +102,7 @@ export class AdminVenuesController {
   }
 
   @Post(adminSetVenueStatus.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async setStatus(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -122,7 +122,7 @@ export class AdminVenuesController {
   }
 
   @Post(adminCreateFacility.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async createFacility(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -136,7 +136,7 @@ export class AdminVenuesController {
   }
 
   @Post(adminCreateResource.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async createResource(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -163,7 +163,7 @@ export class AdminVenuesController {
   }
 
   @Patch(adminUpdateResource.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async updateResource(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -185,7 +185,7 @@ export class AdminVenuesController {
   }
 
   @Post(adminUploadVenueMedia.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async upload(
     @Param() params: unknown,
     @Body() body: unknown,
@@ -208,7 +208,7 @@ export class AdminVenuesController {
   }
 
   @Delete(adminDeleteVenueMedia.path)
-  @AdminAuth('venues.manage')
+  @AdminAuth()
   async deleteMedia(
     @Param() params: unknown,
     @CurrentActor() actor: SessionActor,

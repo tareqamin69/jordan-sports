@@ -5,7 +5,7 @@ import { parseInput } from '../../../platform/http/validation.js';
 import { VenueBookingsService } from '../application/venue-bookings.service.js';
 
 @Controller()
-@AdminAuth('bookings.read')
+@AdminAuth()
 export class AdminBookingsController {
   constructor(private readonly bookings: VenueBookingsService) {}
 

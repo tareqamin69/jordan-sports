@@ -167,7 +167,7 @@ export async function signInPlayer(
 /** Creates a platform staff member and signs them in (password + TOTP). */
 export async function signInAdmin(
   app: NestFastifyApplication,
-  role: 'super_admin' | 'admin' | 'support' | 'finance' = 'super_admin',
+  role: 'owner' | 'admin' | 'support' | 'finance' = 'admin',
 ): Promise<{
   cookie: string;
   userId: string;

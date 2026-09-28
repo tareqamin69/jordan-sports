@@ -82,8 +82,8 @@ export function BookingsPanel({ schedule }: { schedule: VenueSchedule }) {
       {[...byDate.entries()].map(([date, items]) => (
         <DayGroup key={date} date={date} items={items} schedule={schedule} />
       ))}
-      {can(schedule, 'booking.manage') ? <ManualBookingForm schedule={schedule} /> : null}
-      {can(schedule, 'schedule.manage') ? <CutoffSettings schedule={schedule} /> : null}
+      {can(schedule, 'booking.create') ? <ManualBookingForm schedule={schedule} /> : null}
+      {can(schedule, 'schedule.rules') ? <CutoffSettings schedule={schedule} /> : null}
     </div>
   );
 }
@@ -129,7 +129,7 @@ function BookingRow({ booking: b, schedule }: { booking: VenueBooking; schedule:
       await queryClient.invalidateQueries({ queryKey: ['calendar', schedule.venue.id] });
     },
   });
-  const cancellable = b.status === 'CONFIRMED' && can(schedule, 'booking.manage');
+  const cancellable = b.status === 'CONFIRMED' && can(schedule, 'booking.cancel');
 
   return (
     <li

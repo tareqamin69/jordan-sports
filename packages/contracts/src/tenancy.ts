@@ -29,6 +29,7 @@ export const adminListOrganizations = endpoint({
   path: '/v1/admin/organizations',
   summary: 'List organizations',
   auth: 'admin',
+  permission: 'organizations.read',
   query: pageQuerySchema,
   response: page(organizationSchema),
 });
@@ -38,6 +39,7 @@ export const adminCreateOrganization = endpoint({
   path: '/v1/admin/organizations',
   summary: 'Create an organization and its owner (pilot onboarding is admin-created)',
   auth: 'admin',
+  permission: 'organizations.manage',
   body: z.object({
     slug: slugSchema,
     name: localizedTextSchema(120),
@@ -51,6 +53,7 @@ export const adminGetOrganization = endpoint({
   path: '/v1/admin/organizations/:organizationId',
   summary: 'Organization with members',
   auth: 'admin',
+  permission: 'organizations.read',
   params: z.object({ organizationId: uuidSchema }),
   response: organizationDetailSchema,
 });
@@ -60,6 +63,7 @@ export const adminAddMember = endpoint({
   path: '/v1/admin/organizations/:organizationId/members',
   summary: 'Add a member by phone number',
   auth: 'admin',
+  permission: 'organizations.manage',
   params: z.object({ organizationId: uuidSchema }),
   body: z.object({
     phone: phoneInputSchema,

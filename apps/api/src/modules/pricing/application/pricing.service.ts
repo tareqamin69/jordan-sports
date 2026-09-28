@@ -119,7 +119,7 @@ export class PricingService {
   }
 
   async pricing(userId: string, venueId: string): Promise<VenuePricing> {
-    const { venue } = await this.access.require(userId, venueId, 'venue.read');
+    const { venue } = await this.access.require(userId, venueId, 'pricing.read');
     return this.view(venue);
   }
 
@@ -289,7 +289,7 @@ export class PricingService {
     durationMinutes: number,
   ) {
     const resource = await this.resources.find(resourceId);
-    const { venue } = await this.access.require(userId, resource.venueId, 'venue.read');
+    const { venue } = await this.access.require(userId, resource.venueId, 'pricing.read');
     const minute = parseTime(startTime);
     const calendarDate = minute < venue.businessDayStartMinute ? addDays(date, 1) : date;
     const start = localToInstant(calendarDate, minute, venue.timezone);

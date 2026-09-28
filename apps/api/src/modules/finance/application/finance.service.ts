@@ -94,7 +94,7 @@ export class FinanceService {
 
   /** Owners and managers see their organization's balance. */
   async forVenue(userId: string, venueId: string): Promise<Balance> {
-    const { venue } = await this.access.require(userId, venueId, 'venue.manage');
+    const { venue } = await this.access.require(userId, venueId, 'reports.read');
     return transaction(this.db, async (tx) => {
       await setTenant(tx, venue.organizationId);
       return this.view(

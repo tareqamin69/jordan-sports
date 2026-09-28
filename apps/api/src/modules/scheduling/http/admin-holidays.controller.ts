@@ -16,13 +16,13 @@ export class AdminHolidaysController {
   constructor(private readonly holidays: HolidaysService) {}
 
   @Get(adminListHolidays.path)
-  @AdminAuth('venues.read')
+  @AdminAuth()
   list(@Query() query: unknown) {
     return this.holidays.list(parseInput(adminListHolidays.query, query).country);
   }
 
   @Post(adminCreateHoliday.path)
-  @AdminAuth('catalog.manage')
+  @AdminAuth()
   create(@Body() body: unknown, @CurrentActor() actor: Actor, @Req() request: FastifyRequest) {
     return this.holidays.create(
       actor.userId,
@@ -32,7 +32,7 @@ export class AdminHolidaysController {
   }
 
   @Delete(adminDeleteHoliday.path)
-  @AdminAuth('catalog.manage')
+  @AdminAuth()
   delete(@Param() params: unknown, @CurrentActor() actor: Actor, @Req() request: FastifyRequest) {
     const { holidayId } = parseInput(adminDeleteHoliday.params, params);
     return this.holidays.delete(actor.userId, holidayId, requestMeta(request));

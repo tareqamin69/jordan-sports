@@ -8,7 +8,16 @@ import {
   type CalendarEntry,
   type VenueSchedule,
 } from '@jordan-sports/contracts';
-import { Alert, Button, buttonClass, Card, SelectField, Spinner, TextField, cx } from '@jordan-sports/ui';
+import {
+  Alert,
+  Button,
+  buttonClass,
+  Card,
+  SelectField,
+  Spinner,
+  TextField,
+  cx,
+} from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
@@ -53,7 +62,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar', venueId] }),
   });
   const canBlock = can(schedule, 'schedule.block');
-  const canBook = can(schedule, 'booking.manage');
+  const canBook = can(schedule, 'booking.create');
   const [draft, setDraft] = useState<{ resourceId: string; offset: number } | null>(null);
   const nameOf = (id: string) => pick(schedule.resources.find((r) => r.id === id)?.name, locale);
 

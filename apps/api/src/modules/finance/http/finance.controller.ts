@@ -29,14 +29,14 @@ export class AdminBalanceController {
   constructor(private readonly finance: FinanceService) {}
 
   @Get(adminGetBalance.path)
-  @AdminAuth('finance.read')
+  @AdminAuth()
   get(@Param() params: unknown): Promise<Balance> {
     const { organizationId } = parseInput(adminGetBalance.params, params);
     return this.finance.forAdmin(organizationId);
   }
 
   @Post(adminAdjustBalance.path)
-  @AdminAuth('finance.manage')
+  @AdminAuth()
   adjust(
     @Param() params: unknown,
     @Body() body: unknown,

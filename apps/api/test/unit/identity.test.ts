@@ -125,19 +125,32 @@ describe('uuidv7', () => {
   });
 });
 
-describe('role permissions', () => {
-  it('gives super admins every platform permission and support read-only access', () => {
-    for (const p of platformPermissions) expect(hasPlatformPermission('super_admin', p)).toBe(true);
-    expect(hasPlatformPermission('support', 'users.read')).toBe(true);
+describe('role permissions (docs/rbac-plan.md)', () => {
+  it('gives the owner every platform permission and keeps the dangerous ones owner-only', () => {
+    for (const p of platformPermissions) expect(hasPlatformPermission('owner', p)).toBe(true);
+    for (const p of ['team.manage', 'settings.manage', 'venues.archive', 'venues.rate'] as const) {
+      for (const role of ['admin', 'support', 'finance'] as const) {
+        expect(hasPlatformPermission(role, p), `${role} ${p}`).toBe(false);
+      }
+    }
+    expect(hasPlatformPermission('admin', 'venues.review')).toBe(true);
+    expect(hasPlatformPermission('support', 'bookings.cancel')).toBe(true);
+    expect(hasPlatformPermission('support', 'venues.review')).toBe(false);
     expect(hasPlatformPermission('support', 'users.manage')).toBe(false);
-    expect(hasPlatformPermission('finance', 'organizations.manage')).toBe(false);
+    expect(hasPlatformPermission('support', 'revenue.read')).toBe(false);
+    expect(hasPlatformPermission('finance', 'revenue.read')).toBe(true);
+    expect(hasPlatformPermission('finance', 'bookings.cancel')).toBe(false);
   });
 
-  it('restricts staff management to owners and pricing to owners/managers', () => {
+  it('gives venue owners everything, managers the schedule, and staff the front desk', () => {
     expect(hasOrgPermission('owner', 'staff.manage')).toBe(true);
     expect(hasOrgPermission('manager', 'staff.manage')).toBe(false);
+    expect(hasOrgPermission('manager', 'reports.read')).toBe(false);
+    expect(hasOrgPermission('manager', 'venue.archive')).toBe(false);
     expect(hasOrgPermission('manager', 'pricing.manage')).toBe(true);
-    expect(hasOrgPermission('staff', 'pricing.manage')).toBe(false);
-    expect(hasOrgPermission('staff', 'booking.manage')).toBe(true);
+    expect(hasOrgPermission('staff', 'pricing.read')).toBe(false);
+    expect(hasOrgPermission('staff', 'booking.create')).toBe(true);
+    expect(hasOrgPermission('staff', 'booking.checkin')).toBe(true);
+    expect(hasOrgPermission('staff', 'booking.cancel')).toBe(false);
   });
 });

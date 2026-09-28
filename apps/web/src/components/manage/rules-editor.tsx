@@ -25,7 +25,7 @@ export function RulesEditor({ schedule }: { schedule: VenueSchedule }) {
   const resources = schedule.resources.filter((r) => r.status !== 'archived');
   const [resourceId, setResourceId] = useState(resources[0]?.id ?? '');
   const [policy, setPolicy] = useState<BookingPolicy>(() => resources[0]!.policy);
-  const editable = can(schedule, 'schedule.manage');
+  const editable = can(schedule, 'schedule.rules');
   const save = useMutation({
     mutationFn: () => api(setBookingPolicy, { params: { resourceId }, body: policy }),
     onSuccess: setSchedule,

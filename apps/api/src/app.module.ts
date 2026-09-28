@@ -15,6 +15,7 @@ import { TenancyModule } from './modules/tenancy/index.js';
 import { VenueAdminModule } from './modules/venue-admin/venue-admin.module.js';
 import { VenueRegistrationModule } from './modules/venue-registration/venue-registration.module.js';
 import { VenuesModule } from './modules/venues/index.js';
+import { TenantResolver } from './platform/auth/tenant-resolver.js';
 import { AuthGuard } from './platform/auth/auth.guard.js';
 import type { AppConfig } from './platform/config/config.js';
 import { ConfigModule } from './platform/config/config.module.js';
@@ -63,6 +64,7 @@ export class AppModule {
         // Order matters: reject foreign origins before touching sessions.
         { provide: APP_GUARD, useClass: OriginGuard },
         { provide: APP_GUARD, useClass: AuthGuard },
+        TenantResolver,
       ],
     };
   }

@@ -17,7 +17,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { isApiError, useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { can, useManagedVenues, useVenueSchedule } from '@/lib/manage';
-import { tabs, type Tab } from '@/lib/manage-tabs';
+import { tabPermission, tabs, type Tab } from '@/lib/manage-tabs';
 import { useCatalog } from '@/lib/catalog';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { BalanceBanner, BalancePanel, useVenueBalance } from './balance-panel';
@@ -109,16 +109,23 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   const schedule = useVenueSchedule(venueId);
   // CliQ payments and the commission balance are built but switched off (ADR-0018).
   const cliqEnabled = useCatalog().data?.features.cliqPayments ?? false;
-  const seesMoney = cliqEnabled && can(schedule.data, 'venue.manage');
+  const seesMoney = cliqEnabled && can(schedule.data, 'reports.read');
   const balance = useVenueBalance(venueId, seesMoney);
 
   useEffect(() => {
     if (isApiError(schedule.error, 'UNAUTHENTICATED')) router.replace('/sign-in');
   }, [schedule.error, router]);
 
+  // Each role sees only its tabs; CliQ tabs also need the feature switched on.
+  const visible = (key: Tab) =>
+    can(schedule.data, tabPermission[key]) &&
+    (key === 'payments' || key === 'balance' ? cliqEnabled : true);
+
   if (schedule.isPending) return <Spinner label={tc('loading')} />;
   if (schedule.isError) return <Alert tone="error">{errorMessage(schedule.error)}</Alert>;
   const s = schedule.data;
+  // A tab the role can't use (e.g. an old link) falls back to the calendar.
+  const shown: Tab = visible(tab) ? tab : 'calendar';
 
   return (
     <>
@@ -135,7 +142,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
         <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
           {tabs
-            .filter((key) => (key === 'payments' ? cliqEnabled : key !== 'balance' || seesMoney))
+            .filter((key) => visible(key))
             .map((key) => (
               <li key={key}>
                 <Link
@@ -155,16 +162,14 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
             ))}
         </ul>
       </nav>
-      {tab === 'calendar' ? <CalendarView schedule={s} /> : null}
-      {tab === 'bookings' ? <BookingsPanel schedule={s} /> : null}
-      {tab === 'payments' && cliqEnabled ? <PaymentsPanel schedule={s} /> : null}
-      {tab === 'balance' && seesMoney ? (
-        <BalancePanel venueId={venueId} timezone={s.venue.timezone} />
-      ) : null}
-      {tab === 'hours' ? <HoursEditor schedule={s} /> : null}
-      {tab === 'rules' ? <RulesEditor schedule={s} /> : null}
-      {tab === 'pricing' ? <PricingEditor schedule={s} /> : null}
-      {tab === 'closures' ? <ClosuresEditor schedule={s} /> : null}
+      {shown === 'calendar' ? <CalendarView schedule={s} /> : null}
+      {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
+      {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
+      {shown === 'balance' ? <BalancePanel venueId={venueId} timezone={s.venue.timezone} /> : null}
+      {shown === 'hours' ? <HoursEditor schedule={s} /> : null}
+      {shown === 'rules' ? <RulesEditor schedule={s} /> : null}
+      {shown === 'pricing' ? <PricingEditor schedule={s} /> : null}
+      {shown === 'closures' ? <ClosuresEditor schedule={s} /> : null}
     </>
   );
 }

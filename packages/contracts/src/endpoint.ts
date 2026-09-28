@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { OrgPermission, PlatformPermission } from './permissions.js';
 
 export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 export type EndpointAuth = 'public' | 'user' | 'admin';
@@ -19,6 +20,13 @@ export interface Endpoint {
   readonly response: z.ZodType;
   /** Requires an `Idempotency-Key` header. */
   readonly idempotent?: boolean;
+  /** Admin API: the platform permission required (none: any signed-in staff member). */
+  readonly permission?: PlatformPermission;
+  /**
+   * Venue API: the permission required in the organization that owns the resource in the path
+   * (resolved on the server from the path parameter, never from the body).
+   */
+  readonly orgPermission?: OrgPermission;
 }
 
 export function endpoint<const E extends Endpoint>(definition: E): E {

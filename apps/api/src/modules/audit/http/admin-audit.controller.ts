@@ -9,7 +9,7 @@ export class AdminAuditController {
   constructor(private readonly audit: AuditService) {}
 
   @Get(adminListAuditLogs.path)
-  @AdminAuth('audit.read')
+  @AdminAuth()
   list(@Query() query: unknown): Promise<EndpointOutput<typeof adminListAuditLogs>> {
     const q = parseInput(adminListAuditLogs.query, query);
     return this.audit.list({

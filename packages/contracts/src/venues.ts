@@ -209,6 +209,7 @@ export const adminListVenues = endpoint({
   path: '/v1/admin/organizations/:organizationId/venues',
   summary: 'Venues of an organization',
   auth: 'admin',
+  permission: 'venues.read',
   params: z.object({ organizationId: uuidSchema }),
   response: z.object({ items: z.array(adminVenueListItemSchema) }),
 });
@@ -218,6 +219,7 @@ export const adminCreateVenue = endpoint({
   path: '/v1/admin/organizations/:organizationId/venues',
   summary: 'Create a venue (draft)',
   auth: 'admin',
+  permission: 'venues.edit',
   params: z.object({ organizationId: uuidSchema }),
   body: venueProfileInputSchema,
   response: adminVenueSchema,
@@ -228,6 +230,7 @@ export const adminGetVenue = endpoint({
   path: '/v1/admin/venues/:venueId',
   summary: 'Venue with facilities, resources and media',
   auth: 'admin',
+  permission: 'venues.read',
   params: venueParams,
   response: adminVenueSchema,
 });
@@ -237,6 +240,7 @@ export const adminUpdateVenue = endpoint({
   path: '/v1/admin/venues/:venueId',
   summary: 'Update the venue profile',
   auth: 'admin',
+  permission: 'venues.edit',
   params: venueParams,
   body: venueProfileInputSchema.partial(),
   response: adminVenueSchema,
@@ -247,6 +251,7 @@ export const adminSetVenueStatus = endpoint({
   path: '/v1/admin/venues/:venueId/status',
   summary: 'Approve, reject, suspend or reopen a venue (audited)',
   auth: 'admin',
+  permission: 'venues.review',
   params: venueParams,
   body: reasonSchemaBase.extend({ status: venueStatusSchema }),
   response: adminVenueSchema,
@@ -257,6 +262,7 @@ export const adminCreateFacility = endpoint({
   path: '/v1/admin/venues/:venueId/facilities',
   summary: 'Add a facility (a group of resources)',
   auth: 'admin',
+  permission: 'venues.edit',
   params: venueParams,
   body: z.object({ name: localizedTextSchema(120) }),
   response: adminVenueSchema,
@@ -280,6 +286,7 @@ export const adminCreateResource = endpoint({
   path: '/v1/admin/venues/:venueId/resources',
   summary: 'Add a bookable resource',
   auth: 'admin',
+  permission: 'venues.edit',
   params: venueParams,
   body: resourceInputSchema,
   response: adminVenueSchema,
@@ -290,6 +297,7 @@ export const adminUpdateResource = endpoint({
   path: '/v1/admin/resources/:resourceId',
   summary: 'Update a resource',
   auth: 'admin',
+  permission: 'venues.edit',
   params: z.object({ resourceId: uuidSchema }),
   body: z.object({
     name: localizedTextSchema(120).optional(),
@@ -306,6 +314,7 @@ export const adminUploadVenueMedia = endpoint({
   path: '/v1/admin/venues/:venueId/media',
   summary: 'Upload a venue photo (JPEG, PNG or WebP body; stored as WebP without metadata)',
   auth: 'admin',
+  permission: 'venues.edit',
   params: venueParams,
   response: adminVenueSchema,
 });
@@ -315,6 +324,7 @@ export const adminDeleteVenueMedia = endpoint({
   path: '/v1/admin/media/:mediaId',
   summary: 'Delete a venue photo',
   auth: 'admin',
+  permission: 'venues.edit',
   params: z.object({ mediaId: uuidSchema }),
   response: adminVenueSchema,
 });
@@ -339,6 +349,7 @@ export const adminListPendingVenues = endpoint({
   path: '/v1/admin/venues',
   summary: 'Venues across every organization, filterable by status (review queue)',
   auth: 'admin',
+  permission: 'venues.read',
   query: z.object({ status: venueStatusSchema.optional() }),
   response: z.object({ items: z.array(adminPendingVenueSchema) }),
 });
@@ -372,6 +383,7 @@ export const getMyVenueProfile = endpoint({
   path: '/v1/manage/venues/:venueId/profile',
   summary: 'Full profile (for the registration wizard / edit) of a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.read',
   params: venueParams,
   response: adminVenueSchema,
 });
@@ -381,6 +393,7 @@ export const updateMyVenue = endpoint({
   path: '/v1/manage/venues/:venueId',
   summary: 'Update the profile of a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: venueParams,
   body: venueProfileInputSchema.omit({ slug: true }).partial(),
   response: adminVenueSchema,
@@ -391,6 +404,7 @@ export const submitMyVenue = endpoint({
   path: '/v1/manage/venues/:venueId/submit',
   summary: 'Submit a draft (or fixed, previously rejected) venue for admin review',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: venueParams,
   response: adminVenueSchema,
 });
@@ -400,6 +414,7 @@ export const createMyFacility = endpoint({
   path: '/v1/manage/venues/:venueId/facilities',
   summary: 'Add a facility to a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: venueParams,
   body: z.object({ name: localizedTextSchema(120) }),
   response: adminVenueSchema,
@@ -410,6 +425,7 @@ export const createMyResource = endpoint({
   path: '/v1/manage/venues/:venueId/resources',
   summary: 'Add a bookable resource (court/pitch) to a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: venueParams,
   body: resourceInputSchema,
   response: adminVenueSchema,
@@ -420,6 +436,7 @@ export const updateMyResource = endpoint({
   path: '/v1/manage/resources/:resourceId',
   summary: 'Update a resource of a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: z.object({ resourceId: uuidSchema }),
   body: z.object({
     name: localizedTextSchema(120).optional(),
@@ -436,6 +453,7 @@ export const uploadMyVenueMedia = endpoint({
   path: '/v1/manage/venues/:venueId/media',
   summary: 'Upload a photo (JPEG, PNG or WebP body) to a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: venueParams,
   response: adminVenueSchema,
 });
@@ -445,6 +463,7 @@ export const deleteMyVenueMedia = endpoint({
   path: '/v1/manage/media/:mediaId',
   summary: 'Delete a photo of a venue the caller manages',
   auth: 'user',
+  orgPermission: 'venue.edit',
   params: z.object({ mediaId: uuidSchema }),
   response: adminVenueSchema,
 });

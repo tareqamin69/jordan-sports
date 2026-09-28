@@ -129,6 +129,7 @@ export const getVenueSchedule = endpoint({
   path: '/v1/manage/venues/:venueId/schedule',
   summary: 'Opening hours, booking rules and date overrides of a venue',
   auth: 'user',
+  orgPermission: 'venue.read',
   params: venueParams,
   response: venueScheduleSchema,
 });
@@ -138,6 +139,7 @@ export const setWeeklyHours = endpoint({
   path: '/v1/manage/resources/:resourceId/weekly-hours',
   summary: 'Replace the weekly opening windows of a resource',
   auth: 'user',
+  orgPermission: 'schedule.hours',
   params: resourceParams,
   body: z.object({ windows: z.array(weeklyWindowSchema).max(50) }),
   response: venueScheduleSchema,
@@ -148,6 +150,7 @@ export const setBookingPolicy = endpoint({
   path: '/v1/manage/resources/:resourceId/policy',
   summary: 'Replace the booking rules of a resource',
   auth: 'user',
+  orgPermission: 'schedule.rules',
   params: resourceParams,
   body: bookingPolicySchema,
   response: venueScheduleSchema,
@@ -158,6 +161,7 @@ export const updateScheduleSettings = endpoint({
   path: '/v1/manage/venues/:venueId/settings',
   summary: 'Venue scheduling settings',
   auth: 'user',
+  orgPermission: 'schedule.rules',
   params: venueParams,
   body: z.object({
     closedOnPublicHolidays: z.boolean().optional(),
@@ -171,6 +175,7 @@ export const createOverride = endpoint({
   path: '/v1/manage/venues/:venueId/overrides',
   summary: 'Close or set special hours for a date range (whole venue or one resource)',
   auth: 'user',
+  orgPermission: 'schedule.closures',
   params: venueParams,
   body: z.object({
     resourceId: uuidSchema.nullable().optional(),
@@ -188,6 +193,7 @@ export const deleteOverride = endpoint({
   path: '/v1/manage/overrides/:overrideId',
   summary: 'Remove a date override',
   auth: 'user',
+  orgPermission: 'schedule.closures',
   params: z.object({ overrideId: uuidSchema }),
   response: venueScheduleSchema,
 });
@@ -246,6 +252,7 @@ export const getVenueCalendar = endpoint({
   path: '/v1/manage/venues/:venueId/calendar',
   summary: 'Day calendar: opening hours and occupied time per resource',
   auth: 'user',
+  orgPermission: 'booking.read',
   params: venueParams,
   query: z.object({ date: dateSchema }),
   response: venueCalendarSchema,
@@ -257,6 +264,7 @@ export const createBlock = endpoint({
   summary:
     'Block time on a resource (maintenance, private event, booking taken outside the platform…)',
   auth: 'user',
+  orgPermission: 'schedule.block',
   params: venueParams,
   body: z.object({
     resourceId: uuidSchema,
@@ -275,6 +283,7 @@ export const cancelBlock = endpoint({
   path: '/v1/manage/blocks/:blockId',
   summary: 'Remove a block (frees the time immediately)',
   auth: 'user',
+  orgPermission: 'schedule.block',
   params: z.object({ blockId: uuidSchema }),
   response: okSchema,
 });
@@ -295,6 +304,7 @@ export const adminListHolidays = endpoint({
   path: '/v1/admin/holidays',
   summary: 'Public holidays',
   auth: 'admin',
+  permission: 'venues.read',
   query: z.object({
     country: z
       .string()
@@ -309,6 +319,7 @@ export const adminCreateHoliday = endpoint({
   path: '/v1/admin/holidays',
   summary: 'Add a public holiday',
   auth: 'admin',
+  permission: 'catalog.manage',
   body: z.object({
     countryCode: z
       .string()
@@ -325,6 +336,7 @@ export const adminDeleteHoliday = endpoint({
   path: '/v1/admin/holidays/:holidayId',
   summary: 'Remove a public holiday',
   auth: 'admin',
+  permission: 'catalog.manage',
   params: z.object({ holidayId: uuidSchema }),
   response: z.object({ items: z.array(holidaySchema) }),
 });

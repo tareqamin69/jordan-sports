@@ -9,7 +9,7 @@ describe('geography and sports catalog (admin)', () => {
 
   beforeAll(async () => {
     t = await createTestApp();
-    admin = (await signInAdmin(t.app)).cookie;
+    admin = (await signInAdmin(t.app, 'owner')).cookie;
     support = (await signInAdmin(t.app, 'support')).cookie;
   });
   afterAll(async () => {

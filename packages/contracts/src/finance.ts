@@ -39,6 +39,7 @@ export const getVenueBalance = endpoint({
   path: '/v1/manage/venues/:venueId/balance',
   summary: "Commission balance of the venue's organization, with recent history",
   auth: 'user',
+  orgPermission: 'reports.read',
   params: z.object({ venueId: uuidSchema }),
   response: balanceSchema,
 });
@@ -50,6 +51,7 @@ export const adminGetBalance = endpoint({
   path: '/v1/admin/organizations/:organizationId/balance',
   summary: 'Commission balance of an organization',
   auth: 'admin',
+  permission: 'revenue.read',
   params: organizationParams,
   response: balanceSchema,
 });
@@ -59,6 +61,7 @@ export const adminAdjustBalance = endpoint({
   path: '/v1/admin/organizations/:organizationId/balance/adjustments',
   summary: 'Credit (positive) or debit (negative) a balance by hand, with a reason (audited)',
   auth: 'admin',
+  permission: 'finance.manage',
   params: organizationParams,
   body: z.object({
     amount: z

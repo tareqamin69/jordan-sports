@@ -19,14 +19,14 @@ export class AdminOrganizationsController {
   constructor(private readonly organizations: OrganizationsService) {}
 
   @Get(adminListOrganizations.path)
-  @AdminAuth('organizations.read')
+  @AdminAuth()
   list(@Query() query: unknown): Promise<EndpointOutput<typeof adminListOrganizations>> {
     const q = parseInput(adminListOrganizations.query, query);
     return this.organizations.list({ limit: q.limit, ...(q.cursor ? { cursor: q.cursor } : {}) });
   }
 
   @Post(adminCreateOrganization.path)
-  @AdminAuth('organizations.manage')
+  @AdminAuth()
   create(
     @Body() body: unknown,
     @CurrentActor() actor: Actor,
@@ -37,14 +37,14 @@ export class AdminOrganizationsController {
   }
 
   @Get(adminGetOrganization.path)
-  @AdminAuth('organizations.read')
+  @AdminAuth()
   get(@Param() params: unknown): Promise<OrganizationDetail> {
     const { organizationId } = parseInput(adminGetOrganization.params, params);
     return this.organizations.get(organizationId);
   }
 
   @Post(adminAddMember.path)
-  @AdminAuth('organizations.manage')
+  @AdminAuth()
   addMember(
     @Param() params: unknown,
     @Body() body: unknown,

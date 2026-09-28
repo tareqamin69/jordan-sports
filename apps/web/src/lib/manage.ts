@@ -1,6 +1,11 @@
 'use client';
 
-import { getVenueSchedule, listManagedVenues, type VenueSchedule } from '@jordan-sports/contracts';
+import {
+  type OrgPermission,
+  getVenueSchedule,
+  listManagedVenues,
+  type VenueSchedule,
+} from '@jordan-sports/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApi } from './api';
 
@@ -23,6 +28,6 @@ export function useSetSchedule(venueId: string) {
   return (schedule: VenueSchedule) => queryClient.setQueryData(['schedule', venueId], schedule);
 }
 
-export function can(schedule: VenueSchedule | undefined, permission: string): boolean {
+export function can(schedule: VenueSchedule | undefined, permission: OrgPermission): boolean {
   return schedule?.permissions.includes(permission) ?? false;
 }

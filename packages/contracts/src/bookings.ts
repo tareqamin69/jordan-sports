@@ -193,6 +193,7 @@ export const listVenueBookings = endpoint({
   path: '/v1/manage/venues/:venueId/bookings',
   summary: 'Bookings of a venue between two business dates',
   auth: 'user',
+  orgPermission: 'booking.read',
   params: venueParams,
   query: z.object({ from: dateSchema, to: dateSchema }),
   response: z.object({ items: z.array(venueBookingSchema) }),
@@ -203,6 +204,7 @@ export const createManualBooking = endpoint({
   path: '/v1/manage/venues/:venueId/bookings',
   summary: 'Add a booking taken by phone or in person, optionally repeating weekly',
   auth: 'user',
+  orgPermission: 'booking.create',
   params: venueParams,
   body: z.object({
     resourceId: uuidSchema,
@@ -231,6 +233,7 @@ export const cancelVenueBooking = endpoint({
   path: '/v1/manage/bookings/:bookingId/cancel',
   summary: 'Cancel a booking as the venue (reason required; the player is notified)',
   auth: 'user',
+  orgPermission: 'booking.cancel',
   params: bookingParams,
   body: z.object({ reason: z.string().trim().min(3).max(300) }),
   response: venueBookingSchema,
@@ -243,6 +246,7 @@ export const listVenuePayments = endpoint({
   path: '/v1/manage/venues/:venueId/payments',
   summary: 'CliQ payments waiting for the venue: transfers to confirm and deposits to refund',
   auth: 'user',
+  orgPermission: 'payments.manage',
   params: venueParams,
   response: z.object({
     toConfirm: z.array(venueBookingSchema),
@@ -255,6 +259,7 @@ export const confirmVenuePayment = endpoint({
   path: '/v1/manage/payments/:paymentId/confirm',
   summary: '"وصلت الدفعة": the transfer arrived; confirms the booking and deducts the commission',
   auth: 'user',
+  orgPermission: 'payments.manage',
   params: paymentParams,
   response: venueBookingSchema,
 });
@@ -264,6 +269,7 @@ export const rejectVenuePayment = endpoint({
   path: '/v1/manage/payments/:paymentId/reject',
   summary: 'The transfer did not arrive: back to awaiting payment, with the reason for the player',
   auth: 'user',
+  orgPermission: 'payments.manage',
   params: paymentParams,
   body: z.object({ reason: z.string().trim().min(3).max(300) }),
   response: venueBookingSchema,
@@ -274,6 +280,7 @@ export const markPaymentRefunded = endpoint({
   path: '/v1/manage/payments/:paymentId/refunded',
   summary: 'The venue sent the deposit back to the player by CliQ',
   auth: 'user',
+  orgPermission: 'payments.manage',
   params: paymentParams,
   response: venueBookingSchema,
 });
@@ -287,6 +294,7 @@ export const adminListBookings = endpoint({
   path: '/v1/admin/bookings',
   summary: 'Bookings across the platform (newest first)',
   auth: 'admin',
+  permission: 'bookings.read',
   query: pageQuerySchema.extend({ venueId: uuidSchema.optional() }),
   response: page(venueBookingSchema),
 });

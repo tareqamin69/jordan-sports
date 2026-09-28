@@ -1,4 +1,9 @@
-import type { Booking, VenueBooking } from '@jordan-sports/contracts';
+import {
+  hasOrgPermission,
+  type Booking,
+  type MembershipRole,
+  type VenueBooking,
+} from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import type { DbOrTx } from '../../../platform/database/database.js';
 import { instantToLocal } from '../../scheduling/index.js';
@@ -175,4 +180,10 @@ export function toVenueBooking(r: LoadedBooking): VenueBooking {
     seriesId: r.series_id,
     checkedInAt: r.checked_in_at ? new Date(r.checked_in_at).toISOString() : null,
   };
+}
+
+/** Front-desk staff never see prices (docs/rbac-plan.md §3): removed on the server. */
+export function forVenueRole(booking: VenueBooking, role: MembershipRole): VenueBooking {
+  if (hasOrgPermission(role, 'pricing.read')) return booking;
+  return { ...booking, price: null, payment: null };
 }
