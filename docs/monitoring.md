@@ -12,7 +12,7 @@ it stops answering. The free plan covers what we need: 50 monitors, 5-minute che
 | Friendly name | Monitor type | URL | Why |
 |---|---|---|---|
 | Jorena website | HTTP(s) | `https://jorena.app/ar` | players' home page |
-| Jorena API ready | Keyword | `https://jorena.app/api/readyz`, keyword `ok`, alert when **not** found | the API and its database are up (a page can load while the API is down) |
+| Jorena API ready | HTTP(s) | `https://jorena.app/api/readyz` | answers 503 when the API, its database, Redis or a migration is not ready (a page can load while the API is down) |
 | Jorena staff console | HTTP(s) | `https://admin.jorena.app/ar/sign-in` | the admin panel |
 | Jorena SSL | the website monitor's **SSL expiry** option (Advanced settings) | – | warns 30 days before the certificate expires |
 
