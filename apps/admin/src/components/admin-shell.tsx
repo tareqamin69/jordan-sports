@@ -12,6 +12,7 @@ import { useErrorMessage } from '@/lib/use-error-message';
 
 const sections = [
   { href: '/', key: 'dashboard' },
+  { href: '/venues', key: 'venues' },
   { href: '/organizations', key: 'organizations' },
   { href: '/users', key: 'users' },
   { href: '/geography', key: 'geography' },

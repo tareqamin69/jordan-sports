@@ -30,6 +30,11 @@ export interface VenueRow {
   contactPhone: string | null;
   businessDayStartMinute: number;
   cancellationCutoffHours: number;
+  cliqAlias: string | null;
+  cliqAliasHolder: string | null;
+  depositPercentage: number | null;
+  whatsappPhone: string | null;
+  statusReason: string | null;
   createdAt: Date;
 }
 
@@ -73,6 +78,11 @@ export class VenuesService {
         'contact_phone',
         'business_day_start_minute',
         'cancellation_cutoff_hours',
+        'cliq_alias',
+        'cliq_alias_holder',
+        'deposit_percentage',
+        'whatsapp_phone',
+        'status_reason',
         'created_at',
         sql<number | null>`ST_Y(location::geometry)`.as('lat'),
         sql<number | null>`ST_X(location::geometry)`.as('lng'),
@@ -100,6 +110,11 @@ export class VenuesService {
       contactPhone: r.contact_phone,
       businessDayStartMinute: r.business_day_start_minute,
       cancellationCutoffHours: r.cancellation_cutoff_hours,
+      cliqAlias: r.cliq_alias,
+      cliqAliasHolder: r.cliq_alias_holder,
+      depositPercentage: r.deposit_percentage,
+      whatsappPhone: r.whatsapp_phone,
+      statusReason: r.status_reason,
       createdAt: r.created_at,
     };
   }
@@ -120,6 +135,14 @@ export class VenuesService {
       .where('organization_id', '=', organizationId)
       .orderBy('created_at')
       .execute();
+    return rows.map((r) => this.toRow(r));
+  }
+
+  /** Cross-organization review queue (admin console): all venues, optionally by status. */
+  async listAll(status?: VenueStatus): Promise<VenueRow[]> {
+    let query = this.baseQuery(this.db);
+    if (status) query = query.where('status', '=', status);
+    const rows = await query.orderBy('created_at').execute();
     return rows.map((r) => this.toRow(r));
   }
 
@@ -160,6 +183,12 @@ export class VenuesService {
       values.business_day_start_minute = input.businessDayStartMinute;
     const phone = phoneOrNull(input.contactPhone);
     if (phone !== undefined) values.contact_phone = phone;
+    const whatsapp = phoneOrNull(input.whatsapp);
+    if (whatsapp !== undefined) values.whatsapp_phone = whatsapp;
+    if (input.cliqAlias !== undefined) values.cliq_alias = input.cliqAlias;
+    if (input.cliqAliasHolderName !== undefined)
+      values.cliq_alias_holder = input.cliqAliasHolderName;
+    if (input.depositPercentage !== undefined) values.deposit_percentage = input.depositPercentage;
     if (input.location !== undefined) {
       values.location =
         input.location === null
@@ -302,7 +331,11 @@ export class VenuesService {
           'A venue needs at least one active resource to be approved',
         );
       }
-      await tx.updateTable('venue.venues').set({ status }).where('id', '=', venueId).execute();
+      await tx
+        .updateTable('venue.venues')
+        .set({ status, status_reason: reason || null })
+        .where('id', '=', venueId)
+        .execute();
       await this.audit.record(
         {
           actorType: actor.type,

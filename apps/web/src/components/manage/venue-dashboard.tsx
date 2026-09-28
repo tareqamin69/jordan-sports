@@ -1,5 +1,6 @@
 'use client';
 
+import { getMyVenueProfile } from '@jordan-sports/contracts';
 import {
   Alert,
   PageHeader,
@@ -9,10 +10,11 @@ import {
   cx,
   fieldControlClass,
 } from '@jordan-sports/ui';
+import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { isApiError } from '@/lib/api';
+import { isApiError, useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useManagedVenues, useVenueSchedule } from '@/lib/manage';
 import { tabs, type Tab } from '@/lib/manage-tabs';
@@ -56,6 +58,44 @@ function VenueSwitcher({ venueId, tab }: { venueId: string; tab: Tab }) {
   );
 }
 
+/** Surfaces the venue's registration status (draft/submitted/rejected/suspended) with next steps. */
+function VenueStatusBanner({ venueId, status }: { venueId: string; status: string }) {
+  const t = useTranslations('web.manage.status');
+  const api = useApi();
+  const profile = useQuery({
+    queryKey: ['my-venue', venueId],
+    queryFn: () => api(getMyVenueProfile, { params: { venueId } }),
+    enabled: status === 'rejected',
+  });
+  if (status === 'approved') return null;
+
+  const reason = profile.data?.statusReason;
+  return (
+    <Alert
+      tone={status === 'rejected' || status === 'suspended' ? 'error' : 'info'}
+      className="mb-6"
+    >
+      <div className="flex flex-col items-start gap-2">
+        <span>
+          {status === 'rejected'
+            ? reason
+              ? t('rejected', { reason })
+              : t('rejectedNoReason')
+            : t(status as 'draft' | 'submitted' | 'suspended')}
+        </span>
+        {status === 'draft' || status === 'rejected' ? (
+          <Link
+            href={{ pathname: '/manage/register', query: { venueId } }}
+            className="text-sm font-semibold underline"
+          >
+            {status === 'draft' ? t('continueRegistration') : t('editAndResubmit')}
+          </Link>
+        ) : null}
+      </div>
+    </Alert>
+  );
+}
+
 export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) {
   const t = useTranslations('web.manage');
   const tc = useTranslations('common');
@@ -79,6 +119,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
         title={pick(s.venue.name, locale)}
         actions={<VenueSwitcher venueId={venueId} tab={tab} />}
       />
+      <VenueStatusBanner venueId={venueId} status={s.venue.status} />
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
         <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
           {tabs.map((key) => (

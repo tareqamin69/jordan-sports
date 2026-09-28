@@ -32,6 +32,17 @@ export class MediaService {
     private readonly audit: AuditService,
   ) {}
 
+  /** Which venue a photo belongs to (for an ownership check before an owner-scoped read/delete). */
+  async venueIdOf(mediaId: string): Promise<string> {
+    const row = await this.db
+      .selectFrom('venue.media')
+      .select('venue_id')
+      .where('id', '=', mediaId)
+      .executeTakeFirst();
+    if (!row) throw Errors.notFound();
+    return row.venue_id;
+  }
+
   async forVenue(venueId: string): Promise<MediaRef[]> {
     const rows = await this.db
       .selectFrom('venue.media')

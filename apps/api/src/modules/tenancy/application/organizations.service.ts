@@ -13,6 +13,7 @@ import { AppError, Errors } from '../../../platform/http/errors.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
 import { AuditService } from '../../audit/index.js';
 import { normalizePhone, UsersService } from '../../identity/index.js';
+import { slugify } from '../../../platform/text/slugify.js';
 
 interface OrgRow {
   id: string;
@@ -110,6 +111,49 @@ export class OrganizationsService {
             targetId: organizationId,
             organizationId,
             details: { slug: input.slug, ownerUserId: owner.id },
+            meta,
+          },
+          tx,
+        );
+        return this.get(organizationId, tx);
+      });
+    } catch (error) {
+      if (pgErrorCode(error) === PgError.uniqueViolation && pgConstraint(error)?.includes('slug')) {
+        throw Errors.conflict('SLUG_TAKEN');
+      }
+      throw error;
+    }
+  }
+
+  /** Self-registration (plan §3): the signed-in user becomes the owner directly — no phone
+   * lookup needed, they're already authenticated. Slug is derived from the venue name plus a
+   * short random suffix (players never see or pick an org slug). */
+  async createForUser(
+    userId: string,
+    input: { name: LocalizedText },
+    meta: RequestMeta,
+  ): Promise<OrganizationDetail> {
+    const slug = slugify(input.name.en ?? input.name.ar ?? '');
+    try {
+      return await this.db.transaction().execute(async (tx) => {
+        const organizationId = uuidv7();
+        await tx
+          .insertInto('tenancy.organizations')
+          .values({ id: organizationId, slug, name: JSON.stringify(input.name) })
+          .execute();
+        await tx
+          .insertInto('tenancy.memberships')
+          .values({ id: uuidv7(), organization_id: organizationId, user_id: userId, role: 'owner' })
+          .execute();
+        await this.audit.record(
+          {
+            actorType: 'user',
+            actorUserId: userId,
+            action: 'organization.created',
+            targetType: 'organization',
+            targetId: organizationId,
+            organizationId,
+            details: { slug, self: true },
             meta,
           },
           tx,

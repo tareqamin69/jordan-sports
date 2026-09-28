@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Patch, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Patch, Query, Req, Res } from '@nestjs/common';
 import {
   adminCreateFacility,
   adminCreateResource,
   adminCreateVenue,
   adminDeleteVenueMedia,
   adminGetVenue,
+  adminListPendingVenues,
   adminListVenues,
   adminSetVenueStatus,
   adminUpdateResource,
@@ -36,6 +37,16 @@ export class AdminVenuesController {
     private readonly media: MediaService,
     private readonly views: VenueViewsService,
   ) {}
+
+  @Get(adminListPendingVenues.path)
+  @AdminAuth('venues.read')
+  async listPending(
+    @Query() query: unknown,
+  ): Promise<EndpointOutput<typeof adminListPendingVenues>> {
+    const { status } = parseInput(adminListPendingVenues.query, query);
+    const venues = await this.venues.listAll(status);
+    return { items: await this.views.pendingVenues(venues) };
+  }
 
   @Get(adminListVenues.path)
   @AdminAuth('venues.read')

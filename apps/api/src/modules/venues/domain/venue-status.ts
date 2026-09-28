@@ -6,7 +6,7 @@ export const venueTransitions: Record<VenueStatus, readonly VenueStatus[]> = {
   submitted: ['approved', 'rejected', 'draft'],
   approved: ['suspended'],
   suspended: ['approved'],
-  rejected: ['draft'],
+  rejected: ['draft', 'submitted'],
 };
 
 export function canTransition(from: VenueStatus, to: VenueStatus): boolean {

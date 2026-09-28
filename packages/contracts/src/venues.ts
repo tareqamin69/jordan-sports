@@ -141,6 +141,12 @@ export const venueProfileInputSchema = z.object({
   contactPhone: phoneInputSchema.nullable().optional(),
   amenityIds: z.array(uuidSchema).max(50).default([]),
   businessDayStartMinute: z.number().int().min(0).max(720).optional(),
+  // Self-registration (plan §3, wizard step 8-9). Configuration only — no CliQ payment
+  // processing exists yet (P4).
+  whatsapp: phoneInputSchema.nullable().optional(),
+  cliqAlias: z.string().trim().min(1).max(60).nullable().optional(),
+  cliqAliasHolderName: z.string().trim().min(1).max(120).nullable().optional(),
+  depositPercentage: z.number().int().min(0).max(100).nullable().optional(),
 });
 export type VenueProfileInput = z.input<typeof venueProfileInputSchema>;
 
@@ -163,6 +169,8 @@ export const adminVenueSchema = z.object({
   name: localizedSchema,
   description: localizedSchema,
   status: venueStatusSchema,
+  /** Set on the latest status change — most useful for 'rejected' (why, so it can be fixed). */
+  statusReason: z.string().nullable(),
   timezone: z.string(),
   currency: z.string(),
   governorateId: uuidSchema,
@@ -170,11 +178,18 @@ export const adminVenueSchema = z.object({
   address: localizedSchema,
   location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   contactPhone: z.string().nullable(),
+  whatsapp: z.string().nullable(),
+  cliqAlias: z.string().nullable(),
+  cliqAliasHolderName: z.string().nullable(),
+  depositPercentage: z.number().int().nullable(),
   businessDayStartMinute: z.number().int(),
   amenityIds: z.array(uuidSchema),
   facilities: z.array(z.object({ id: uuidSchema, name: localizedSchema })),
   resources: z.array(adminResourceSchema),
   media: z.array(mediaSchema),
+  /** Owner contact, for the admin review queue's call/WhatsApp buttons. */
+  ownerName: z.string().nullable(),
+  ownerPhone: z.string().nullable(),
   createdAt: z.string(),
 });
 export type AdminVenue = z.infer<typeof adminVenueSchema>;
@@ -300,6 +315,136 @@ export const adminDeleteVenueMedia = endpoint({
   path: '/v1/admin/media/:mediaId',
   summary: 'Delete a venue photo',
   auth: 'admin',
+  params: z.object({ mediaId: uuidSchema }),
+  response: adminVenueSchema,
+});
+
+// ---------------------------------------------------------------------------------------------
+// Admin: cross-organization review queue (plan §3)
+// ---------------------------------------------------------------------------------------------
+
+export const adminPendingVenueSchema = z.object({
+  id: uuidSchema,
+  slug: z.string(),
+  name: localizedSchema,
+  status: venueStatusSchema,
+  governorateId: uuidSchema,
+  ownerName: z.string().nullable(),
+  ownerPhone: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const adminListPendingVenues = endpoint({
+  method: 'GET',
+  path: '/v1/admin/venues',
+  summary: 'Venues across every organization, filterable by status (review queue)',
+  auth: 'admin',
+  query: z.object({ status: venueStatusSchema.optional() }),
+  response: z.object({ items: z.array(adminPendingVenueSchema) }),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Self-registration (plan §3): the signed-in user registers and manages their own venue.
+// Authorization happens per venue inside the service (ADR-0008) — never admin-gated.
+// ---------------------------------------------------------------------------------------------
+
+export const registerVenueInputSchema = z.object({
+  name: localizedTextSchema(120),
+  description: localizedTextSchema(2000).optional(),
+  governorateId: uuidSchema,
+  areaId: uuidSchema.nullable().optional(),
+  address: localizedTextSchema(300).optional(),
+  location: locationInput.nullable().optional(),
+  contactPhone: phoneInputSchema,
+});
+
+export const registerVenue = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venues',
+  summary: 'Register a new venue (creates its organization; the caller becomes owner)',
+  auth: 'user',
+  body: registerVenueInputSchema,
+  response: adminVenueSchema,
+});
+
+export const getMyVenueProfile = endpoint({
+  method: 'GET',
+  path: '/v1/manage/venues/:venueId/profile',
+  summary: 'Full profile (for the registration wizard / edit) of a venue the caller manages',
+  auth: 'user',
+  params: venueParams,
+  response: adminVenueSchema,
+});
+
+export const updateMyVenue = endpoint({
+  method: 'PATCH',
+  path: '/v1/manage/venues/:venueId',
+  summary: 'Update the profile of a venue the caller manages',
+  auth: 'user',
+  params: venueParams,
+  body: venueProfileInputSchema.omit({ slug: true }).partial(),
+  response: adminVenueSchema,
+});
+
+export const submitMyVenue = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venues/:venueId/submit',
+  summary: 'Submit a draft (or fixed, previously rejected) venue for admin review',
+  auth: 'user',
+  params: venueParams,
+  response: adminVenueSchema,
+});
+
+export const createMyFacility = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venues/:venueId/facilities',
+  summary: 'Add a facility to a venue the caller manages',
+  auth: 'user',
+  params: venueParams,
+  body: z.object({ name: localizedTextSchema(120) }),
+  response: adminVenueSchema,
+});
+
+export const createMyResource = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venues/:venueId/resources',
+  summary: 'Add a bookable resource (court/pitch) to a venue the caller manages',
+  auth: 'user',
+  params: venueParams,
+  body: resourceInputSchema,
+  response: adminVenueSchema,
+});
+
+export const updateMyResource = endpoint({
+  method: 'PATCH',
+  path: '/v1/manage/resources/:resourceId',
+  summary: 'Update a resource of a venue the caller manages',
+  auth: 'user',
+  params: z.object({ resourceId: uuidSchema }),
+  body: z.object({
+    name: localizedTextSchema(120).optional(),
+    facilityId: uuidSchema.nullable().optional(),
+    sportFormatIds: z.array(uuidSchema).min(1).max(20).optional(),
+    attributes: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
+    status: z.enum(['active', 'inactive', 'archived']).optional(),
+  }),
+  response: adminVenueSchema,
+});
+
+export const uploadMyVenueMedia = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venues/:venueId/media',
+  summary: 'Upload a photo (JPEG, PNG or WebP body) to a venue the caller manages',
+  auth: 'user',
+  params: venueParams,
+  response: adminVenueSchema,
+});
+
+export const deleteMyVenueMedia = endpoint({
+  method: 'DELETE',
+  path: '/v1/manage/media/:mediaId',
+  summary: 'Delete a photo of a venue the caller manages',
+  auth: 'user',
   params: z.object({ mediaId: uuidSchema }),
   response: adminVenueSchema,
 });

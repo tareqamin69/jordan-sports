@@ -12,6 +12,7 @@ import { ResourcesModule } from './modules/resources/index.js';
 import { SchedulingModule } from './modules/scheduling/index.js';
 import { TenancyModule } from './modules/tenancy/index.js';
 import { VenueAdminModule } from './modules/venue-admin/venue-admin.module.js';
+import { VenueRegistrationModule } from './modules/venue-registration/venue-registration.module.js';
 import { VenuesModule } from './modules/venues/index.js';
 import { AuthGuard } from './platform/auth/auth.guard.js';
 import type { AppConfig } from './platform/config/config.js';
@@ -49,6 +50,7 @@ export class AppModule {
         SchedulingModule,
         PricingModule,
         VenueAdminModule,
+        VenueRegistrationModule,
         IdempotencyModule,
         NotificationsModule,
         BookingsModule,

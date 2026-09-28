@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Badge, Card, PageHeader, Spinner } from '@jordan-sports/ui';
+import { Alert, Badge, buttonClass, Card, PageHeader, Spinner } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -37,6 +37,9 @@ export function ManageHome() {
           </span>
           <p className="font-semibold text-ink">{t('empty')}</p>
           <p className="text-sm text-ink-muted">{t('emptyHint')}</p>
+          <Link href="/manage/register" className={buttonClass({ size: 'sm', className: 'mt-2' })}>
+            {t('registerCta')}
+          </Link>
         </Card>
       ) : null}
       <ul className="grid gap-3 sm:grid-cols-2">

@@ -446,10 +446,13 @@ export interface VenueVenues {
   business_day_start_minute: Generated<number>;
   cancellation_cutoff_hours: Generated<number>;
   city_id: string;
+  cliq_alias: string | null;
+  cliq_alias_holder: string | null;
   closed_on_public_holidays: Generated<boolean>;
   contact_phone: string | null;
   created_at: Generated<Timestamp>;
   currency: Generated<string>;
+  deposit_percentage: number | null;
   description: Generated<Json>;
   id: string;
   location: string | null;
@@ -457,8 +460,10 @@ export interface VenueVenues {
   organization_id: string;
   slug: string;
   status: Generated<string>;
+  status_reason: string | null;
   timezone: Generated<string>;
   updated_at: Generated<Timestamp>;
+  whatsapp_phone: string | null;
 }
 
 export interface DB {

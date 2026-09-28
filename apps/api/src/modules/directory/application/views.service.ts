@@ -135,14 +135,45 @@ export class VenueViewsService {
     };
   }
 
+  async owner(organizationId: string): Promise<{ name: string | null; phone: string | null }> {
+    const row = await this.db
+      .selectFrom('tenancy.memberships as m')
+      .innerJoin('identity.users as u', 'u.id', 'm.user_id')
+      .select(['u.display_name', 'u.phone'])
+      .where('m.organization_id', '=', organizationId)
+      .where('m.role', '=', 'owner')
+      .orderBy('m.created_at')
+      .executeTakeFirst();
+    return { name: row?.display_name ?? null, phone: row?.phone ?? null };
+  }
+
+  async pendingVenues(rows: readonly VenueRow[]) {
+    return Promise.all(
+      rows.map(async (venue) => {
+        const owner = await this.owner(venue.organizationId);
+        return {
+          id: venue.id,
+          slug: venue.slug,
+          name: venue.name,
+          status: venue.status,
+          governorateId: venue.governorateId,
+          ownerName: owner.name,
+          ownerPhone: owner.phone,
+          createdAt: venue.createdAt.toISOString(),
+        };
+      }),
+    );
+  }
+
   async adminVenue(venueId: string): Promise<AdminVenue> {
     const venue = await this.venues.find(venueId);
     const catalog = await this.catalog.get();
-    const [resources, facilities, media, amenityIds] = await Promise.all([
+    const [resources, facilities, media, amenityIds, owner] = await Promise.all([
       this.resources.listForVenue(venueId),
       this.venues.facilities(venueId),
       this.media.forVenue(venueId),
       this.venues.amenityIds(venueId),
+      this.owner(venue.organizationId),
     ]);
     return {
       id: venue.id,
@@ -151,6 +182,7 @@ export class VenueViewsService {
       name: venue.name,
       description: venue.description,
       status: venue.status,
+      statusReason: venue.statusReason,
       timezone: venue.timezone,
       currency: venue.currency,
       governorateId: venue.governorateId,
@@ -158,10 +190,16 @@ export class VenueViewsService {
       address: venue.address,
       location: venue.location,
       contactPhone: venue.contactPhone,
+      whatsapp: venue.whatsappPhone,
+      cliqAlias: venue.cliqAlias,
+      cliqAliasHolderName: venue.cliqAliasHolder,
+      depositPercentage: venue.depositPercentage,
       businessDayStartMinute: venue.businessDayStartMinute,
       amenityIds,
       facilities: facilities as Array<{ id: string; name: Localized }>,
       media,
+      ownerName: owner.name,
+      ownerPhone: owner.phone,
       createdAt: venue.createdAt.toISOString(),
       resources: await Promise.all(
         resources.map(async (r) => ({
