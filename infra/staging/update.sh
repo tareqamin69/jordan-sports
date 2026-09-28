@@ -15,5 +15,7 @@ docker compose up -d --build --remove-orphans
 # The Caddyfile is a bind mount: Compose doesn't notice when only its contents change.
 docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile ||
   echo "[$(date -u +%FT%TZ)] caddy reload failed (the previous proxy configuration stays active)"
+# Daily off-server backup timer (only once /opt/jordan-sports/backup.env exists; docs/backups.md).
+"$APP/infra/backup/install.sh" || echo "[$(date -u +%FT%TZ)] backup timer install failed"
 docker image prune -f >/dev/null
 echo "[$(date -u +%FT%TZ)] deployed"
