@@ -7,6 +7,8 @@ import { usePathname } from '@/i18n/navigation';
 import { Icon } from './icons';
 
 const DISMISSED_KEY = 'pwa-install-dismissed';
+const VISITS_KEY = 'pwa-install-visits';
+const BROWSE_DELAY_MS = 30_000;
 const CHECKOUT_PATH = /^\/bookings\/[^/]+$/;
 
 /** Minimal shape of the (non-standard, Chromium-only) BeforeInstallPromptEvent. */
@@ -41,6 +43,46 @@ function dismiss() {
 const noSubscription = () => () => {};
 const serverSnapshotFalse = () => false;
 
+/** Phones/small touch screens only — never desktop, whatever the browser thinks is installable. */
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia('(max-width: 767px)');
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia('(max-width: 767px)').matches,
+    serverSnapshotFalse,
+  );
+}
+
+function priorVisitRecorded(): boolean {
+  try {
+    return Number(localStorage.getItem(VISITS_KEY) ?? '0') >= 1;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Never on a first-page-load: only once this is the visitor's 2nd visit (a prior visit already
+ * recorded in localStorage, so it survives closing the tab) or they've spent 30s on this one.
+ */
+function useHasBrowsedEnough(): boolean {
+  const isSecondVisit = useSyncExternalStore(noSubscription, priorVisitRecorded, serverSnapshotFalse);
+  const [timerFired, setTimerFired] = useState(false);
+  useEffect(() => {
+    try {
+      localStorage.setItem(VISITS_KEY, '1');
+    } catch {
+      // Private browsing or storage disabled: falls back to the 30s timer every visit, harmless.
+    }
+    const id = setTimeout(() => setTimerFired(true), BROWSE_DELAY_MS);
+    return () => clearTimeout(id);
+  }, []);
+  return isSecondVisit || timerFired;
+}
+
 /**
  * True once, for an iOS Safari visit that hasn't installed or dismissed the hint before. Read as
  * an external store (not effect + setState) so the client-only value never causes a hydration
@@ -71,6 +113,8 @@ export function InstallPrompt() {
   const tc = useTranslations('common');
   const pathname = usePathname();
   const iosEligible = useIosHintEligible();
+  const isMobile = useIsMobile();
+  const hasBrowsedEnough = useHasBrowsedEnough();
   const [deferred, setDeferred] = useState<InstallEvent | null>(null);
   const [dismissedNow, setDismissedNow] = useState(false);
 
@@ -106,7 +150,12 @@ export function InstallPrompt() {
 
   const appName = tc('appName');
   const showIos = iosEligible && !deferred;
-  const visible = (deferred || showIos) && !dismissedNow && !CHECKOUT_PATH.test(pathname);
+  const visible =
+    (deferred || showIos) &&
+    isMobile &&
+    hasBrowsedEnough &&
+    !dismissedNow &&
+    !CHECKOUT_PATH.test(pathname);
   if (!visible) return null;
 
   return (
