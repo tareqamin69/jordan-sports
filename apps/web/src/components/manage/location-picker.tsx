@@ -1,28 +1,10 @@
 'use client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-import {
-  Map as MapLibreMap,
-  Marker,
-  NavigationControl,
-  type StyleSpecification,
-} from 'maplibre-gl';
-import { useTranslations } from 'next-intl';
+import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
-
-const style: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '&copy; OpenStreetMap contributors',
-      maxzoom: 19,
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-};
+import { attachStyleFallback, localizeMapLabels, MAP_STYLE_URL } from '@/lib/map-style';
 
 /** Amman, roughly centered — used when the owner hasn't set a pin yet. */
 const defaultCenter = { lat: 31.9539, lng: 35.9106 };
@@ -36,6 +18,7 @@ export function LocationPicker({
   onChange: (location: { lat: number; lng: number }) => void;
 }) {
   const t = useTranslations('web.manage.register');
+  const locale = useLocale() as 'ar' | 'en';
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibreMap | null>(null);
   const marker = useRef<Marker | null>(null);
@@ -49,12 +32,14 @@ export function LocationPicker({
     const center = location ?? defaultCenter;
     const m = new MapLibreMap({
       container: container.current,
-      style,
+      style: MAP_STYLE_URL,
       center: [center.lng, center.lat],
       zoom: location ? 15 : 11,
       attributionControl: { compact: true },
       cooperativeGestures: true,
     });
+    attachStyleFallback(m);
+    m.on('style.load', () => localizeMapLabels(m, locale));
     m.addControl(new NavigationControl({ showCompass: false }), 'top-right');
     const mk = new Marker({ color: '#0f4d34', draggable: true })
       .setLngLat([center.lng, center.lat])

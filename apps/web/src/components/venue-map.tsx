@@ -1,31 +1,12 @@
 'use client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-import {
-  Map as MapLibreMap,
-  Marker,
-  NavigationControl,
-  type StyleSpecification,
-} from 'maplibre-gl';
-import { useTranslations } from 'next-intl';
+import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { attachStyleFallback, localizeMapLabels, MAP_STYLE_URL } from '@/lib/map-style';
 
-/** Raster OpenStreetMap tiles — no API key. See https://operations.osmfoundation.org/policies/tiles/ */
-const style: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '&copy; OpenStreetMap contributors',
-      maxzoom: 19,
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-};
-
-/** The venue's location on an interactive OpenStreetMap (MapLibre GL, raster tiles, no key). */
+/** The venue's location on an interactive map (MapLibre GL, OpenFreeMap vector tiles, no key). */
 export function VenueMap({
   location,
   name,
@@ -34,6 +15,7 @@ export function VenueMap({
   name: string;
 }) {
   const t = useTranslations('web.venue');
+  const locale = useLocale() as 'ar' | 'en';
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -41,7 +23,7 @@ export function VenueMap({
     if (!container.current) return;
     const map = new MapLibreMap({
       container: container.current,
-      style,
+      style: MAP_STYLE_URL,
       center: [location.lng, location.lat],
       zoom: 15,
       attributionControl: { compact: true },
@@ -49,9 +31,15 @@ export function VenueMap({
     });
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
     new Marker({ color: '#0f4d34' }).setLngLat([location.lng, location.lat]).addTo(map);
-    map.once('load', () => setReady(true));
+    attachStyleFallback(map);
+    // `style.load` (not `load`) so this still fires if the vector style fails and
+    // attachStyleFallback swaps in the raster one — `load` only ever fires for the first style.
+    map.on('style.load', () => {
+      localizeMapLabels(map, locale);
+      setReady(true);
+    });
     return () => map.remove();
-  }, [location.lat, location.lng]);
+  }, [location.lat, location.lng, locale]);
 
   return (
     <div className="relative mt-4 aspect-[4/3] w-full overflow-hidden rounded-card border border-line bg-canvas-deep">
