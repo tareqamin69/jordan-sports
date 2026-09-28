@@ -43,7 +43,7 @@ export function SiteHeader() {
   return (
     <header
       className={cx(
-        'relative z-30',
+        'z-30',
         overlay
           ? 'absolute inset-x-0 top-0 text-canvas'
           : // The frosted background lives on a ::before layer, not the header itself: a
@@ -58,7 +58,7 @@ export function SiteHeader() {
           href="/"
           className={cx(
             'font-display text-[1.75rem] leading-none whitespace-nowrap sm:text-[2rem]',
-            overlay ? 'text-canvas' : 'text-primary',
+            overlay ? 'text-canvas [text-shadow:0_1px_8px_rgb(0_0_0_/_0.45)]' : 'text-primary',
           )}
           data-testid="brand"
         >

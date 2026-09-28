@@ -66,7 +66,7 @@ export function VenueGallery({
       )}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-night/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-night/75 to-transparent"
       />
       <div
         aria-hidden

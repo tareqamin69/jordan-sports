@@ -38,6 +38,10 @@ export default async function HomePage({ params }: Props) {
         <HeroArt className="absolute inset-0" />
         <div
           aria-hidden
+          className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/70 to-transparent"
+        />
+        <div
+          aria-hidden
           className="absolute inset-0 bg-gradient-to-b from-night/0 from-40% to-night/90"
         />
         <div className="absolute inset-x-0 bottom-[92px] sm:bottom-[120px]">
