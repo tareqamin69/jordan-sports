@@ -25,6 +25,7 @@ const sections: ReadonlyArray<{
   { href: '/geography', key: 'geography', permission: 'catalog.manage' },
   { href: '/holidays', key: 'holidays', permission: 'catalog.manage' },
   { href: '/settings', key: 'settings', permission: 'settings.read' },
+  { href: '/team', key: 'team', permission: 'team.read' },
   { href: '/audit', key: 'audit', permission: 'audit.read' },
 ];
 

@@ -709,6 +709,7 @@ export const en = {
       holidays: 'Public holidays',
       bookings: 'Bookings',
       settings: 'Settings',
+      team: 'Admin team',
       audit: 'Audit log',
     },
     settings: {
@@ -731,6 +732,26 @@ export const en = {
       allowlistHint:
         'One address or range per line (e.g. 203.0.113.7 or 203.0.113.0/24). Empty: from anywhere.',
       yourIp: 'Your current address:',
+    },
+    team: {
+      title: 'Admin team',
+      description: 'Who can use the admin panel and with which role. Only you can change this.',
+      inviteTitle: 'Invite a member',
+      email: 'Email',
+      name: 'Name (optional)',
+      role: 'Role',
+      invite: 'Create invitation link',
+      linkReady:
+        'Invitation link (single use, valid 2 days). Send it to the person yourself; it is not shown again:',
+      copy: 'Copy link',
+      pending: 'Pending invitations',
+      expires: 'Expires {time}',
+      cancelInvite: 'Cancel invitation',
+      members: 'Members',
+      locked: 'Temporarily locked',
+      lastActive: 'Last active {time}',
+      remove: 'Remove from team',
+      removeConfirm: 'Remove {email} from the admin team? They lose access immediately.',
     },
     setup: {
       title: 'Set up your admin account',

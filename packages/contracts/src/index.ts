@@ -13,3 +13,4 @@ export * from './bookings.js';
 export * from './finance.js';
 export * from './permissions.js';
 export * from './settings.js';
+export * from './team.js';

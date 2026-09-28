@@ -5,8 +5,10 @@ import { ConsoleOtpSender, OTP_SENDER, type OtpSender } from './application/otp-
 import { ReleansOtpSender } from './application/releans-otp-sender.js';
 import { ReleansClient } from '../../platform/sms/releans.js';
 import { StaffSetupService } from './application/staff-setup.service.js';
+import { TeamService } from './application/team.service.js';
 import { UsersService } from './application/users.service.js';
 import { AdminAuthController } from './http/admin-auth.controller.js';
+import { AdminTeamController } from './http/admin-team.controller.js';
 import { AdminUsersController } from './http/admin-users.controller.js';
 import { DevOtpController } from './http/dev-otp.controller.js';
 
@@ -22,6 +24,7 @@ export class IdentityModule {
       providers: [
         AuthService,
         StaffSetupService,
+        TeamService,
         UsersService,
         {
           provide: OTP_SENDER,
@@ -33,6 +36,7 @@ export class IdentityModule {
       controllers: [
         AdminAuthController,
         AdminUsersController,
+        AdminTeamController,
         ...(devOnly ? [DevOtpController] : []),
       ],
       exports: [AuthService, StaffSetupService, UsersService],
