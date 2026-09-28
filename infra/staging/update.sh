@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Pulls the staging branch and redeploys when it changed (systemd timer, every 5 minutes).
+# Pulls the deploy branch and redeploys when it changed (systemd timer, every 5 minutes).
+# Staging follows the staging branch (every push). A production server sets
+# DEPLOY_BRANCH=production in /opt/jordan-sports/deploy.env, so it only changes when the owner
+# deliberately moves that branch (docs/releases.md).
 set -euo pipefail
 APP=/opt/jordan-sports/app
-BRANCH=${BRANCH:-claude/inspect-repo-environment-c0iptd}
+# shellcheck disable=SC1091
+[ -f /opt/jordan-sports/deploy.env ] && . /opt/jordan-sports/deploy.env
+BRANCH=${DEPLOY_BRANCH:-${BRANCH:-claude/inspect-repo-environment-c0iptd}}
 exec 9>/tmp/jordan-sports-update.lock
 flock -n 9 || exit 0
 cd "$APP"

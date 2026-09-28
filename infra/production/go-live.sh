@@ -54,6 +54,8 @@ say "Prerequisites"
 [ -n "$(get_env "$BASE/releans.env" RELEANS_API_KEY)" ] || die "RELEANS_API_KEY is empty in releans.env"
 grep -q '^WEB_HOST=' "$APP/infra/staging/domain.env" || die "the real domain is not switched on in infra/staging/domain.env (docs/domain.md)"
 [ -n "$phone" ] || die "give a phone you can read: --test-phone +9627XXXXXXXX"
+git -C "$APP" fetch -q origin production 2>/dev/null ||
+  die "there is no 'production' branch yet; create it first (docs/releases.md)"
 
 say "1/6 Backup first (a safety net before anything is deleted)"
 "$APP/infra/backup/backup.sh"
@@ -79,6 +81,9 @@ set_env "$ENVF" RELEANS_SENDER_ID "$(get_env "$BASE/releans.env" RELEANS_SENDER_
 [ -n "$(get_env "$ENVF" RELEANS_SENDER_ID)" ] || del_env "$ENVF" RELEANS_SENDER_ID
 # The staging staff login is not kept in the environment of every container.
 for k in ADMIN_EMAIL ADMIN_PASSWORD ADMIN_TOTP_SECRET; do del_env "$ENVF" "$k"; done
+
+# From now on this server only follows the branch the owner moves on purpose (docs/releases.md).
+echo "DEPLOY_BRANCH=production" > "$BASE/deploy.env"
 
 say "5/6 Restart in production mode"
 docker compose up -d --force-recreate
