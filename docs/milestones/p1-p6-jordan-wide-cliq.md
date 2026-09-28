@@ -193,10 +193,21 @@ fixed in order, one commit per item, pushed to both `claude/dazzling-feynman-iry
      full register → submit → admin-approve flow (written, run, and removed — not part of the
      committed suite).
 
-Remaining items from the list (in order): free-cancellation deadline display, header logo on hero
-pages, hero art layering, per-sport venue illustrations, "(تجريبي)" on all demo venues, PWA
-install-prompt timing, public footer, owner-dashboard tabs hidden pre-approval, performance/
-Lighthouse pass, Arabic map labels, and an in-page cancel-booking confirmation dialog. Cancelling
-the owner's test booking `LULBBS94` on staging is blocked: the staging URL isn't discoverable
-anywhere in this repo or the session environment — needs the owner to share it or cancel it
-themselves.
+Items 2–9 from the list are fixed (free-cancellation deadline display, header logo on hero pages,
+hero art layering, per-sport venue illustrations, "(تجريبي)" on all demo venues, PWA install-prompt
+timing, public footer, owner-dashboard tabs hidden pre-approval) — see the commit log on
+`claude/dazzling-feynman-iryb1r` for one commit per item.
+
+**Item 12 (cancel-booking confirmation) needed no code change**: both the player's cancel button
+(`booking-view.tsx`) and the owner's (`bookings-panel.tsx`) already show an in-page two-step
+confirmation (a "بدك تلغي؟" card with confirm/keep buttons, or a reason field + confirm button) —
+never `window.confirm`. Verified against the existing e2e coverage in `bookings.spec.ts`, which
+already drives that exact flow (`Cancel booking` → `Yes, cancel`).
+
+Remaining: performance/Lighthouse pass (item 10) and Arabic map labels (item 11). Cancelling the
+owner's test booking `LULBBS94` on staging is blocked: the staging URL isn't discoverable anywhere
+in this repo or the session environment — needs the owner to share it or cancel it themselves.
+Similarly, items 5 and 6 (demo venue photos and the "(تجريبي)" name suffix) only take effect for
+*newly seeded* venues — staging's existing demo venues won't self-correct from a code push alone,
+since `seed:demo` skips venues that already exist; fixing the already-seeded ones needs either a
+reseed or a direct data fix on staging.
