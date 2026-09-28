@@ -60,6 +60,16 @@ export function bookingQuery(db: DbOrTx) {
       'u.locale as user_locale',
       'vc.name as vc_name',
       'vc.phone as vc_phone',
+      (eb) =>
+        eb
+          .selectFrom('resource.resource_formats as rf')
+          .innerJoin('catalog.sport_formats as sf', 'sf.id', 'rf.sport_format_id')
+          .innerJoin('catalog.sports as s', 's.id', 'sf.sport_id')
+          .select('s.icon')
+          .whereRef('rf.resource_id', '=', 'r.id')
+          .orderBy('s.sort_order')
+          .limit(1)
+          .as('resource_icon'),
     ]);
 }
 
@@ -89,7 +99,7 @@ export function toBooking(r: LoadedBooking): Booking {
           ? { lat: Number(r.venue_lat), lng: Number(r.venue_lng) }
           : null,
     },
-    resource: { id: r.resource_id, name: r.resource_name as Localized },
+    resource: { id: r.resource_id, name: r.resource_name as Localized, icon: r.resource_icon },
     start: start.toISOString(),
     end: end.toISOString(),
     businessDate: r.business_date,

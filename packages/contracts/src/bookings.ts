@@ -37,7 +37,12 @@ export const bookingSchema = z.object({
     address: localizedSchema,
     location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   }),
-  resource: z.object({ id: uuidSchema, name: localizedSchema }),
+  resource: z.object({
+    id: uuidSchema,
+    name: localizedSchema,
+    /** Icon key of the resource's sport (catalog data), so booking art can match the sport. */
+    icon: z.string().nullable(),
+  }),
   start: z.string(),
   end: z.string(),
   /** Business date and venue-local times (clients never convert venue times). */

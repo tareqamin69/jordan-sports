@@ -213,7 +213,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
 
       <article className="overflow-hidden rounded-card border border-line bg-surface">
         <div className="relative h-28 bg-night">
-          <CourtArt className="absolute inset-0 opacity-90" />
+          <CourtArt icon={b.resource.icon ?? undefined} className="absolute inset-0 opacity-90" />
           <div
             aria-hidden
             className="absolute inset-0 bg-gradient-to-b from-night/10 to-night/80"
