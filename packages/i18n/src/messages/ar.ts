@@ -336,6 +336,7 @@ export const ar = {
         today: 'اليوم',
         bookings: 'الحجوزات',
         settings: 'الإعدادات',
+        status: 'حالة التسجيل',
       },
       open: 'افتح اللوحة',
       notPublic: 'لسا مش منشور',

@@ -337,6 +337,7 @@ export const en = {
         today: 'Today',
         bookings: 'Bookings',
         settings: 'Settings',
+        status: 'Registration status',
       },
       open: 'Open dashboard',
       notPublic: 'Not public yet',

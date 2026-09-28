@@ -28,29 +28,45 @@ export function VenueNav() {
   const venueId = matched ?? single;
   const base = venueId ? `/manage/${venueId}` : '/manage';
   const tab = matched ? (searchParams.get('tab') ?? 'calendar') : null;
+  const currentVenue = venues.data?.items.find((v) => v.id === venueId);
+  // Calendar/bookings/hours only make sense once the venue is public: before that, replace them
+  // with a single "status" item pointing at the dashboard, which explains where things stand.
+  const notApprovedYet = currentVenue !== undefined && currentVenue.status !== 'approved';
 
   const items = [
-    {
-      key: 'today',
-      href: base,
-      icon: 'home',
-      label: t('today'),
-      active: matched !== undefined && tab === 'calendar',
-    },
-    {
-      key: 'bookings',
-      href: { pathname: base, query: { tab: 'bookings' } },
-      icon: 'calendar',
-      label: t('bookings'),
-      active: tab === 'bookings',
-    },
-    {
-      key: 'settings',
-      href: { pathname: base, query: { tab: 'hours' } },
-      icon: 'sliders',
-      label: t('settings'),
-      active: tab !== null && tab !== 'calendar' && tab !== 'bookings',
-    },
+    ...(notApprovedYet
+      ? ([
+          {
+            key: 'status',
+            href: base,
+            icon: 'clock',
+            label: t('status'),
+            active: matched !== undefined,
+          },
+        ] as const)
+      : ([
+          {
+            key: 'today',
+            href: base,
+            icon: 'home',
+            label: t('today'),
+            active: matched !== undefined && tab === 'calendar',
+          },
+          {
+            key: 'bookings',
+            href: { pathname: base, query: { tab: 'bookings' } },
+            icon: 'calendar',
+            label: t('bookings'),
+            active: tab === 'bookings',
+          },
+          {
+            key: 'settings',
+            href: { pathname: base, query: { tab: 'hours' } },
+            icon: 'sliders',
+            label: t('settings'),
+            active: tab !== null && tab !== 'calendar' && tab !== 'bookings',
+          },
+        ] as const)),
     {
       key: 'account',
       href: '/account',
