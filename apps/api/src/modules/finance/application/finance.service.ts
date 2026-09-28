@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Balance } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
-import { APP_CONFIG } from '../../../platform/config/config.module.js';
-import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { bypassTenant, setTenant } from '../../../platform/database/tenant.js';
@@ -17,6 +15,7 @@ import {
   REFUND_OVERDUE_HOURS,
 } from '../domain/finance-rules.js';
 import { postEntry } from './ledger.js';
+import { SettingsService } from '../../settings/index.js';
 
 const HISTORY_SHOWN = 50;
 
@@ -25,7 +24,7 @@ const HISTORY_SHOWN = 50;
 export class FinanceService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    @Inject(APP_CONFIG) private readonly config: AppConfig,
+    private readonly settings: SettingsService,
     private readonly access: VenueAccessService,
     private readonly audit: AuditService,
   ) {}
@@ -100,7 +99,7 @@ export class FinanceService {
       return this.view(
         tx,
         venue.organizationId,
-        this.config.features.cliqPayments && venue.cliqAlias !== null,
+        (await this.settings.cliqPayments()) && venue.cliqAlias !== null,
       );
     });
   }

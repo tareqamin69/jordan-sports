@@ -64,6 +64,8 @@ export const catalogSchema = z.object({
     /** CliQ-to-venue payments and the commission balance (ADR-0018); off while a card gateway is planned. */
     cliqPayments: z.boolean(),
   }),
+  /** Platform support contact (owner settings); null when not set. */
+  support: z.object({ whatsapp: z.string().nullable() }),
 });
 export type Catalog = z.infer<typeof catalogSchema>;
 

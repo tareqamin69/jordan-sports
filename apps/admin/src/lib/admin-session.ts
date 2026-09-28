@@ -1,6 +1,6 @@
 'use client';
 
-import { getAdminMe } from '@jordan-sports/contracts';
+import { getAdminMe, type PlatformPermission } from '@jordan-sports/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { isApiError, useApi } from './api';
 
@@ -17,4 +17,11 @@ export function useAdminMe() {
       }
     },
   });
+}
+
+/** Whether the signed-in staff member has a permission (the API enforces it; this only hides UI). */
+export function useCan(): (permission: PlatformPermission) => boolean {
+  const me = useAdminMe();
+  const permissions = me.data?.permissions ?? [];
+  return (permission) => permissions.includes(permission);
 }

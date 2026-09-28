@@ -2,11 +2,16 @@ import type { Locale } from '@jordan-sports/i18n';
 import { Alert, Card, Ltr, PageHeader, buttonClass } from '@jordan-sports/ui';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getCatalog } from '@jordan-sports/contracts';
 import { Icon } from '@/components/icons';
+import { serverApi } from '@/lib/server-api';
 
 type Props = { params: Promise<{ locale: Locale }> };
 
-/** Placeholder until a real support line is confirmed (see SUPPORT_WHATSAPP in .env.example). */
+/**
+ * Placeholder until the owner sets the support WhatsApp in the admin settings (or the server sets
+ * SUPPORT_WHATSAPP, see .env.example).
+ */
 const DEFAULT_SUPPORT_WHATSAPP = '+962700000000';
 const SUPPORT_EMAIL = 'support@jorena.app';
 
@@ -31,15 +36,22 @@ export default async function ContactPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('web.contact');
-  const whatsapp = process.env.SUPPORT_WHATSAPP ?? DEFAULT_SUPPORT_WHATSAPP;
+  const configured =
+    (await serverApi(getCatalog).then(
+      (c) => c.support.whatsapp,
+      () => null,
+    )) ?? process.env.SUPPORT_WHATSAPP;
+  const whatsapp = configured ?? DEFAULT_SUPPORT_WHATSAPP;
   const waDigits = whatsapp.replace(/[^0-9]/g, '');
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <PageHeader title={t('title')} description={t('description')} />
-      <Alert tone="warning" className="mb-6">
-        {t('placeholderNotice')}
-      </Alert>
+      {configured ? null : (
+        <Alert tone="warning" className="mb-6">
+          {t('placeholderNotice')}
+        </Alert>
+      )}
       <Card className="flex flex-col gap-5">
         <div className="flex items-center gap-4">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">

@@ -12,3 +12,4 @@ export * from './pricing.js';
 export * from './bookings.js';
 export * from './finance.js';
 export * from './permissions.js';
+export * from './settings.js';

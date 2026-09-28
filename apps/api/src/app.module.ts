@@ -8,6 +8,7 @@ import { DirectoryModule } from './modules/directory/index.js';
 import { FinanceModule } from './modules/finance/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { RequestAuditInterceptor } from './modules/audit/http/request-audit.interceptor.js';
+import { SettingsModule } from './modules/settings/index.js';
 import { NotificationsModule } from './modules/notifications/index.js';
 import { PricingModule } from './modules/pricing/index.js';
 import { ResourcesModule } from './modules/resources/index.js';
@@ -43,6 +44,7 @@ export class AppModule {
         RedisModule,
         HealthModule,
         AuditModule,
+        SettingsModule,
         IdentityModule.forRoot(config),
         TenancyModule,
         AccountModule,

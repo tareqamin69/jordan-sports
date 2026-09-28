@@ -13,6 +13,7 @@ import { ADMIN_SESSION_COOKIE, WEB_SESSION_COOKIE } from './cookies.js';
 import { AUTH_REQUIREMENT, type AuthRequirement } from './decorators.js';
 import { endpointFor } from './endpoint-registry.js';
 import { TenantResolver } from './tenant-resolver.js';
+import { SettingsService } from '../../modules/settings/index.js';
 
 /**
  * Global authentication guard. Routes are private by default: without a decorator a signed-in
@@ -24,6 +25,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly auth: AuthService,
     private readonly tenants: TenantResolver,
+    private readonly settings: SettingsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,9 +33,16 @@ export class AuthGuard implements CanActivate {
       AUTH_REQUIREMENT,
       [context.getHandler(), context.getClass()],
     ) ?? { kind: 'user' };
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
+    // Optional owner setting: the whole admin API (sign-in included) only from listed addresses.
+    if (
+      request.routeOptions.url?.startsWith('/v1/admin/') &&
+      !(await this.settings.adminIpAllowed(request.ip || null))
+    ) {
+      throw new AppError('IP_NOT_ALLOWED', 403);
+    }
     if (requirement.kind === 'public') return true;
 
-    const request = context.switchToHttp().getRequest<FastifyRequest>();
     const contract = endpointFor(request.method, request.routeOptions.url);
     if (requirement.kind === 'admin') {
       // The contract is the source of permissions (docs/rbac-plan.md); the decorator's permission

@@ -365,6 +365,16 @@ export interface PlatformOutboxEvents {
   type: string;
 }
 
+export interface PlatformSettings {
+  admin_ip_allowlist: Generated<string[]>;
+  commission_bps: Generated<number>;
+  features: Generated<Json>;
+  id: Generated<boolean>;
+  support_whatsapp: string | null;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+}
+
 export interface PricingPriceRuleAmounts {
   amount: Int8;
   duration_minutes: number;
@@ -538,7 +548,7 @@ export interface VenueVenues {
   cliq_alias: string | null;
   cliq_alias_holder: string | null;
   closed_on_public_holidays: Generated<boolean>;
-  commission_bps: Generated<number>;
+  commission_bps: number | null;
   contact_phone: string | null;
   created_at: Generated<Timestamp>;
   currency: Generated<string>;
@@ -586,6 +596,7 @@ export interface DB {
   'payment.payments': PaymentPayments;
   'platform.idempotency_keys': PlatformIdempotencyKeys;
   'platform.outbox_events': PlatformOutboxEvents;
+  'platform.settings': PlatformSettings;
   'pricing.price_rule_amounts': PricingPriceRuleAmounts;
   'pricing.price_rules': PricingPriceRules;
   'resource.booking_policies': ResourceBookingPolicies;

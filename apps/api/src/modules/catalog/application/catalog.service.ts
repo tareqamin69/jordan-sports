@@ -2,8 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { attributeFieldSchema, type AttributeField, type Catalog } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import { z } from 'zod';
-import { APP_CONFIG } from '../../../platform/config/config.module.js';
-import type { AppConfig } from '../../../platform/config/config.js';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
@@ -14,6 +12,7 @@ import {
   type AttributeValues,
   type Feature,
 } from '../domain/attributes.js';
+import { SettingsService } from '../../settings/index.js';
 
 type Localized = { ar?: string; en?: string };
 const fieldsSchema = z.object({ fields: z.array(attributeFieldSchema) });
@@ -22,15 +21,25 @@ const KEY_PATTERN = /^[a-z0-9_]+$/;
 
 @Injectable()
 export class CatalogService {
-  private cached?: { at: number; value: Catalog };
+  private cached?: { at: number; value: Omit<Catalog, 'features' | 'support'> };
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    @Inject(APP_CONFIG) private readonly config: AppConfig,
+    private readonly settings: SettingsService,
   ) {}
 
   /** Reference data changes rarely; cached briefly in memory. */
   async get(): Promise<Catalog> {
+    // Owner settings have their own short cache, so a switched flag shows up within seconds.
+    const [base, cliqPayments, whatsapp] = await Promise.all([
+      this.reference(),
+      this.settings.cliqPayments(),
+      this.settings.supportWhatsapp(),
+    ]);
+    return { ...base, features: { cliqPayments }, support: { whatsapp } };
+  }
+
+  private async reference(): Promise<Omit<Catalog, 'features' | 'support'>> {
     if (this.cached && Date.now() - this.cached.at < CACHE_MS) return this.cached.value;
     const [sports, formats, types, typeFormats, amenities, governorates, areas, offered] =
       await Promise.all([
@@ -78,7 +87,7 @@ export class CatalogService {
           .distinct()
           .execute(),
       ]);
-    const value: Catalog = {
+    const value: Omit<Catalog, 'features' | 'support'> = {
       sports: sports.map((s) => ({
         id: s.id,
         key: s.key,
@@ -115,7 +124,6 @@ export class CatalogService {
           .map((a) => ({ id: a.id, key: a.key, name: a.name as Localized })),
       })),
       offeredSportIds: [...new Set(offered.map((o) => o.sport_id))],
-      features: { cliqPayments: this.config.features.cliqPayments },
     };
     this.cached = { at: Date.now(), value };
     return value;

@@ -4,6 +4,7 @@ import { platformRoleSchema } from '@jordan-sports/contracts';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
 import { AuthService } from '../modules/identity/index.js';
+import { SettingsService } from '../modules/settings/index.js';
 import { loadDotEnv, parseConfig } from '../platform/config/config.js';
 import { DATABASE } from '../platform/database/database.module.js';
 import type { Db } from '../platform/database/database.js';
@@ -14,6 +15,7 @@ import { otpauthUri } from '../platform/security/totp.js';
  * owner-setup-link.js). There is no self-signup for staff.
  *
  *   ADMIN_PASSWORD='…' node dist/cli/admin.js create --email a@b.jo --name "Name" [--role admin]
+ *   node dist/cli/admin.js clear-ip-allowlist   (recovery from an admin IP allowlist lockout)
  *
  * Prints the authenticator (TOTP) secret once; it cannot be retrieved later.
  */
@@ -29,6 +31,21 @@ async function main(): Promise<number> {
       'if-missing': { type: 'boolean', default: false },
     },
   });
+  if (positionals[0] === 'clear-ip-allowlist') {
+    // Recovery when the admin IP allowlist locks everyone out (docs/rbac-plan.md §7).
+    loadDotEnv();
+    const config = parseConfig(process.env);
+    const app = await NestFactory.createApplicationContext(AppModule.forRoot(config), {
+      logger: false,
+    });
+    try {
+      await app.get(SettingsService).clearAdminIpAllowlist();
+      console.log('Admin IP allowlist cleared: the admin panel accepts every address again.');
+      return 0;
+    } finally {
+      await app.close();
+    }
+  }
   const password = process.env.ADMIN_PASSWORD;
   if (positionals[0] !== 'create' || !values.email || !values.name || !password) {
     console.error(

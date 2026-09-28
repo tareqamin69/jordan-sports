@@ -1,6 +1,6 @@
 'use client';
 
-import { adminSignOut } from '@jordan-sports/contracts';
+import { adminSignOut, type PlatformPermission } from '@jordan-sports/contracts';
 import { Alert, Button, Spinner, cx } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
@@ -11,16 +11,22 @@ import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { ReauthDialog } from './reauth-dialog';
 
-const sections = [
-  { href: '/', key: 'dashboard' },
-  { href: '/venues', key: 'venues' },
-  { href: '/organizations', key: 'organizations' },
-  { href: '/users', key: 'users' },
-  { href: '/geography', key: 'geography' },
-  { href: '/holidays', key: 'holidays' },
-  { href: '/bookings', key: 'bookings' },
-  { href: '/audit', key: 'audit' },
-] as const;
+/** Each role sees only the sections it can use (the API enforces the same permissions). */
+const sections: ReadonlyArray<{
+  href: string;
+  key: string;
+  permission: PlatformPermission | null;
+}> = [
+  { href: '/', key: 'dashboard', permission: null },
+  { href: '/venues', key: 'venues', permission: 'venues.read' },
+  { href: '/organizations', key: 'organizations', permission: 'organizations.read' },
+  { href: '/users', key: 'users', permission: 'users.read' },
+  { href: '/bookings', key: 'bookings', permission: 'bookings.read' },
+  { href: '/geography', key: 'geography', permission: 'catalog.manage' },
+  { href: '/holidays', key: 'holidays', permission: 'catalog.manage' },
+  { href: '/settings', key: 'settings', permission: 'settings.read' },
+  { href: '/audit', key: 'audit', permission: 'audit.read' },
+];
 
 /** Requires an admin session; otherwise sends the user to the staff sign-in page. */
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -52,6 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
+  const permissions = me.data.permissions;
   const signOut = async () => {
     await api(adminSignOut).catch(() => undefined);
     queryClient.clear();
@@ -62,23 +69,25 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-5 py-8 sm:px-8 md:flex-row">
       <nav aria-label={t('label')} className="md:w-56 md:shrink-0">
         <ul className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto px-5 md:sticky md:top-24 md:mx-0 md:flex-col md:px-0">
-          {sections.map((s) => {
-            const active = s.href === '/' ? pathname === '/' : pathname.startsWith(s.href);
-            return (
-              <li key={s.key}>
-                <Link
-                  href={s.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cx(
-                    'flex min-h-10 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors duration-200',
-                    active ? 'bg-night text-canvas' : 'text-ink hover:bg-canvas-deep',
-                  )}
-                >
-                  {t(s.key)}
-                </Link>
-              </li>
-            );
-          })}
+          {sections
+            .filter((s) => s.permission === null || permissions.includes(s.permission))
+            .map((s) => {
+              const active = s.href === '/' ? pathname === '/' : pathname.startsWith(s.href);
+              return (
+                <li key={s.key}>
+                  <Link
+                    href={s.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cx(
+                      'flex min-h-10 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors duration-200',
+                      active ? 'bg-night text-canvas' : 'text-ink hover:bg-canvas-deep',
+                    )}
+                  >
+                    {t(s.key as Parameters<typeof t>[0])}
+                  </Link>
+                </li>
+              );
+            })}
           <li className="md:mt-4">
             <Button variant="ghost" size="sm" onClick={signOut} data-testid="admin-sign-out">
               {tc('actions.signOut')}

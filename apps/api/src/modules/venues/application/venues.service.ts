@@ -85,7 +85,10 @@ export class VenuesService {
         'cliq_alias',
         'cliq_alias_holder',
         'deposit_percentage',
-        'commission_bps',
+        // A venue's own rate, else the platform default (Settings).
+        sql<number>`coalesce(commission_bps, (SELECT s.commission_bps FROM platform.settings s))`.as(
+          'commission_bps',
+        ),
         'payment_hold_minutes',
         'whatsapp_phone',
         'status_reason',
