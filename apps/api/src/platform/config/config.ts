@@ -37,7 +37,17 @@ const envSchema = z.object({
   WEB_ORIGINS: origins.default(['http://localhost:3000', 'http://127.0.0.1:3000']),
   ADMIN_ORIGINS: origins.default(['http://localhost:3001', 'http://127.0.0.1:3001']),
   COOKIE_SECURE: booleanString.optional(),
-  OTP_CHANNEL: z.enum(['console']).default('console'),
+  // console: development/staging only (codes are logged / shown). releans: real SMS (ADR-0019).
+  OTP_CHANNEL: z.enum(['console', 'releans']).default('console'),
+  // Releans SMS gateway; required when OTP_CHANNEL=releans. The sender ID must be approved by
+  // the Jordanian operators through Releans before messages are delivered.
+  RELEANS_API_KEY: z.string().trim().min(8).optional(),
+  RELEANS_SENDER_ID: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9]{3,11}$/, 'must be 3-11 letters or digits')
+    .default('Jorena'),
+  RELEANS_BASE_URL: z.string().url().default('https://api.releans.com/v2'),
   MEDIA_DIR: z.string().min(1).default('.data/media'),
   LOG_LEVEL: z.enum(logLevels).default('info'),
   // Test-only: multiplies every rate limit (all end-to-end traffic comes from one IP).
@@ -76,7 +86,13 @@ export interface AppConfig {
   readonly webOrigins: readonly string[];
   readonly adminOrigins: readonly string[];
   readonly cookieSecure: boolean;
-  readonly otpChannel: 'console';
+  readonly otpChannel: 'console' | 'releans';
+  /** Set when OTP_CHANNEL=releans; also used for booking notifications. */
+  readonly releans: {
+    readonly apiKey: string;
+    readonly senderId: string;
+    readonly baseUrl: string;
+  } | null;
   readonly mediaDir: string;
   readonly logLevel: (typeof logLevels)[number];
   /** Multiplier for rate limits; must be 1 in production. */
@@ -104,6 +120,11 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     throw new ConfigError(`Invalid configuration: ${issues}`);
   }
   const e = result.data;
+  if (e.OTP_CHANNEL === 'releans' && !e.RELEANS_API_KEY) {
+    throw new ConfigError(
+      'Invalid configuration: RELEANS_API_KEY: required when OTP_CHANNEL=releans',
+    );
+  }
   const config: AppConfig = {
     nodeEnv: e.NODE_ENV,
     host: e.API_HOST,
@@ -118,6 +139,10 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     adminOrigins: e.ADMIN_ORIGINS,
     cookieSecure: e.COOKIE_SECURE ?? e.NODE_ENV === 'production',
     otpChannel: e.OTP_CHANNEL,
+    releans:
+      e.OTP_CHANNEL === 'releans' && e.RELEANS_API_KEY
+        ? { apiKey: e.RELEANS_API_KEY, senderId: e.RELEANS_SENDER_ID, baseUrl: e.RELEANS_BASE_URL }
+        : null,
     mediaDir: e.MEDIA_DIR,
     logLevel: e.LOG_LEVEL,
     rateLimitScale: e.RATE_LIMIT_SCALE,

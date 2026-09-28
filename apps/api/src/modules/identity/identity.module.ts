@@ -1,7 +1,9 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import type { AppConfig } from '../../platform/config/config.js';
 import { AuthService } from './application/auth.service.js';
-import { ConsoleOtpSender, OTP_SENDER } from './application/otp-sender.js';
+import { ConsoleOtpSender, OTP_SENDER, type OtpSender } from './application/otp-sender.js';
+import { ReleansOtpSender } from './application/releans-otp-sender.js';
+import { ReleansClient } from '../../platform/sms/releans.js';
 import { UsersService } from './application/users.service.js';
 import { AdminAuthController } from './http/admin-auth.controller.js';
 import { AdminUsersController } from './http/admin-users.controller.js';
@@ -19,8 +21,12 @@ export class IdentityModule {
       providers: [
         AuthService,
         UsersService,
-        // Only the development console channel exists until an SMS/WhatsApp provider is chosen.
-        { provide: OTP_SENDER, useValue: new ConsoleOtpSender() },
+        {
+          provide: OTP_SENDER,
+          useValue: (config.releans
+            ? new ReleansOtpSender(new ReleansClient(config.releans))
+            : new ConsoleOtpSender()) satisfies OtpSender,
+        },
       ],
       controllers: [
         AdminAuthController,

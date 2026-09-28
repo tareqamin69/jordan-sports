@@ -27,6 +27,7 @@ describe('parseConfig', () => {
       adminOrigins: ['http://localhost:3001', 'http://127.0.0.1:3001'],
       cookieSecure: false,
       otpChannel: 'console',
+      releans: null,
       mediaDir: '.data/media',
       logLevel: 'info',
       rateLimitScale: 1,
@@ -80,6 +81,25 @@ describe('production safety', () => {
   it('refuses insecure cookies and http origins in production', () => {
     expect(() => parseConfig({ ...production, COOKIE_SECURE: 'false' })).toThrow(/COOKIE_SECURE/);
     expect(() => parseConfig({ ...production, WEB_ORIGINS: 'http://example.jo' })).toThrow(/https/);
+  });
+
+  it('accepts Releans in production and requires its key', () => {
+    const releans = { ...production, OTP_CHANNEL: 'releans' };
+    expect(() => parseConfig(releans)).toThrow(/RELEANS_API_KEY/);
+    const config = parseConfig({ ...releans, RELEANS_API_KEY: 'key-12345678' });
+    expect(config.releans).toEqual({
+      apiKey: 'key-12345678',
+      senderId: 'Jorena',
+      baseUrl: 'https://api.releans.com/v2',
+    });
+    expect(() =>
+      parseConfig({
+        ...releans,
+        RELEANS_API_KEY: 'key-12345678',
+        RELEANS_SENDER_ID: 'Too Long Sender',
+      }),
+    ).toThrow(/RELEANS_SENDER_ID/);
+    expect(parseConfig({ ...base, RELEANS_API_KEY: 'key-12345678' }).releans).toBeNull();
   });
 
   it('allows the console OTP channel on staging only', () => {

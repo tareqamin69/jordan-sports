@@ -105,7 +105,12 @@ export class AuthService {
         expires_at: new Date(Date.now() + OTP_TTL_SECONDS * 1000),
       })
       .execute();
-    await this.otpSender.send(phone, code, locale);
+    try {
+      await this.otpSender.send(phone, code, locale);
+    } catch {
+      // The provider already logged why (never the code). The player can ask for a new code.
+      throw new AppError('SERVICE_UNAVAILABLE', 503);
+    }
     return { phone, expiresInSeconds: OTP_TTL_SECONDS };
   }
 

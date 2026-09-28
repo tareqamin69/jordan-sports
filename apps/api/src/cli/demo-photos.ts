@@ -83,7 +83,8 @@ function clay(): string {
 function pool(): string {
   const lanes = Array.from(
     { length: 6 },
-    (_, i) => `<line x1="${260 + i * 180}" y1="150" x2="${260 + i * 180}" y2="850" stroke="#f4f8f2" stroke-width="6" stroke-dasharray="26 20" opacity="0.85"/>`,
+    (_, i) =>
+      `<line x1="${260 + i * 180}" y1="150" x2="${260 + i * 180}" y2="850" stroke="#f4f8f2" stroke-width="6" stroke-dasharray="26 20" opacity="0.85"/>`,
   ).join('');
   return `
     <rect width="${W}" height="${H}" fill="#0b1c26"/>
@@ -98,7 +99,13 @@ function pool(): string {
 export function demoPhotoSvg(kind: Kind, variant: Variant): string {
   const night = variant === 'night';
   const body =
-    kind === 'grass' ? grass(night) : kind === 'glass' ? glass() : kind === 'clay' ? clay() : pool();
+    kind === 'grass'
+      ? grass(night)
+      : kind === 'glass'
+        ? glass()
+        : kind === 'clay'
+          ? clay()
+          : pool();
   const transform =
     variant === 'angle' ? 'translate(260 120) scale(0.78 0.62) skewX(-14) translate(-80 180)' : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
