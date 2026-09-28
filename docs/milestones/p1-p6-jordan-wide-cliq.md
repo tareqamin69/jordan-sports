@@ -109,3 +109,36 @@ simpler).
   for a real photo when the owner provides one.
 - Verification: lint, typecheck, `check:repo`, unit, integration 79/79, Playwright e2e 68/68
   (mobile + desktop, incl. axe AA checks).
+
+## Post-Clubhouse polish (2026-09-28)
+
+Owner feedback from the redesign, all fixed:
+
+1. **Sport icons**: volleyball redrawn (was too close to basketball's cross-seam look); futsal got
+   its own icon instead of reusing football's exact one (migration 0012).
+2. **Venue map**: replaced the openstreetmap.org iframe (rendered as an empty grey box in
+   practice) with a real MapLibre GL map — OSM raster tiles, no API key, a pin, zoom controls.
+3–4. **Checkout**: added a back button; found and fixed why the floating bottom nav rendered
+   pinned to the *top* of every non-overlay page instead of the bottom (the sticky header's
+   `backdrop-blur-md` made it the CSS containing block for the nav's `fixed` positioning on
+   mobile — moved the frosted background to a `::before` layer). Also dropped the entrance
+   animation on the checkout wrapper (same containing-block issue) and added a layout spacer so
+   the "release this time" link can't slide under the now-correctly-fixed confirm bar. Net effect:
+   home/venue pages were never affected by the nav bug; checkout/confirmation lost their extra
+   defensive bottom padding along with it.
+5. Swept the whole app for other empty/placeholder boxes; the map was the only one.
+6. **Renamed the platform to Jorena / جورينا.** New `packages/brand` (`BRAND_NAME`,
+   `BRAND_NAME_LATIN`) is the single source every surface reads from: UI copy, notification
+   templates, OpenAPI title, the admin TOTP issuer, the `.ics` PRODID, the PWA manifest.
+7. **Web is now an installable PWA**: icons (192/512/maskable + apple-touch), `app/manifest.ts`
+   (standalone, Arabic/RTL `start_url`), a service worker (installability + fast static-asset
+   reloads + an offline fallback screen — deliberately never caches pages/API responses), and a
+   real install prompt (`beforeinstallprompt` on Android/Chrome, an instructional hint on iOS
+   Safari). Surfaced and fixed a real, pre-existing a11y bug along the way: the overlay header's
+   language-switcher chip didn't reliably meet color-contrast over the hero photo's lighter
+   regions.
+
+Verification after every step: lint, typecheck, `check:repo`, unit (90/90), integration (79/79),
+full Playwright e2e (68/68, mobile + desktop, axe AA). Each item landed as its own commit, pushed
+to both `claude/dazzling-feynman-iryb1r` and the staging branch
+`claude/inspect-repo-environment-c0iptd` (staging auto-deploys from the latter every 5 minutes).
