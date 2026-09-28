@@ -38,6 +38,7 @@ test.describe('bookings', () => {
     await page.locator('input[name="displayName"]').fill('Lina');
     await page.locator('input[name="ageConfirmed"]').check();
     await page.locator('form button[type="submit"]').click();
+    await page.getByTestId('mode-player').click();
     await expect(page).toHaveURL(new RegExp(`/en/venues/${venue.slug}$`));
 
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();

@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { InstallPrompt } from '@/components/install-prompt';
 import { Providers } from '@/components/providers';
 import { PwaRegister } from '@/components/pwa-register';
@@ -58,7 +58,11 @@ export default async function LocaleLayout({ children, params }: Props) {
         <NextIntlClientProvider>
           <Providers>
             <PwaRegister />
-            <SiteHeader />
+            {/* SiteHeader reads the URL's ?tab= (venue mode) via useSearchParams, which Next
+                requires a Suspense boundary for during static prerendering. */}
+            <Suspense fallback={null}>
+              <SiteHeader />
+            </Suspense>
             {children}
             <InstallPrompt />
           </Providers>

@@ -13,7 +13,13 @@ async function session(phone, name) {
   const v = await (await api.post('/v1/auth/otp/verify', { data: { phone, code } })).json();
   if (v.status !== 'signed_in')
     await api.post('/v1/auth/signup', {
-      data: { signupToken: v.signupToken, displayName: name, locale: 'ar', ageConfirmed: true },
+      data: {
+        signupToken: v.signupToken,
+        displayName: name,
+        locale: 'ar',
+        ageConfirmed: true,
+        preferredMode: 'player',
+      },
     });
   return api.storageState();
 }

@@ -21,6 +21,7 @@ export class AccountService {
       email: user.email,
       displayName: user.display_name,
       locale: user.locale as Me['locale'],
+      preferredMode: user.preferred_mode as Me['preferredMode'],
       memberships: await this.memberships.forUser(user.id),
     };
   }

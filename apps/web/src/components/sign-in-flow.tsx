@@ -1,6 +1,11 @@
 'use client';
 
-import { completeSignup, requestOtp, verifyOtp } from '@jordan-sports/contracts';
+import {
+  completeSignup,
+  requestOtp,
+  verifyOtp,
+  type PreferredMode,
+} from '@jordan-sports/contracts';
 import { Alert, Button, Card, CheckboxField, Ltr, TextField } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
@@ -9,13 +14,17 @@ import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { HeroArt } from './court-art';
+import { Icon } from './icons';
 
 type Step =
-  { name: 'phone' } | { name: 'code'; phone: string } | { name: 'profile'; signupToken: string };
+  | { name: 'phone' }
+  | { name: 'code'; phone: string }
+  | { name: 'profile'; signupToken: string }
+  | { name: 'mode'; signupToken: string };
 
 /** Only same-site paths are accepted as a return address (no open redirects). */
-function safeNext(next: string | undefined): string {
-  return next && /^\/(?![/\\])[\w\-/?=&%.]*$/.test(next) ? next : '/account';
+function safeNext(next: string | undefined, fallback: string): string {
+  return next && /^\/(?![/\\])[\w\-/?=&%.]*$/.test(next) ? next : fallback;
 }
 
 export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: string | undefined }) {
@@ -49,9 +58,9 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
     }
   }
 
-  async function finish() {
+  async function finish(fallback: string) {
     await queryClient.invalidateQueries({ queryKey: ['me'] });
-    router.replace(safeNext(next));
+    router.replace(safeNext(next, fallback));
   }
 
   const sendCode = (e?: FormEvent) => {
@@ -73,19 +82,30 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
     if (step.name !== 'code') return;
     return run(async () => {
       const result = await api(verifyOtp, { body: { phone: step.phone, code } });
-      if (result.status === 'signed_in') await finish();
+      if (result.status === 'signed_in') await finish('/account');
       else setStep({ name: 'profile', signupToken: result.signupToken });
     });
   };
 
-  const createAccount = (e: FormEvent) => {
+  const continueToMode = (e: FormEvent) => {
     e.preventDefault();
     if (step.name !== 'profile' || !ageConfirmed) return;
+    setStep({ name: 'mode', signupToken: step.signupToken });
+  };
+
+  const chooseMode = (preferredMode: PreferredMode) => {
+    if (step.name !== 'mode') return;
     return run(async () => {
       await api(completeSignup, {
-        body: { signupToken: step.signupToken, displayName: name, locale, ageConfirmed: true },
+        body: {
+          signupToken: step.signupToken,
+          displayName: name,
+          locale,
+          ageConfirmed: true,
+          preferredMode,
+        },
       });
-      await finish();
+      await finish(preferredMode === 'venue' ? '/manage' : '/');
     });
   };
 
@@ -173,7 +193,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
         ) : null}
 
         {step.name === 'profile' ? (
-          <form onSubmit={createAccount} className="flex flex-col gap-5">
+          <form onSubmit={continueToMode} className="flex flex-col gap-5">
             <h1 className="font-display text-[2rem] leading-[1.2]">{t('profileTitle')}</h1>
             <TextField
               label={t('nameLabel')}
@@ -191,13 +211,59 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
               onChange={(e) => setAgeConfirmed(e.target.checked)}
               name="ageConfirmed"
             />
-            <Button type="submit" busy={busy} disabled={!ageConfirmed || name.trim() === ''}>
-              {t('createAccount')}
+            <Button type="submit" disabled={!ageConfirmed || name.trim() === ''}>
+              {tc('continue')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>
               {tc('back')}
             </Button>
           </form>
+        ) : null}
+
+        {step.name === 'mode' ? (
+          <div className="flex flex-col gap-5">
+            <h1 className="font-display text-[2rem] leading-[1.2]">{t('modeTitle')}</h1>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                data-testid="mode-player"
+                disabled={busy}
+                onClick={() => void chooseMode('player')}
+                className="flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start transition-colors hover:border-primary hover:bg-brand-50 disabled:opacity-60"
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
+                  <Icon name="calendar" className="size-5" />
+                </span>
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-semibold text-ink">{t('modePlayerTitle')}</span>
+                  <span className="text-sm text-ink-muted">{t('modePlayerBody')}</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                data-testid="mode-venue"
+                disabled={busy}
+                onClick={() => void chooseMode('venue')}
+                className="flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start transition-colors hover:border-primary hover:bg-brand-50 disabled:opacity-60"
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
+                  <Icon name="grid" className="size-5" />
+                </span>
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-semibold text-ink">{t('modeVenueTitle')}</span>
+                  <span className="text-sm text-ink-muted">{t('modeVenueBody')}</span>
+                </span>
+              </button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start"
+              onClick={() => setStep({ name: 'profile', signupToken: step.signupToken })}
+            >
+              {tc('back')}
+            </Button>
+          </div>
         ) : null}
       </div>
     </Card>

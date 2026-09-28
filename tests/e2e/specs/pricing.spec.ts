@@ -7,7 +7,7 @@ test.describe('pricing', () => {
     page,
   }) => {
     const venue = await arrangeVenue(await adminApi(createAdmin()));
-    await signUpPlayer(page, 'en', 'Owner', venue.ownerPhone);
+    await signUpPlayer(page, 'en', 'Owner', venue.ownerPhone, 'venue');
     await page.goto(`${WEB}/en/manage/${venue.venueId}?tab=hours`);
     for (const day of [6, 7, 1, 2, 3, 4, 5]) {
       await page.getByTestId(`hours-day-${day}`).getByRole('checkbox').check();

@@ -12,6 +12,14 @@ export const displayNameSchema = z.string().trim().min(1).max(80);
 export const membershipRoleSchema = z.enum(['owner', 'manager', 'staff']);
 export type MembershipRole = z.infer<typeof membershipRoleSchema>;
 
+/**
+ * Two interfaces, one account (plan §2). Presentation only — decides where a fresh sign-up
+ * lands and which mode the switch defaults to; venue access is still decided by organization
+ * membership (ADR-0008), never by this field.
+ */
+export const preferredModeSchema = z.enum(['player', 'venue']);
+export type PreferredMode = z.infer<typeof preferredModeSchema>;
+
 export const myMembershipSchema = z.object({
   organizationId: uuidSchema,
   organizationSlug: z.string(),
@@ -25,6 +33,7 @@ export const meSchema = z.object({
   email: z.string().nullable(),
   displayName: z.string().nullable(),
   locale: localeSchema,
+  preferredMode: preferredModeSchema,
   memberships: z.array(myMembershipSchema),
 });
 export type Me = z.infer<typeof meSchema>;
@@ -63,6 +72,8 @@ export const completeSignup = endpoint({
     locale: localeSchema,
     // Minimum age 16 (approved product decision): explicit self-attestation.
     ageConfirmed: z.literal(true),
+    // "بدك تحجز وتلعب؟" / "عندك ملعب وبدك تضيفه؟" — only decides where the new account lands.
+    preferredMode: preferredModeSchema,
   }),
   response: signedIn,
 });

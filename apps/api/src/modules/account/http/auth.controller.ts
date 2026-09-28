@@ -73,7 +73,7 @@ export class AuthController {
     const input = parseInput(completeSignup.body, body);
     const session = await this.auth.completeSignup(
       input.signupToken,
-      { displayName: input.displayName, locale: input.locale },
+      { displayName: input.displayName, locale: input.locale, preferredMode: input.preferredMode },
       requestMeta(request),
     );
     setSessionCookie(

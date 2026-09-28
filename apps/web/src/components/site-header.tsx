@@ -3,16 +3,43 @@
 import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
+import { Icon } from './icons';
 import { LocaleSwitcher } from './locale-switcher';
 import { MainNav } from './main-nav';
+import { VenueNav } from './venue-nav';
+
+/** Header-level "player ⇄ venue owner" toggle (plan §2). Presentation only: it just navigates. */
+function ModeSwitch({ inVenueMode, overlay }: { inVenueMode: boolean; overlay: boolean }) {
+  const t = useTranslations('web.header');
+  return (
+    <Link
+      href={inVenueMode ? '/' : '/manage'}
+      aria-label={inVenueMode ? t('switchToPlayer') : t('switchToVenue')}
+      className={cx(
+        'flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors duration-200',
+        overlay
+          ? 'border-canvas/35 bg-night/60 text-canvas backdrop-blur-sm hover:bg-night/75'
+          : 'border-line-strong text-ink hover:bg-surface',
+      )}
+    >
+      <Icon name="swap" className="size-4" />
+      <span className="hidden sm:inline">
+        {inVenueMode ? t('switchToPlayer') : t('switchToVenue')}
+      </span>
+    </Link>
+  );
+}
 
 /** Pages that open with a full-bleed photo: the header floats over it in ivory. */
 const overlayPaths = [/^\/$/, /^\/venues\/[^/]+$/];
+/** The venue interface (plan §2) gets its own shell and navigation, not the player's. */
+const venueMode = /^\/manage(\/|$)/;
 
 export function SiteHeader() {
   const t = useTranslations('common');
   const pathname = usePathname();
   const overlay = overlayPaths.some((re) => re.test(pathname));
+  const inVenueMode = venueMode.test(pathname);
   return (
     <header
       className={cx(
@@ -37,8 +64,9 @@ export function SiteHeader() {
         >
           {t('appName')}
         </Link>
-        <MainNav overlay={overlay} />
+        {inVenueMode ? <VenueNav /> : <MainNav overlay={overlay} />}
         <div className="ms-auto flex items-center gap-2">
+          <ModeSwitch inVenueMode={inVenueMode} overlay={overlay} />
           <LocaleSwitcher overlay={overlay} />
         </div>
       </div>

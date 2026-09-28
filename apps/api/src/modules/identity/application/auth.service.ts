@@ -182,7 +182,7 @@ export class AuthService {
 
   async completeSignup(
     signupToken: string,
-    profile: { displayName: string; locale: 'ar' | 'en' },
+    profile: { displayName: string; locale: 'ar' | 'en'; preferredMode: 'player' | 'venue' },
     meta: RequestMeta,
   ): Promise<IssuedSession> {
     return this.db.transaction().execute(async (tx) => {
@@ -214,7 +214,12 @@ export class AuthService {
         userId = existing.id;
         await tx
           .updateTable('identity.users')
-          .set({ display_name: profile.displayName, locale: profile.locale, age_confirmed_at: now })
+          .set({
+            display_name: profile.displayName,
+            locale: profile.locale,
+            preferred_mode: profile.preferredMode,
+            age_confirmed_at: now,
+          })
           .where('id', '=', userId)
           .execute();
       } else {
@@ -226,6 +231,7 @@ export class AuthService {
             phone: challenge.phone,
             display_name: profile.displayName,
             locale: profile.locale,
+            preferred_mode: profile.preferredMode,
             age_confirmed_at: now,
           })
           .execute();

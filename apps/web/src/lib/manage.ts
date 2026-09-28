@@ -1,8 +1,14 @@
 'use client';
 
-import { getVenueSchedule, type VenueSchedule } from '@jordan-sports/contracts';
+import { getVenueSchedule, listManagedVenues, type VenueSchedule } from '@jordan-sports/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApi } from './api';
+
+/** Every venue the signed-in user manages — shared by the venue picker and the venue switcher. */
+export function useManagedVenues() {
+  const api = useApi();
+  return useQuery({ queryKey: ['managed-venues'], queryFn: () => api(listManagedVenues) });
+}
 
 export function useVenueSchedule(venueId: string) {
   const api = useApi();

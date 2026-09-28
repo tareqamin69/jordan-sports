@@ -7,6 +7,7 @@ test.describe('player sign-up and sign-in (phone code)', () => {
     await page.goto(`${WEB}/ar/sign-in`);
     await expectNoAccessibilityViolations(page);
     await signUpPlayer(page, 'ar', 'سامي');
+    await page.goto(`${WEB}/ar/account`);
     await expect(page.getByTestId('account-name')).toHaveText('سامي');
     await expect(page.getByTestId('account-link')).toHaveText('سامي');
     await expectNoAccessibilityViolations(page);
@@ -14,6 +15,7 @@ test.describe('player sign-up and sign-in (phone code)', () => {
 
   test('signs out and protects the account page', async ({ page }) => {
     await signUpPlayer(page, 'en', 'Omar');
+    await page.goto(`${WEB}/en/account`);
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(`${WEB}/en`);
     await page.goto(`${WEB}/en/account`);

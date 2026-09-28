@@ -79,6 +79,22 @@ export function AccountView() {
         </span>
         <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
       </Link>
+      <Link
+        href="/manage"
+        data-testid="switch-mode-link"
+        className="group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 transition-colors hover:border-line-strong"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
+            <Icon name="swap" className="size-5" />
+          </span>
+          <span className="flex flex-col">
+            <span className="font-semibold">{t('switchToVenue')}</span>
+            <span className="text-sm text-ink-muted">{t('switchToVenueHint')}</span>
+          </span>
+        </span>
+        <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
+      </Link>
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl">{t('organizationsTitle')}</h2>

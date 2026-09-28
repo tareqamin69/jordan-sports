@@ -75,7 +75,13 @@ describe('player authentication (phone OTP)', () => {
     const noAge = await call(t.app, {
       method: 'POST',
       url: '/v1/auth/signup',
-      body: { signupToken, displayName: 'Rami', locale: 'ar', ageConfirmed: false },
+      body: {
+        signupToken,
+        displayName: 'Rami',
+        locale: 'ar',
+        ageConfirmed: false,
+        preferredMode: 'player',
+      },
       ip,
     });
     expect(noAge.statusCode).toBe(400);
@@ -83,7 +89,13 @@ describe('player authentication (phone OTP)', () => {
     const signup = await call(t.app, {
       method: 'POST',
       url: '/v1/auth/signup',
-      body: { signupToken, displayName: 'Rami', locale: 'ar', ageConfirmed: true },
+      body: {
+        signupToken,
+        displayName: 'Rami',
+        locale: 'ar',
+        ageConfirmed: true,
+        preferredMode: 'player',
+      },
       ip,
     });
     expect(signup.statusCode).toBe(200);
@@ -96,13 +108,25 @@ describe('player authentication (phone OTP)', () => {
       cookie: `js_session=${cookie.value}`,
     });
     expect(me.statusCode).toBe(200);
-    expect(me.json()).toMatchObject({ phone, displayName: 'Rami', locale: 'ar', memberships: [] });
+    expect(me.json()).toMatchObject({
+      phone,
+      displayName: 'Rami',
+      locale: 'ar',
+      preferredMode: 'player',
+      memberships: [],
+    });
 
     // The sign-up token is single-use.
     const again = await call(t.app, {
       method: 'POST',
       url: '/v1/auth/signup',
-      body: { signupToken, displayName: 'Rami', locale: 'ar', ageConfirmed: true },
+      body: {
+        signupToken,
+        displayName: 'Rami',
+        locale: 'ar',
+        ageConfirmed: true,
+        preferredMode: 'player',
+      },
       ip,
     });
     expect(again.json()).toMatchObject({ code: 'SIGNUP_TOKEN_INVALID' });

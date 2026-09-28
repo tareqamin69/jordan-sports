@@ -20,12 +20,17 @@ export async function latestOtp(phone: string): Promise<string> {
   throw new Error('No OTP was sent');
 }
 
-/** Signs up a new player through the real UI and returns their phone number. */
+/**
+ * Signs up a new player through the real UI and returns their phone number. `mode` picks the
+ * "بدك تحجز وتلعب؟" / "عندك ملعب وبدك تضيفه؟" step (plan §2); it only decides the landing page —
+ * player lands on `/`, venue on `/manage`.
+ */
 export async function signUpPlayer(
   page: Page,
   locale: 'ar' | 'en',
   name: string,
   phone = randomPhone(),
+  mode: 'player' | 'venue' = 'player',
 ): Promise<string> {
   await page.goto(`http://127.0.0.1:3000/${locale}/sign-in`);
   await page.locator('input[name="phone"]').fill(phone);
@@ -35,7 +40,10 @@ export async function signUpPlayer(
   await page.locator('input[name="displayName"]').fill(name);
   await page.locator('input[name="ageConfirmed"]').check();
   await page.locator('form button[type="submit"]').click();
-  await expect(page).toHaveURL(new RegExp(`/${locale}/account$`));
+  await page.getByTestId(`mode-${mode}`).click();
+  await expect(page).toHaveURL(
+    mode === 'venue' ? `http://127.0.0.1:3000/${locale}/manage` : `http://127.0.0.1:3000/${locale}`,
+  );
   return phone;
 }
 
@@ -179,6 +187,7 @@ export async function userApi(phone: string, name = 'Player'): Promise<APIReques
         displayName: name,
         locale: 'en',
         ageConfirmed: true,
+        preferredMode: 'player',
       },
     });
     if (!done.ok()) throw new Error(`Sign-up failed: ${await done.text()}`);

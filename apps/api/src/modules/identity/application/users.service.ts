@@ -13,6 +13,7 @@ export interface UserRow {
   email: string | null;
   display_name: string | null;
   locale: string;
+  preferred_mode: string;
   status: string;
   platform_role: string | null;
   created_at: Date;
@@ -24,6 +25,7 @@ const userColumns = [
   'email',
   'display_name',
   'locale',
+  'preferred_mode',
   'status',
   'platform_role',
   'created_at',

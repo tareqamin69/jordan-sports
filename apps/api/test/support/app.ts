@@ -152,6 +152,7 @@ export async function signInPlayer(
       displayName: options.name ?? 'Test Player',
       locale: 'ar',
       ageConfirmed: true,
+      preferredMode: 'player',
     },
     ip,
   });

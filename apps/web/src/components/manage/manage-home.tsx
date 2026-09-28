@@ -1,12 +1,11 @@
 'use client';
 
-import { listManagedVenues } from '@jordan-sports/contracts';
-import { Alert, Badge, PageHeader, Spinner } from '@jordan-sports/ui';
-import { useQuery } from '@tanstack/react-query';
+import { Alert, Badge, Card, PageHeader, Spinner } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { isApiError, useApi } from '@/lib/api';
+import { isApiError } from '@/lib/api';
+import { useManagedVenues } from '@/lib/manage';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { CourtArt } from '../court-art';
@@ -16,10 +15,9 @@ export function ManageHome() {
   const t = useTranslations('web.manage');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const api = useApi();
   const router = useRouter();
   const errorMessage = useErrorMessage();
-  const venues = useQuery({ queryKey: ['managed-venues'], queryFn: () => api(listManagedVenues) });
+  const venues = useManagedVenues();
 
   useEffect(() => {
     if (isApiError(venues.error, 'UNAUTHENTICATED')) router.replace('/sign-in');
@@ -32,7 +30,15 @@ export function ManageHome() {
       {venues.isError && !isApiError(venues.error, 'UNAUTHENTICATED') ? (
         <Alert tone="error">{errorMessage(venues.error)}</Alert>
       ) : null}
-      {venues.data?.items.length === 0 ? <p className="text-ink-muted">{t('empty')}</p> : null}
+      {venues.data?.items.length === 0 ? (
+        <Card className="flex flex-col items-start gap-2">
+          <span className="grid size-11 place-items-center rounded-full bg-brand-50 text-primary">
+            <Icon name="grid" className="size-5" />
+          </span>
+          <p className="font-semibold text-ink">{t('empty')}</p>
+          <p className="text-sm text-ink-muted">{t('emptyHint')}</p>
+        </Card>
+      ) : null}
       <ul className="grid gap-3 sm:grid-cols-2">
         {venues.data?.items.map((v) => (
           <li key={v.id} className="min-w-0">

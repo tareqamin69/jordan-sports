@@ -238,6 +238,7 @@ export interface IdentityUsers {
   locale: Generated<string>;
   phone: string | null;
   platform_role: string | null;
+  preferred_mode: Generated<string>;
   status: Generated<string>;
   updated_at: Generated<Timestamp>;
 }

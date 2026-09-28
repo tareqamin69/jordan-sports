@@ -17,6 +17,8 @@ const paths: Record<string, string> = {
   compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6',
   grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
+  swap: 'M4 8h13l-3.5-3.5M20 16H7l3.5 3.5',
+  sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h13M21 18h-2M8 4v4M16 10v4M18 16v4',
   more: 'M6 12h.01M12 12h.01M18 12h.01',
   arrow: 'M5 12h14M13 6l6 6-6 6',
   check: 'M5 12.5l4.5 4.5L19 7.5',

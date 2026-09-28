@@ -19,9 +19,7 @@ test.describe('venue dashboard (/manage)', () => {
     const api = await adminApi(createAdmin());
     const venue = await arrangeVenue(api);
 
-    await signUpPlayer(page, 'en', 'Venue Owner', venue.ownerPhone);
-    await page.getByTestId('manage-link').click();
-    await expect(page).toHaveURL(`${WEB}/en/manage`);
+    await signUpPlayer(page, 'en', 'Venue Owner', venue.ownerPhone, 'venue');
     await page.getByTestId('managed-venue').click();
     await expect(page.getByTestId('calendar-resource')).toContainText('Closed');
 
