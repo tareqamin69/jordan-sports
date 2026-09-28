@@ -10,7 +10,7 @@ import { CourtArt } from '@/components/court-art';
 import { Icon } from '@/components/icons';
 import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
-import { VenueMap } from '@/components/venue-map';
+import { VenueMap } from '@/components/venue-map-lazy';
 import { directionsUrl } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
