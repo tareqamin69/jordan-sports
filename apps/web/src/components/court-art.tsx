@@ -1,5 +1,5 @@
 import { cx } from '@jordan-sports/ui';
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 
 /**
  * Illustrated placeholders shown until a venue uploads real photos (and the home hero art).
@@ -118,30 +118,53 @@ export function CourtArt({
   );
 }
 
-/** Home hero: a floodlit pitch at dusk. Decorative only. */
+/**
+ * Home hero: a floodlit pitch at dusk. Decorative only. Three stacked layers (sky, hills, pitch)
+ * drift at different speeds as the page scrolls (CSS scroll-driven parallax, see motion.css); at
+ * rest they line up as one picture because they share the same viewBox.
+ */
 export function HeroArt({ className }: { className?: string }) {
   const id = useId().replace(/:/g, '');
-  return (
+  const layer = (children: ReactNode, extra?: string) => (
     <svg
       viewBox="-400 0 1190 470"
       preserveAspectRatio="xMidYMax slice"
       aria-hidden
       focusable="false"
-      className={cx('block size-full', className)}
+      className={cx('absolute inset-0 block size-full', extra)}
     >
-      <defs>
-        <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2B3A4A" />
-          <stop offset="0.55" stopColor="#C9825A" />
-          <stop offset="1" stopColor="#E9B98A" />
-        </linearGradient>
-      </defs>
-      <rect x="-400" width="1190" height="470" fill={`url(#${id}-sky)`} />
-      <path
-        d="M-400 250 L-300 236 L-180 248 L-60 232 L0 250 L60 238 L110 246 L170 230 L240 244 L300 232 L390 242 L470 230 L560 246 L680 234 L790 244 L790 290 L-400 290 Z"
-        fill="#6E5A48"
-        fillOpacity="0.55"
-      />
+      {children}
+    </svg>
+  );
+  return (
+    // The sky's top colour fills in above the sky layer as it drifts down.
+    <div aria-hidden className={cx('bg-[#2B3A4A]', className)}>
+      {layer(
+        <>
+          <defs>
+            <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#2B3A4A" />
+              <stop offset="0.55" stopColor="#C9825A" />
+              <stop offset="1" stopColor="#E9B98A" />
+            </linearGradient>
+            <radialGradient id={`${id}-sun`} cx="50%" cy="50%" r="50%">
+              <stop offset="0" stopColor="#FFE2B0" stopOpacity="0.9" />
+              <stop offset="1" stopColor="#FFE2B0" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect x="-400" width="1190" height="470" fill={`url(#${id}-sky)`} />
+          <circle cx="470" cy="250" r="120" fill={`url(#${id}-sun)`} />
+        </>,
+        'parallax-fast',
+      )}
+      {layer(
+        <path
+          d="M-400 250 L-300 236 L-180 248 L-60 232 L0 250 L60 238 L110 246 L170 230 L240 244 L300 232 L390 242 L470 230 L560 246 L680 234 L790 244 L790 290 L-400 290 Z"
+          fill="#6E5A48"
+          fillOpacity="0.55"
+        />,
+        'parallax-slow',
+      )}
       {/*
         The court's near edge sits low in the frame (y >= 410) so its lines never run behind the
         title/subtitle text block anchored near the hero's bottom — Arabic descenders sit lower
@@ -149,15 +172,19 @@ export function HeroArt({ className }: { className?: string }) {
         (visible in the CourtArt thumbnail version of this scene) is dropped here rather than
         pushed further down, since there's no room left before the viewBox's bottom edge.
       */}
-      <rect x="-400" y="280" width="1190" height="190" fill="#0C3A27" />
-      <polygon points="-20,470 410,470 300,410 90,410" fill="#0F4D34" />
-      <g fill="none" stroke="#F4F0E6" strokeOpacity="0.8" strokeWidth="2">
-        <polygon points="-20,470 410,470 300,410 90,410" />
-        <line x1="195" y1="410" x2="195" y2="470" />
-        <line x1="40" y1="448" x2="350" y2="448" />
-      </g>
-      <line x1="30" y1="448" x2="360" y2="448" stroke="#151712" strokeWidth="4" />
-      <circle cx="255" cy="415" r="5" fill="#E7F06A" />
-    </svg>
+      {layer(
+        <>
+          <rect x="-400" y="280" width="1190" height="190" fill="#0C3A27" />
+          <polygon points="-20,470 410,470 300,410 90,410" fill="#0F4D34" />
+          <g fill="none" stroke="#F4F0E6" strokeOpacity="0.8" strokeWidth="2">
+            <polygon points="-20,470 410,470 300,410 90,410" />
+            <line x1="195" y1="410" x2="195" y2="470" />
+            <line x1="40" y1="448" x2="350" y2="448" />
+          </g>
+          <line x1="30" y1="448" x2="360" y2="448" stroke="#151712" strokeWidth="4" />
+          <circle cx="255" cy="415" r="5" fill="#E7F06A" />
+        </>,
+      )}
+    </div>
   );
 }

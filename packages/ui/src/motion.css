@@ -1,0 +1,246 @@
+/*
+ * Motion system (Design B "Clubhouse"). CSS only: no animation library ships to the browser.
+ *
+ * - Durations and easings are theme tokens (`duration-fast`, `ease-soft`, `ease-spring`…).
+ * - Movement uses transform (and opacity only where no text is measured at load), so nothing shifts
+ *   layout (CLS 0) and the largest paint is never delayed.
+ * - Scroll reveals use CSS scroll-driven animations where supported (Chrome, Edge, Safari 26+);
+ *   elsewhere content is simply shown. Anything already on screen at load is shown immediately.
+ * - `prefers-reduced-motion: reduce` turns all of it off (base.css + the guards below).
+ */
+@theme {
+  --duration-instant: 90ms;
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+  --duration-slower: 640ms;
+
+  /* ease-soft (tokens.css): quick start, long settle — the default for entrances. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Slight overshoot for small "pop" feedback (selected chips, check marks). */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-pop: pop var(--duration-base) var(--ease-spring) both;
+  --animate-fade: fade-in var(--duration-base) var(--ease-soft) both;
+  --animate-sheet: sheet-in var(--duration-slow) var(--ease-soft) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-draw: draw 520ms var(--ease-out-quart) 120ms both;
+
+  @keyframes pop {
+    0% {
+      transform: scale(0.94);
+    }
+    100% {
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(110%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: var(--path-length, 40);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+@layer components {
+  /* Cards: lift on hover, press on tap. Pair with `.zoom-media` on the photo inside. */
+  .lift {
+    transition:
+      transform var(--duration-base) var(--ease-soft),
+      box-shadow var(--duration-base) var(--ease-soft),
+      border-color var(--duration-fast) var(--ease-soft);
+  }
+  @media (hover: hover) {
+    .lift:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lift);
+    }
+    .lift:hover .zoom-media,
+    .group:hover .zoom-media {
+      transform: scale(1.045);
+    }
+  }
+  .lift:active {
+    transform: scale(0.985);
+    transition-duration: var(--duration-instant);
+  }
+  .zoom-media {
+    transition: transform var(--duration-slower) var(--ease-soft);
+  }
+
+  /* "Haptic-like" press feedback for tappable things that are not buttons (tiles, pills, rows). */
+  .pressable {
+    transition: transform var(--duration-fast) var(--ease-soft);
+  }
+  .pressable:active {
+    transform: scale(0.96);
+    transition-duration: var(--duration-instant);
+  }
+
+  /* Skeleton shimmer (warm, on-brand). */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-canvas-deep) 25%,
+      color-mix(in srgb, var(--color-canvas-deep) 55%, white) 50%,
+      var(--color-canvas-deep) 75%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /*
+   * Scroll reveal: rises into place as it enters the viewport. `.reveal-stagger > *` reveals the
+   * children of a grid or row one after another (each child's own entry drives it).
+   */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal,
+      .reveal-stagger > * {
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+      .reveal-stagger > *:nth-child(3n + 2) {
+        animation-range: entry 8% entry 65%;
+      }
+      .reveal-stagger > *:nth-child(3n + 3) {
+        animation-range: entry 16% entry 75%;
+      }
+    }
+  }
+  @keyframes reveal {
+    from {
+      transform: translateY(28px) scale(0.985);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* Hero parallax: layers drift at different speeds while the page scrolls away (no JS). */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .parallax-slow,
+      .parallax-fast {
+        animation: parallax linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 600px;
+      }
+      .parallax-slow {
+        --parallax-distance: 60px;
+      }
+      .parallax-fast {
+        --parallax-distance: 140px;
+      }
+    }
+  }
+  @keyframes parallax {
+    to {
+      transform: translateY(var(--parallax-distance, 80px));
+    }
+  }
+}
+
+/*
+ * Count-up numbers without JS: `<span class="count-up" style="--to: 42">` counts from 0 to 42 once.
+ * The digits are CSS generated content, so pair it with the real number for screen readers.
+ * Without @property support (or with reduced motion) it simply shows the final number.
+ */
+@property --count {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+@layer components {
+  .count-up {
+    --count: var(--to);
+    counter-reset: count var(--count);
+    font-variant-numeric: tabular-nums;
+  }
+  .count-up::after {
+    content: counter(count);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .count-up {
+      animation: count-up 1.2s var(--ease-out-quart) 200ms both;
+    }
+  }
+  @keyframes count-up {
+    from {
+      --count: 0;
+    }
+  }
+}
+
+/*
+ * Confetti-lite: a one-shot burst of a dozen small pieces (pure CSS). Each `<i>` sets --x, --y
+ * (burst offset), --r (spin) and --c (colour). Not rendered at all with reduced motion.
+ */
+@layer components {
+  .confetti {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .confetti > i {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 2.25rem;
+    width: 7px;
+    height: 11px;
+    border-radius: 2px;
+    background: var(--c);
+    opacity: 0;
+    animation: confetti 1300ms var(--ease-out-quart) var(--d, 0ms) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti {
+      display: none;
+    }
+  }
+  @keyframes confetti {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0) scale(0.4);
+    }
+    45% {
+      opacity: 1;
+      transform: translate(var(--x), var(--y)) rotate(calc(var(--r) * 0.6)) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(var(--x) * 1.25), calc(var(--y) + 90px)) rotate(var(--r)) scale(0.9);
+    }
+  }
+}

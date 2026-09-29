@@ -11,6 +11,7 @@ const links = [
   { href: '/contact', key: 'contact' },
   { href: '/terms', key: 'terms' },
   { href: '/privacy', key: 'privacy' },
+  { href: '/credits', key: 'credits' },
 ] as const;
 
 /** Shown on every player-facing page (not the venue owner console, which has its own shell). */

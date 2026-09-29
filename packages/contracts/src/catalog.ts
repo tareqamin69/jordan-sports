@@ -15,6 +15,16 @@ export const attributeFieldSchema = z.discriminatedUnion('type', [
 ]);
 export type AttributeField = z.infer<typeof attributeFieldSchema>;
 
+/** Same shape as a venue photo (`Media`); kept here to keep the contracts module graph acyclic. */
+const stockMediaSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  width: z.number().int(),
+  height: z.number().int(),
+  blur: z.string().nullable(),
+  stock: z.object({ photographer: z.string(), sourceUrl: z.string() }).nullable().optional(),
+});
+
 export const sportFormatSchema = z.object({
   id: uuidSchema,
   key: z.string(),
@@ -31,6 +41,8 @@ export const sportSchema = z.object({
   /** Icon key from the UI icon set (catalog data, so the UI never names a sport). */
   icon: z.string(),
   formats: z.array(sportFormatSchema),
+  /** Illustrative photos of the sport (self-hosted stock); empty until they are downloaded. */
+  photos: z.array(stockMediaSchema),
 });
 export type Sport = z.infer<typeof sportSchema>;
 
@@ -59,6 +71,8 @@ export const catalogSchema = z.object({
   ),
   /** Sports with at least one active resource at an approved venue — what players should see. */
   offeredSportIds: z.array(uuidSchema),
+  /** Live figures for the home page ("X ملعب · Y رياضة"). */
+  counts: z.object({ venues: z.number().int(), sports: z.number().int() }),
   /** Platform switches the apps need to know about (server configuration). */
   features: z.object({
     /** CliQ-to-venue payments and the commission balance (ADR-0018); off while a card gateway is planned. */
@@ -203,4 +217,27 @@ export const adminUpdateSport = endpoint({
     active: z.boolean().optional(),
   }),
   response: catalogSchema,
+});
+
+export const imageCreditsSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      sport: z.string(),
+      photographer: z.string(),
+      photographerUrl: z.string(),
+      sourceUrl: z.string(),
+      license: z.string(),
+      licenseUrl: z.string(),
+    }),
+  ),
+});
+export type ImageCredits = z.infer<typeof imageCreditsSchema>;
+
+export const getImageCredits = endpoint({
+  method: 'GET',
+  path: '/v1/stock/credits',
+  summary: 'Credits for the illustrative sport photos (Pexels)',
+  auth: 'public',
+  response: imageCreditsSchema,
 });

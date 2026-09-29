@@ -18,81 +18,109 @@ import {
   type Feature,
 } from '../domain/attributes.js';
 import { SettingsService } from '../../settings/index.js';
+import { StockPhotosService } from '../../stock-photos/index.js';
 
 type Localized = { ar?: string; en?: string };
 const fieldsSchema = z.object({ fields: z.array(attributeFieldSchema) });
 const CACHE_MS = 60_000;
 const KEY_PATTERN = /^[a-z0-9_]+$/;
 
+/** The cached part of the catalog (settings and stock photos have their own caches). */
+type Reference = Omit<Catalog, 'features' | 'support' | 'sports'> & {
+  sports: Array<Omit<Catalog['sports'][number], 'photos'>>;
+};
+
 @Injectable()
 export class CatalogService {
-  private cached?: { at: number; value: Omit<Catalog, 'features' | 'support'> };
+  private cached?: { at: number; value: Reference };
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
     private readonly settings: SettingsService,
+    private readonly stock: StockPhotosService,
   ) {}
 
   /** Reference data changes rarely; cached briefly in memory. */
   async get(): Promise<Catalog> {
     // Owner settings have their own short cache, so a switched flag shows up within seconds.
-    const [base, cliqPayments, whatsapp] = await Promise.all([
+    const [base, cliqPayments, whatsapp, photos] = await Promise.all([
       this.reference(),
       this.settings.cliqPayments(),
       this.settings.supportWhatsapp(),
+      this.stock.bySport(),
     ]);
-    return { ...base, features: { cliqPayments }, support: { whatsapp } };
+    return {
+      ...base,
+      sports: base.sports.map((s) => ({ ...s, photos: photos.get(s.key) ?? [] })),
+      features: { cliqPayments },
+      support: { whatsapp },
+    };
   }
 
-  private async reference(): Promise<Omit<Catalog, 'features' | 'support'>> {
+  private async reference(): Promise<Reference> {
     if (this.cached && Date.now() - this.cached.at < CACHE_MS) return this.cached.value;
-    const [sports, formats, types, typeFormats, amenities, governorates, areas, offered] =
-      await Promise.all([
-        this.db
-          .selectFrom('catalog.sports')
-          .selectAll()
-          .where('active', '=', true)
-          .orderBy('sort_order')
-          .execute(),
-        this.db
-          .selectFrom('catalog.sport_formats')
-          .selectAll()
-          .where('active', '=', true)
-          .orderBy('sort_order')
-          .execute(),
-        this.db
-          .selectFrom('catalog.resource_types')
-          .selectAll()
-          .where('active', '=', true)
-          .orderBy('sort_order')
-          .execute(),
-        this.db.selectFrom('catalog.resource_type_formats').selectAll().execute(),
-        this.db.selectFrom('catalog.amenities').selectAll().orderBy('sort_order').execute(),
-        this.db.selectFrom('catalog.cities').selectAll().orderBy('sort_order').execute(),
-        // Areas are shown alphabetically by Arabic name (governorates and everything else keep
-        // sort_order — only areas need this because the list per governorate is long).
-        this.db
-          .selectFrom('catalog.areas')
-          .selectAll()
-          .orderBy(sql`name->>'ar'`)
-          .execute(),
-        this.db
-          .selectFrom('catalog.sport_formats as sf')
-          .innerJoin('resource.resource_formats as rf', 'rf.sport_format_id', 'sf.id')
-          .innerJoin('resource.resources as r', (join) =>
-            join.onRef('r.id', '=', 'rf.resource_id').on('r.status', '=', 'active'),
-          )
-          .innerJoin('venue.venues as v', (join) =>
-            join
-              .onRef('v.id', '=', 'r.venue_id')
-              .on('v.status', '=', 'approved')
-              .on('v.archived_at', 'is', null),
-          )
-          .select('sf.sport_id')
-          .distinct()
-          .execute(),
-      ]);
-    const value: Omit<Catalog, 'features' | 'support'> = {
+    const [
+      sports,
+      formats,
+      types,
+      typeFormats,
+      amenities,
+      governorates,
+      areas,
+      offered,
+      venueCount,
+    ] = await Promise.all([
+      this.db
+        .selectFrom('catalog.sports')
+        .selectAll()
+        .where('active', '=', true)
+        .orderBy('sort_order')
+        .execute(),
+      this.db
+        .selectFrom('catalog.sport_formats')
+        .selectAll()
+        .where('active', '=', true)
+        .orderBy('sort_order')
+        .execute(),
+      this.db
+        .selectFrom('catalog.resource_types')
+        .selectAll()
+        .where('active', '=', true)
+        .orderBy('sort_order')
+        .execute(),
+      this.db.selectFrom('catalog.resource_type_formats').selectAll().execute(),
+      this.db.selectFrom('catalog.amenities').selectAll().orderBy('sort_order').execute(),
+      this.db.selectFrom('catalog.cities').selectAll().orderBy('sort_order').execute(),
+      // Areas are shown alphabetically by Arabic name (governorates and everything else keep
+      // sort_order — only areas need this because the list per governorate is long).
+      this.db
+        .selectFrom('catalog.areas')
+        .selectAll()
+        .orderBy(sql`name->>'ar'`)
+        .execute(),
+      this.db
+        .selectFrom('catalog.sport_formats as sf')
+        .innerJoin('resource.resource_formats as rf', 'rf.sport_format_id', 'sf.id')
+        .innerJoin('resource.resources as r', (join) =>
+          join.onRef('r.id', '=', 'rf.resource_id').on('r.status', '=', 'active'),
+        )
+        .innerJoin('venue.venues as v', (join) =>
+          join
+            .onRef('v.id', '=', 'r.venue_id')
+            .on('v.status', '=', 'approved')
+            .on('v.archived_at', 'is', null),
+        )
+        .select('sf.sport_id')
+        .distinct()
+        .execute(),
+      this.db
+        .selectFrom('venue.venues')
+        .select((eb) => eb.fn.countAll<string>().as('n'))
+        .where('status', '=', 'approved')
+        .where('archived_at', 'is', null)
+        .executeTakeFirstOrThrow(),
+    ]);
+    const value: Reference = {
       sports: sports.map((s) => ({
         id: s.id,
         key: s.key,
@@ -129,6 +157,7 @@ export class CatalogService {
           .map((a) => ({ id: a.id, key: a.key, name: a.name as Localized })),
       })),
       offeredSportIds: [...new Set(offered.map((o) => o.sport_id))],
+      counts: { venues: Number(venueCount.n), sports: sports.length },
     };
     this.cached = { at: Date.now(), value };
     return value;

@@ -115,6 +115,15 @@ export const ar = {
       terms: 'الشروط والأحكام',
       privacy: 'سياسة الخصوصية',
       rights: 'كل الحقوق محفوظة © {year}',
+      credits: 'مصادر الصور',
+    },
+    credits: {
+      title: 'مصادر الصور',
+      description:
+        'الملاعب اللي ما عندها صور خاصة فيها بتظهر معها صورة توضيحية للرياضة. هاي الصور من موقع Pexels وحسب رخصة Pexels.',
+      empty: 'لسا ما في صور توضيحية.',
+      by: 'تصوير {name}',
+      source: 'شوفها على Pexels',
     },
     about: {
       title: 'من نحن',
@@ -164,6 +173,13 @@ export const ar = {
       locating: 'عم ندوّر على موقعك…',
       locationDenied: 'ما قدرنا نعرف موقعك. بتقدر تدوّر حسب المنطقة.',
       browseAll: 'شوف كل الملاعب',
+      venuesCount:
+        '{count, plural, zero {لسا ما في ملاعب} one {ملعب واحد} two {ملعبين} few {<n></n> ملاعب} many {<n></n> ملعب} other {<n></n> ملعب}}',
+      sportsCount:
+        '{count, plural, zero {} one {رياضة وحدة} two {رياضتين} few {<n></n> رياضات} many {<n></n> رياضة} other {<n></n> رياضة}}',
+      previous: 'السابق',
+      next: 'التالي',
+      stockPhoto: 'صورة توضيحية',
     },
     search: {
       sport: 'الرياضة',
@@ -237,7 +253,7 @@ export const ar = {
       noSlots: 'ما في أوقات فاضية بهاد اليوم.',
       taken: 'محجوز',
       duration: '{duration} دقيقة',
-      bookHint: 'اضغط عالوقت لتحجزه. الدفع بالملعب.',
+      bookHint: 'اختار الوقت وبعدين اضغط احجز. الدفع بالملعب.',
       holding: 'لحظة، عم نحجزلك الوقت…',
       durationLabel: 'مدة الحجز',
       previousWeek: 'الأسبوع اللي قبل',
@@ -247,7 +263,11 @@ export const ar = {
       chooseCourt: 'اختار الملعب',
       freeCount:
         '{count, plural, =0 {محجوز كله} =1 {وقت واحد فاضي} =2 {وقتين فاضيين} few {{n} أوقات فاضية} other {{n} وقت فاضي}}',
-      slotLabel: 'احجز الساعة {time}، {price}',
+      slotLabel: 'الساعة {time}، {price}',
+      selectedSummary:
+        '{day} · {minutes, plural, one {دقيقة} two {دقيقتين} few {# دقائق} other {# دقيقة}}',
+      bookSelected: 'احجز',
+      clearSelection: 'إلغاء الاختيار',
       loading: 'عم نجيب الأوقات الفاضية…',
     },
     venue: {
@@ -269,6 +289,12 @@ export const ar = {
       mapMarkerLabel: 'موقع {name}',
       book: 'احجز',
       call: 'اتصل',
+      allPhotos: 'كل الصور ({count})',
+      closePhotos: 'سكّر الصور',
+      previousPhoto: 'الصورة السابقة',
+      nextPhoto: 'الصورة التالية',
+      showMap: 'اعرض الخريطة',
+      mapPreview: 'موقع {name} على الخريطة',
     },
     manage: {
       title: 'لوحة الملعب',
@@ -722,6 +748,7 @@ export const ar = {
       confirmed: 'تأكّد حجزك! ورجي رقم الحجز بالملعب.',
       expired: 'خلصت مدة حجز الوقت وصار فاضي لغيرك.',
       released: 'انلغى حجز الوقت.',
+      cancelledNotice: 'انلغى حجزك.',
       chooseAgain: 'اختار وقت',
       cancelledByVenue: 'الملعب لغى هاد الحجز. السبب: {reason}',
       cancel: 'إلغاء الحجز',

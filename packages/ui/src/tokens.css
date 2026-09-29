@@ -41,6 +41,7 @@
   --color-primary-hover: #0a3624;
   --color-on-primary: #f4f0e6;
   --color-clay: #b4481f;
+  --color-lime: #e7f06a; /* the ball; live indicators on dark surfaces */
   --color-night: #151712; /* dark floating surfaces (bottom nav, chips) */
   --color-success: #0f4d34;
   --color-warning: #8a4b0b;

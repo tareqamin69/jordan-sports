@@ -8,9 +8,11 @@ import {
   Card,
   CheckboxField,
   Ltr,
-  Spinner,
+  Skeleton,
+  SkeletonGroup,
   buttonClass,
   cx,
+  useToast,
 } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
@@ -30,8 +32,10 @@ import {
 import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { BookingSuccess } from './booking-success';
 import { CliqCheckout, CliqPaymentSummary } from './cliq-checkout';
 import { CourtArt } from './court-art';
+import { HoldCountdown } from './hold-countdown';
 import { Icon } from './icons';
 
 function useNow(active: boolean): number {
@@ -82,10 +86,9 @@ export function BookingView({
   const errorMessage = useErrorMessage();
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState<'confirm' | 'cancel' | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [showConfirmed, setShowConfirmed] = useState(justConfirmed);
-  const [notice, setNotice] = useState<string | null>(null);
+  const toast = useToast();
   const [calendarOpen, setCalendarOpen] = useState(false);
   // One key per page visit: a retried confirmation is recognized by the server.
   const confirmKey = useMemo(() => crypto.randomUUID(), []);
@@ -108,11 +111,14 @@ export function BookingView({
     }
   }, [booking.error, router, bookingId]);
 
-  if (booking.isPending) return <Spinner label={tc('loading')} />;
+  if (booking.isPending) return <BookingSkeleton label={tc('loading')} />;
   if (booking.isError) return <Alert tone="error">{errorMessage(booking.error)}</Alert>;
   const b = data!;
 
   const holdLeft = b.holdExpiresAt ? new Date(b.holdExpiresAt).getTime() - now : 0;
+  const holdTotal = b.holdExpiresAt
+    ? new Date(b.holdExpiresAt).getTime() - new Date(b.createdAt).getTime()
+    : 0;
   const expired = b.status === 'EXPIRED' || (b.status === 'HELD' && holdLeft <= 0);
   const status = expired ? 'EXPIRED' : b.status;
   const holding = b.status === 'HELD' && !expired;
@@ -132,13 +138,12 @@ export function BookingView({
 
   async function run(kind: 'confirm' | 'cancel', action: () => Promise<Booking>, done?: string) {
     setBusy(kind);
-    setError(null);
     try {
       update(await action());
-      setNotice(done ?? null);
+      if (done) toast(done, 'info');
       setAsking(false);
     } catch (e) {
-      setError(errorMessage(e));
+      toast(errorMessage(e), 'error');
       if (isApiError(e, 'HOLD_EXPIRED')) await booking.refetch();
     } finally {
       setBusy(null);
@@ -159,7 +164,6 @@ export function BookingView({
       return confirmed;
     });
   };
-  // The status badge at the top already says "cancelled": no second notice.
   const cancel = (done?: string) =>
     run('cancel', () => api(cancelBooking, { params: { bookingId }, body: {} }), done);
 
@@ -210,7 +214,11 @@ export function BookingView({
         </div>
         <span
           data-testid="booking-status"
-          className={cx('mb-2 rounded-full px-4 py-1.5 text-sm font-semibold', statusTone[status])}
+          key={status}
+          className={cx(
+            'mb-2 animate-pop rounded-full px-4 py-1.5 text-sm font-semibold transition-colors duration-base',
+            statusTone[status],
+          )}
         >
           {holding && b.payment?.status === 'SUBMITTED'
             ? t('awaitingVenue')
@@ -219,23 +227,13 @@ export function BookingView({
       </div>
 
       {b.status === 'CONFIRMED' && showConfirmed ? (
-        <div
-          role="status"
-          className="flex items-center gap-4 rounded-card bg-primary p-5 text-on-primary"
-        >
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-on-primary/15">
-            <Icon name="check" className="size-6" strokeWidth={2.4} />
-          </span>
-          <p className="font-medium leading-7">{t('confirmed')}</p>
-        </div>
+        <BookingSuccess message={t('confirmed')} />
       ) : null}
       {expired ? <Alert tone="warning">{t('expired')}</Alert> : null}
       {b.status === 'CANCELLED' && b.cancelledBy === 'venue' ? (
         <Alert tone="warning">{t('cancelledByVenue', { reason: b.cancelReason ?? '' })}</Alert>
       ) : null}
       <CliqPaymentSummary booking={b} />
-      {notice ? <Alert tone="info">{notice}</Alert> : null}
-      {error ? <Alert tone="error">{error}</Alert> : null}
 
       <article className="overflow-hidden rounded-card border border-line bg-surface">
         <div className="relative h-28 bg-night">
@@ -343,13 +341,9 @@ export function BookingView({
           </div>
           <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 rounded-card border border-line bg-surface p-2.5 shadow-float md:static md:inset-auto md:bottom-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
             <div className="flex items-center gap-3">
-              <span
-                data-testid="hold-countdown"
-                className="flex h-12 shrink-0 items-center gap-1.5 rounded-full bg-accent-300/60 px-4 text-sm font-medium text-ink"
-              >
-                <Icon name="clock" className="size-4 text-clay" />
+              <HoldCountdown holdLeft={holdLeft} total={holdTotal}>
                 {t('countdown', { time: remaining(holdLeft) })}
-              </span>
+              </HoldCountdown>
               <Button
                 size="lg"
                 className="flex-1 md:flex-none md:px-10"
@@ -439,10 +433,14 @@ export function BookingView({
             {late ? t('freeCancellationUnavailable') : t('freeUntil', { date: freeUntilText })}
           </p>
           {asking ? (
-            <Card className="flex flex-col gap-4 p-5">
+            <Card className="flex animate-pop flex-col gap-4 p-5">
               <p className="font-medium">{late ? t('lateQuestion') : t('cancelQuestion')}</p>
               <div className="flex flex-wrap gap-2">
-                <Button variant="danger" onClick={() => void cancel()} busy={busy === 'cancel'}>
+                <Button
+                  variant="danger"
+                  onClick={() => void cancel(t('cancelledNotice'))}
+                  busy={busy === 'cancel'}
+                >
                   {t('cancelConfirm')}
                 </Button>
                 <Button variant="secondary" onClick={() => setAsking(false)}>
@@ -473,5 +471,30 @@ export function BookingView({
         </Link>
       ) : null}
     </div>
+  );
+}
+
+/** Placeholder shaped like the booking page (title, status, summary card, actions). */
+function BookingSkeleton({ label }: { label: string }) {
+  return (
+    <SkeletonGroup label={label} className="flex flex-col gap-4">
+      <Skeleton className="h-10 w-24 rounded-full" />
+      <div className="mb-2 flex items-end justify-between gap-3">
+        <Skeleton className="h-11 w-56" />
+        <Skeleton className="h-8 w-24 rounded-full" />
+      </div>
+      <div className="overflow-hidden rounded-card border border-line bg-surface">
+        <Skeleton className="h-28 rounded-none" />
+        <div className="grid grid-cols-3 gap-4 p-4">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-4 w-20" />
+            </span>
+          ))}
+        </div>
+      </div>
+      <Skeleton className="h-40 rounded-card" />
+    </SkeletonGroup>
   );
 }

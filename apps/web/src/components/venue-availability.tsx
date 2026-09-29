@@ -7,7 +7,7 @@ import {
   type PublicResource,
 } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Spinner, chipClass, cx } from '@jordan-sports/ui';
+import { Alert, Button, Skeleton, SkeletonGroup, chipClass, cx, useToast } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -49,7 +49,8 @@ const arrow =
 
 /**
  * Public booking picker: length first, then day, then start time — across any free court (the
- * cheapest free court at that time is booked) or per court. Tapping a time holds it.
+ * cheapest free court at that time is booked) or per court. Tapping a time selects it and opens
+ * a booking bar (a bottom sheet on phones) with the time, price and Book; Book holds it.
  */
 export function VenueAvailability({
   slug,
@@ -82,8 +83,9 @@ export function VenueAvailability({
   const [date, setDate] = useState(startDate);
   const [duration, setDuration] = useState<number | null>(null);
   const [byCourt, setByCourt] = useState(false);
-  const [holding, setHolding] = useState<string | null>(null);
-  const [holdError, setHoldError] = useState<string | null>(null);
+  const [holding, setHolding] = useState(false);
+  const [selected, setSelected] = useState<{ key: string; choices: Choice[] } | null>(null);
+  const toast = useToast();
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, week * 7 + i));
 
   const availability = useQuery({
@@ -119,14 +121,37 @@ export function VenueAvailability({
     }));
   const multipleCourts = free.length > 1;
 
-  async function book(choices: Choice[], key: string) {
+  // A new day, length or court mode starts a fresh choice.
+  const pickDate = (d: string) => {
+    setDate(d);
+    setSelected(null);
+  };
+  const pickDuration = (d: number) => {
+    setDuration(d);
+    setSelected(null);
+  };
+  const pickMode = (court: boolean) => {
+    setByCourt(court);
+    setSelected(null);
+  };
+
+  async function book(choices: Choice[]) {
     if (holding) return;
-    if (!me.data) {
-      router.push({ pathname: '/sign-in', query: { next: `/venues/${slug}` } });
+    const first = choices[0]!.slot;
+    // A quick tap can beat the "who am I" request: wait for it rather than sending a signed-in
+    // player to the sign-in page.
+    const user = me.data ?? (me.isPending ? (await me.refetch()).data : null);
+    if (!user) {
+      // Back on the venue after signing in, the same day and time are highlighted.
+      router.push({
+        pathname: '/sign-in',
+        query: {
+          next: `/venues/${slug}?date=${date}&time=${encodeURIComponent(first.localStart)}`,
+        },
+      });
       return;
     }
-    setHolding(key);
-    setHoldError(null);
+    setHolding(true);
     for (const [index, choice] of choices.entries()) {
       try {
         const booking = await api(createBookingHold, {
@@ -142,44 +167,58 @@ export function VenueAvailability({
       } catch (error) {
         // Someone just took this court: try the next free court at the same time.
         if (isApiError(error, 'SLOT_UNAVAILABLE') && index < choices.length - 1) continue;
-        setHoldError(errorMessage(error));
-        setHolding(null);
+        toast(errorMessage(error), 'error');
+        setHolding(false);
+        setSelected(null);
         await queryClient.invalidateQueries({ queryKey: ['availability', slug] });
         return;
       }
     }
   }
 
-  const timeButton = (key: string, slot: Slot, choices: Choice[]) => (
-    <li key={key} data-testid="slot">
-      <button
-        type="button"
-        onClick={() => void book(choices, key)}
-        disabled={holding !== null}
-        aria-busy={holding === key}
-        aria-label={t('slotLabel', {
-          time: slot.localStart,
-          price: formatMoney(slot.price, locale),
-        })}
-        className={cx(
-          'group flex w-full flex-col items-center gap-0.5 rounded-2xl border border-line bg-surface px-2 py-3 transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97] disabled:opacity-60',
-          'hover:border-primary hover:bg-primary hover:text-on-primary',
-          initialTime === slot.localStart && 'border-primary ring-2 ring-primary/25',
-          holding === key && 'border-primary bg-primary text-on-primary',
-        )}
-      >
-        <span dir="ltr" className="text-base font-bold leading-6">
-          {slot.localStart}
-        </span>
-        <span className="text-xs text-ink-muted transition-colors group-hover:text-on-primary/80">
-          {formatMoney(slot.price, locale)}
-        </span>
-      </button>
-    </li>
-  );
+  const timeButton = (key: string, slot: Slot, choices: Choice[]) => {
+    const active = selected?.key === key;
+    return (
+      <li key={key} data-testid="slot">
+        <button
+          type="button"
+          onClick={() => setSelected(active ? null : { key, choices })}
+          disabled={holding}
+          aria-pressed={active}
+          aria-label={t('slotLabel', {
+            time: slot.localStart,
+            price: formatMoney(slot.price, locale),
+          })}
+          className={cx(
+            'group flex w-full flex-col items-center gap-0.5 rounded-2xl border px-2 py-3 transition-[background-color,border-color,color,transform,box-shadow] duration-fast ease-soft active:scale-[0.95] disabled:opacity-60',
+            active
+              ? 'animate-pop border-primary bg-primary text-on-primary shadow-lift'
+              : 'border-line bg-surface hover:border-primary hover:bg-brand-50',
+            !active && initialTime === slot.localStart && 'border-primary ring-2 ring-primary/25',
+          )}
+        >
+          <span dir="ltr" className="text-base font-bold leading-6">
+            {slot.localStart}
+          </span>
+          <span
+            className={cx(
+              'text-xs transition-colors',
+              active ? 'text-on-primary/80' : 'text-ink-muted',
+            )}
+          >
+            {formatMoney(slot.price, locale)}
+          </span>
+        </button>
+      </li>
+    );
+  };
+  const choice = selected?.choices[0];
 
   return (
-    <section aria-labelledby="availability-heading" className="min-w-0">
+    <section
+      aria-labelledby="availability-heading"
+      className={cx('min-w-0', selected && 'pb-24 md:pb-0')}
+    >
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 id="availability-heading" className="font-display text-[1.75rem] leading-[1.25]">
@@ -222,7 +261,7 @@ export function VenueAvailability({
               key={d}
               type="button"
               aria-pressed={d === activeDuration}
-              onClick={() => setDuration(d)}
+              onClick={() => pickDuration(d)}
               className={chipClass(d === activeDuration, {
                 tone: 'night',
                 className: 'min-h-11 px-5',
@@ -240,7 +279,7 @@ export function VenueAvailability({
             <button
               key={d}
               type="button"
-              onClick={() => setDate(d)}
+              onClick={() => pickDate(d)}
               disabled={d > lastDay}
               aria-pressed={d === date}
               className={cx(dayTile(d === date), d > lastDay && 'pointer-events-none opacity-30')}
@@ -261,7 +300,7 @@ export function VenueAvailability({
           <button
             type="button"
             aria-pressed={!byCourt}
-            onClick={() => setByCourt(false)}
+            onClick={() => pickMode(false)}
             className={chipClass(!byCourt)}
           >
             {t('anyCourt')}
@@ -269,7 +308,7 @@ export function VenueAvailability({
           <button
             type="button"
             aria-pressed={byCourt}
-            onClick={() => setByCourt(true)}
+            onClick={() => pickMode(true)}
             className={chipClass(byCourt)}
           >
             {t('chooseCourt')}
@@ -278,24 +317,19 @@ export function VenueAvailability({
       ) : null}
 
       {availability.isPending ? (
-        <div className="mt-4">
-          <Spinner label={t('loading')} />
-        </div>
+        <SkeletonGroup
+          label={t('loading')}
+          className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5"
+        >
+          {Array.from({ length: 10 }, (_, i) => (
+            <Skeleton key={i} className="h-[4.25rem] rounded-2xl" />
+          ))}
+        </SkeletonGroup>
       ) : null}
       {availability.isError ? (
         <Alert tone="error" className="mt-4">
           {errorMessage(availability.error)}
         </Alert>
-      ) : null}
-      {holdError ? (
-        <Alert tone="error" className="mt-4">
-          {holdError}
-        </Alert>
-      ) : null}
-      {holding ? (
-        <div className="mt-4">
-          <Spinner label={t('holding')} />
-        </div>
       ) : null}
 
       {data ? (
@@ -333,6 +367,61 @@ export function VenueAvailability({
               ))
             : null}
           <p className="text-sm text-ink-muted">{t('bookHint')}</p>
+        </div>
+      ) : null}
+
+      {selected && choice ? (
+        // Phones: a bottom sheet over the tab bar. Wider screens: sticks to the bottom of the card.
+        <div
+          className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 animate-sheet md:sticky md:inset-x-auto md:bottom-4 md:mt-5 md:animate-pop"
+          data-testid="booking-bar"
+        >
+          <div className="flex items-center gap-3 rounded-[1.75rem] bg-night p-2.5 ps-5 text-canvas shadow-float">
+            <div key={selected.key} className="flex min-w-0 flex-1 animate-fade flex-col">
+              <span className="flex items-baseline gap-2">
+                <span dir="ltr" className="text-xl font-bold leading-7">
+                  {choice.slot.localStart}
+                </span>
+                <span className="text-base font-semibold text-lime">
+                  {formatMoney(choice.slot.price, locale)}
+                </span>
+              </span>
+              <span className="truncate text-xs text-canvas/70">
+                {[
+                  t('selectedSummary', {
+                    day: format.dateTime(dateForLabel(date), {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                      numberingSystem: 'latn',
+                    }),
+                    minutes: choice.slot.durationMinutes,
+                  }),
+                  byCourt ? nameOf(choice.resourceId) : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              disabled={holding}
+              aria-label={t('clearSelection')}
+              className="pressable grid size-11 shrink-0 place-items-center rounded-full text-canvas/70 hover:bg-canvas/10 hover:text-canvas"
+            >
+              <Icon name="close" className="size-5" />
+            </button>
+            <Button
+              onClick={() => void book(selected.choices)}
+              busy={holding}
+              variant="inverse"
+              className="shrink-0 px-7"
+              data-testid="book-selected"
+            >
+              {holding ? t('holding') : t('bookSelected')}
+            </Button>
+          </div>
         </div>
       ) : null}
     </section>

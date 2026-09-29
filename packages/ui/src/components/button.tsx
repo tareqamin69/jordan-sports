@@ -30,7 +30,7 @@ export function buttonClass({
   className,
 }: { variant?: ButtonVariant; size?: ButtonSize; className?: string | undefined } = {}) {
   return cx(
-    'inline-flex select-none items-center justify-center gap-2 rounded-full font-semibold transition-[background-color,border-color,color,transform,opacity] duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100',
+    'inline-flex select-none items-center justify-center gap-2 rounded-full font-semibold transition-[background-color,border-color,color,transform,opacity,box-shadow] duration-fast ease-soft active:scale-[0.97] active:duration-instant disabled:cursor-not-allowed disabled:active:scale-100',
     sizes[size],
     variants[variant],
     className,

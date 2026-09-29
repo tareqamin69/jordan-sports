@@ -1,10 +1,12 @@
 import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
-import { SectionHeading, buttonClass, tileClass } from '@jordan-sports/ui';
+import { SectionHeading, buttonClass, cx, tileClass } from '@jordan-sports/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import type { CSSProperties } from 'react';
 import { HeroArt } from '@/components/court-art';
 import { GovernorateChips } from '@/components/governorate-chips';
 import { Icon } from '@/components/icons';
+import { Photo } from '@/components/photo';
 import { SearchBar } from '@/components/search-bar';
 import { VenuePicks } from '@/components/venue-picks';
 import { Link } from '@/i18n/navigation';
@@ -26,18 +28,35 @@ export default async function HomePage({ params }: Props) {
   ]);
   // Every active sport is shown, even before it has venues (the admin can hide one later).
   const tiles = catalog.sports;
+  // A self-hosted stock photo of the first sport that has one; the illustrated pitch otherwise.
+  const heroPhoto = catalog.sports.find((s) => s.photos.length > 0)?.photos[0];
+  const count = (key: 'venuesCount' | 'sportsCount', n: number) =>
+    t.rich(key, {
+      count: n,
+      n: () => <span className="count-up" style={{ '--to': n } as CSSProperties} />,
+    });
 
   return (
     <main className="flex-1">
       <section className="relative h-[470px] overflow-hidden rounded-b-hero bg-night sm:h-[540px]">
-        <HeroArt className="absolute inset-0" />
+        {heroPhoto ? (
+          // Taller than the hero so the slow drift never shows an edge.
+          <div className="parallax-slow absolute inset-x-0 -top-16 bottom-0">
+            <Photo photo={heroPhoto} alt="" sizes="100vw" eager />
+          </div>
+        ) : (
+          <HeroArt className="absolute inset-0" />
+        )}
         <div
           aria-hidden
           className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/70 to-transparent"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-night/0 from-40% to-night/90"
+          className={cx(
+            'absolute inset-0 bg-gradient-to-b to-night/90',
+            heroPhoto ? 'from-night/10 from-20%' : 'from-night/0 from-40%',
+          )}
         />
         <div className="absolute inset-x-0 bottom-[92px] sm:bottom-[120px]">
           <div className="mx-auto flex max-w-6xl animate-rise flex-col gap-2.5 px-6 text-canvas sm:px-8">
@@ -48,6 +67,20 @@ export default async function HomePage({ params }: Props) {
               {t('title')}
             </h1>
             <p className="hidden max-w-xl text-lg text-canvas/85 sm:block">{t('description')}</p>
+            {catalog.counts.venues > 0 ? (
+              <p
+                className="flex items-center gap-2 text-sm font-semibold text-canvas/90"
+                data-testid="hero-counts"
+              >
+                <span className="relative flex size-2" aria-hidden>
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-60 motion-reduce:hidden" />
+                  <span className="relative inline-flex size-2 rounded-full bg-lime" />
+                </span>
+                <span>{count('venuesCount', catalog.counts.venues)}</span>
+                <span aria-hidden>·</span>
+                <span>{count('sportsCount', catalog.counts.sports)}</span>
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -57,7 +90,7 @@ export default async function HomePage({ params }: Props) {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        <section aria-labelledby="sports-heading" className="mt-10">
+        <section aria-labelledby="sports-heading" className="reveal mt-10">
           <SectionHeading
             id="sports-heading"
             title={t('sportsTitle')}
@@ -72,21 +105,52 @@ export default async function HomePage({ params }: Props) {
               </Link>
             }
           />
-          <ul className="mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6 sm:gap-3">
-            {tiles.map((sport) => (
-              <li key={sport.id}>
-                <Link
-                  href={{ pathname: '/venues', query: { sport: sport.key } }}
-                  className={tileClass(
-                    false,
-                    'group h-26 hover:border-primary hover:bg-primary hover:text-on-primary',
+          <ul className="reveal-stagger mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6 sm:gap-3">
+            {tiles.map((sport) => {
+              const photo = sport.photos[0];
+              return (
+                <li key={sport.id}>
+                  {photo ? (
+                    <Link
+                      href={{ pathname: '/venues', query: { sport: sport.key } }}
+                      className="lift group relative flex h-28 flex-col justify-end overflow-hidden rounded-tile bg-night p-3 text-canvas"
+                    >
+                      <Photo
+                        photo={photo}
+                        alt=""
+                        sizes="(min-width: 640px) 170px, 33vw"
+                        className="zoom-media !absolute inset-0"
+                      />
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-t from-night/85 via-night/25 to-transparent"
+                      />
+                      <Icon name={sport.icon} className="relative size-5" strokeWidth={1.8} />
+                      <span className="relative mt-1 truncate text-sm font-semibold">
+                        {pick(sport.name, locale)}
+                      </span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href={{ pathname: '/venues', query: { sport: sport.key } }}
+                      className={tileClass(
+                        false,
+                        'group h-28 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:text-on-primary hover:shadow-lift',
+                      )}
+                    >
+                      <Icon
+                        name={sport.icon}
+                        className="size-7 transition-transform duration-base ease-spring group-hover:-rotate-6 group-hover:scale-110"
+                        strokeWidth={1.5}
+                      />
+                      <span className="truncate text-sm font-semibold">
+                        {pick(sport.name, locale)}
+                      </span>
+                    </Link>
                   )}
-                >
-                  <Icon name={sport.icon} className="size-7" strokeWidth={1.5} />
-                  <span className="truncate text-sm font-semibold">{pick(sport.name, locale)}</span>
-                </Link>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -101,7 +165,7 @@ export default async function HomePage({ params }: Props) {
           </Link>
         </div>
 
-        <section aria-labelledby="governorates-heading" className="mt-14">
+        <section aria-labelledby="governorates-heading" className="reveal mt-14">
           <SectionHeading
             id="governorates-heading"
             title={t('governoratesTitle')}
@@ -112,7 +176,7 @@ export default async function HomePage({ params }: Props) {
           </div>
         </section>
 
-        <section className="mb-10 mt-14 flex flex-col gap-3 rounded-card bg-primary px-6 py-7 text-on-primary sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-10">
+        <section className="reveal mb-10 mt-14 flex flex-col gap-3 rounded-card bg-primary px-6 py-7 text-on-primary sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-10">
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-[1.875rem] leading-[1.2] sm:text-[2.5rem]">
               {t('ownerTitle')}
@@ -127,10 +191,14 @@ export default async function HomePage({ params }: Props) {
             href="/manage"
             className={buttonClass({
               variant: 'inverse',
-              className: 'mt-1 self-start sm:self-auto',
+              className: 'group mt-1 gap-2 self-start sm:self-auto',
             })}
           >
             {t('ownerCta')}
+            <Icon
+              name="arrow"
+              className="size-4 transition-transform duration-base ease-soft group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1"
+            />
           </Link>
         </section>
       </div>

@@ -29,13 +29,14 @@ export function VenueCard({
   const href = `/venues/${venue.slug}`;
   return (
     <article
-      className="group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface transition-[border-color,box-shadow,transform] duration-300 ease-soft hover:-translate-y-0.5 hover:shadow-lift has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus"
+      className="lift group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus"
       data-testid="venue-card"
     >
       <div className="relative h-56 overflow-hidden bg-night">
         <VenuePhoto
           venue={venue}
-          className="transition-transform duration-500 ease-soft group-hover:scale-[1.03]"
+          className="zoom-media"
+          sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
         />
         <span className="absolute end-4 top-4 flex gap-1.5">
           {venue.sports.map((s) => (
@@ -89,7 +90,7 @@ export function VenueCard({
               <li key={f.start}>
                 <Link
                   href={{ pathname: href, query: { date, time: f.localStart } }}
-                  className="flex h-9 items-center rounded-full border border-primary/30 bg-brand-50 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary"
+                  className="pressable flex h-11 items-center rounded-full border border-primary/30 bg-brand-50 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary"
                   dir="ltr"
                 >
                   {f.localStart}

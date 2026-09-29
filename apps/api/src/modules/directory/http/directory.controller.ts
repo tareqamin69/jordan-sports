@@ -11,9 +11,21 @@ import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { Public } from '../../../platform/auth/decorators.js';
 import { parseInput } from '../../../platform/http/validation.js';
+import { MEDIA_WIDTHS } from '../../../platform/storage/image-variants.js';
 import { MediaService } from '../../venues/index.js';
 import { AvailabilityViewService } from '../application/availability-view.service.js';
 import { DirectoryService } from '../application/directory.service.js';
+
+/** `?w=` picks a resized copy; other values are rejected so no unbounded variants are created. */
+const mediaWidthQuery = z.object({
+  w: z.coerce
+    .number()
+    .int()
+    .refine((n): n is (typeof MEDIA_WIDTHS)[number] =>
+      (MEDIA_WIDTHS as readonly number[]).includes(n),
+    )
+    .optional(),
+});
 
 @Controller()
 @Public()
@@ -56,9 +68,14 @@ export class DirectoryController {
 
   /** Public photos of approved venues. Immutable: a changed photo gets a new id. */
   @Get('/v1/media/:mediaId')
-  async photo(@Param() params: unknown, @Res() reply: FastifyReply): Promise<void> {
+  async photo(
+    @Param() params: unknown,
+    @Query() query: unknown,
+    @Res() reply: FastifyReply,
+  ): Promise<void> {
     const { mediaId } = parseInput(z.object({ mediaId: z.string().uuid() }), params);
-    const data = await this.media.read(mediaId);
+    const { w } = parseInput(mediaWidthQuery, query);
+    const data = await this.media.read(mediaId, w);
     await reply
       .header('content-type', 'image/webp')
       .header('cache-control', 'public, max-age=31536000, immutable')

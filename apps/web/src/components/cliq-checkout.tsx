@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { useApi } from '@/lib/api';
 import { fieldErrors } from '@/lib/field-errors';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { HoldCountdown } from './hold-countdown';
 import { Icon } from './icons';
 
 /** "m:ss" with Western digits. */
@@ -92,15 +93,18 @@ export function CliqCheckout({
   };
 
   const countdown = (
-    <span
-      data-testid="hold-countdown"
-      className="flex h-10 w-fit items-center gap-1.5 rounded-full bg-accent-300/60 px-4 text-sm font-medium text-ink"
+    <HoldCountdown
+      holdLeft={holdLeft}
+      total={
+        booking.holdExpiresAt
+          ? new Date(booking.holdExpiresAt).getTime() - new Date(booking.createdAt).getTime()
+          : 0
+      }
     >
-      <Icon name="clock" className="size-4 text-clay" />
       {payment.status === 'SUBMITTED'
         ? tq('awaitingCountdown', { time: remaining(holdLeft) })
         : t('countdown', { time: remaining(holdLeft) })}
-    </span>
+    </HoldCountdown>
   );
 
   if (payment.status === 'SUBMITTED') {

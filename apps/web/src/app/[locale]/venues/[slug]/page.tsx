@@ -10,12 +10,25 @@ import { CourtArt } from '@/components/court-art';
 import { Icon } from '@/components/icons';
 import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
-import { VenueMap } from '@/components/venue-map-lazy';
+import { VenueMapCard } from '@/components/venue-map-lazy';
+import { VenueStickyHeader } from '@/components/venue-sticky-header';
 import { directionsUrl } from '@/lib/format';
 import { joinList, joinPlace, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
 
 export const dynamic = 'force-dynamic';
+
+/** Icon per catalog amenity key; amenities added later by the admin get a check mark. */
+const amenityIcon: Record<string, string> = {
+  parking: 'parking',
+  changing_rooms: 'hanger',
+  showers: 'shower',
+  prayer_room: 'dome',
+  cafe: 'cup',
+  equipment_rental: 'tag',
+  spectator_seating: 'seats',
+  accessible: 'accessible',
+};
 
 type Props = {
   params: Promise<{ locale: Locale; slug: string }>;
@@ -117,7 +130,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
 
   const priceFrom = venue.priceFrom;
   const pill =
-    'flex h-11 items-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-ink/30';
+    'pressable flex h-11 items-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-ink/30';
 
   return (
     <main className="flex-1">
@@ -126,7 +139,18 @@ export default async function VenuePage({ params, searchParams }: Props) {
         dangerouslySetInnerHTML={{ __html: jsonLd(venue, locale, url) }}
       />
 
-      <VenueGallery media={venue.media} name={name} icon={venue.sports[0]?.icon}>
+      <VenueStickyHeader
+        name={name}
+        price={priceFrom ? `${t('from')} ${formatMoney(priceFrom, locale)}` : null}
+        bookLabel={t('book')}
+      />
+
+      <VenueGallery
+        media={venue.media}
+        cover={venue.cover}
+        name={name}
+        icon={venue.sports[0]?.icon}
+      >
         <span className="text-xs font-medium ltr:tracking-[0.12em] text-canvas/85">
           {joinList(
             venue.sports.map((s) => pick(s.name, locale)),
@@ -206,7 +230,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
             </div>
 
             {pick(venue.description, locale) ? (
-              <section>
+              <section className="reveal">
                 <SectionHeading title={t('about')} />
                 <p className="mt-3 max-w-prose whitespace-pre-line leading-8 text-ink">
                   {pick(venue.description, locale)}
@@ -214,9 +238,9 @@ export default async function VenuePage({ params, searchParams }: Props) {
               </section>
             ) : null}
 
-            <section>
+            <section className="reveal">
               <SectionHeading title={t('resources')} />
-              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              <ul className="reveal-stagger mt-4 grid gap-3 sm:grid-cols-2">
                 {venue.resources.map((r, i) => (
                   <li
                     key={r.id}
@@ -302,7 +326,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
               <section>
                 <h2 className="font-display text-2xl">{t('address')}</h2>
                 <p className="mt-2 text-ink">{address}</p>
-                {venue.location ? <VenueMap location={venue.location} name={name} /> : null}
+                {venue.location ? <VenueMapCard location={venue.location} name={name} /> : null}
                 <a
                   href={directions}
                   target="_blank"
@@ -317,13 +341,15 @@ export default async function VenuePage({ params, searchParams }: Props) {
             {venue.amenities.length > 0 ? (
               <section>
                 <h2 className="font-display text-2xl">{t('amenities')}</h2>
-                <ul className="mt-3 flex flex-wrap gap-2">
+                <ul className="reveal-stagger mt-3 flex flex-wrap gap-2">
                   {venue.amenities.map((a) => (
                     <li
                       key={a.id}
-                      className="flex h-9 items-center gap-1.5 rounded-full bg-surface px-4 text-sm text-ink ring-1 ring-line"
+                      className="flex h-10 items-center gap-2 rounded-full bg-surface pe-4 ps-1.5 text-sm text-ink ring-1 ring-line"
                     >
-                      <Icon name="check" className="size-4 text-primary" />
+                      <span className="grid size-7 place-items-center rounded-full bg-brand-50 text-primary">
+                        <Icon name={amenityIcon[a.key] ?? 'check'} className="size-4" />
+                      </span>
                       {pick(a.name, locale)}
                     </li>
                   ))}

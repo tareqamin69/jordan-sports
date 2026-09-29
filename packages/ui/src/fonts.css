@@ -2,14 +2,15 @@
  * Self-hosted fonts (no runtime request to a third-party font CDN).
  * Display: Amiri Bold (Arabic + Latin). Body/UI: IBM Plex Sans Arabic first for Arabic,
  * IBM Plex Sans first for English.
+ *
+ * Weights 400/500/600 only: `font-bold` resolves to the 600 file (CSS font matching). The 700
+ * files cost ~70KB on every page for a barely visible difference (performance budget).
  */
 @import '@fontsource/amiri/arabic-700.css';
 @import '@fontsource/amiri/latin-700.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
-@import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
 @import '@fontsource/ibm-plex-sans/latin-400.css';
 @import '@fontsource/ibm-plex-sans/latin-500.css';
 @import '@fontsource/ibm-plex-sans/latin-600.css';
-@import '@fontsource/ibm-plex-sans/latin-700.css';

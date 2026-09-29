@@ -4,6 +4,12 @@ import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
+import {
+  blurDataUrl,
+  deleteWithVariants,
+  readVariant,
+  type MediaWidth,
+} from '../../../platform/storage/image-variants.js';
 import { MEDIA_STORAGE, type MediaStorage } from '../../../platform/storage/media-storage.js';
 import { AuditService } from '../../audit/index.js';
 import type { Actor } from './venues.service.js';
@@ -18,6 +24,8 @@ export interface MediaRef {
   url: string;
   width: number;
   height: number;
+  /** Tiny blurred preview (data URL) shown while the photo loads. */
+  blur: string | null;
 }
 
 export function mediaUrl(id: string): string {
@@ -46,12 +54,33 @@ export class MediaService {
   async forVenue(venueId: string): Promise<MediaRef[]> {
     const rows = await this.db
       .selectFrom('venue.media')
-      .select(['id', 'width', 'height'])
+      .select(['id', 'width', 'height', 'blur', 'storage_key'])
       .where('venue_id', '=', venueId)
       .orderBy('sort_order')
       .orderBy('created_at')
       .execute();
-    return rows.map((r) => ({ id: r.id, url: mediaUrl(r.id), width: r.width, height: r.height }));
+    return Promise.all(
+      rows.map(async (r) => ({
+        id: r.id,
+        url: mediaUrl(r.id),
+        width: r.width,
+        height: r.height,
+        // Photos uploaded before blur-up existed get their preview on first use.
+        blur: r.blur ?? (await this.backfillBlur(r.id, r.storage_key)),
+      })),
+    );
+  }
+
+  private async backfillBlur(id: string, key: string): Promise<string | null> {
+    try {
+      const data = await this.storage.get(key);
+      if (!data) return null;
+      const blur = await blurDataUrl(data);
+      await this.db.updateTable('venue.media').set({ blur }).where('id', '=', id).execute();
+      return blur;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -107,6 +136,7 @@ export class MediaService {
             width: output.info.width,
             height: output.info.height,
             byte_size: output.info.size,
+            blur: await blurDataUrl(output.data),
             sort_order: Number(count.n),
             created_by: actor.userId,
           })
@@ -188,12 +218,12 @@ export class MediaService {
         tx,
       );
     });
-    await this.storage.delete(row.storage_key);
+    await deleteWithVariants(this.storage, row.storage_key);
     return row.venue_id;
   }
 
   /** Public read. Only photos of approved venues are served. */
-  async read(mediaId: string): Promise<Buffer> {
+  async read(mediaId: string, width?: MediaWidth): Promise<Buffer> {
     const row = await this.db
       .selectFrom('venue.media as m')
       .innerJoin('venue.venues as v', 'v.id', 'm.venue_id')
@@ -201,19 +231,19 @@ export class MediaService {
       .where('m.id', '=', mediaId)
       .executeTakeFirst();
     if (!row || row.status !== 'approved') throw Errors.notFound();
-    const data = await this.storage.get(row.storage_key);
+    const data = await readVariant(this.storage, row.storage_key, width);
     if (!data) throw Errors.notFound();
     return data;
   }
 
   /** Admin read: photos of any venue (for review before approval). */
-  async readAny(mediaId: string): Promise<Buffer> {
+  async readAny(mediaId: string, width?: MediaWidth): Promise<Buffer> {
     const row = await this.db
       .selectFrom('venue.media')
       .select('storage_key')
       .where('id', '=', mediaId)
       .executeTakeFirst();
-    const data = row ? await this.storage.get(row.storage_key) : null;
+    const data = row ? await readVariant(this.storage, row.storage_key, width) : null;
     if (!data) throw Errors.notFound();
     return data;
   }

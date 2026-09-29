@@ -23,6 +23,18 @@ const paths: Record<string, string> = {
   arrow: 'M5 12h14M13 6l6 6-6 6',
   check: 'M5 12.5l4.5 4.5L19 7.5',
   close: 'M6 6l12 12M18 6L6 18',
+  expand: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+  map: 'M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20',
+  // Amenities (looked up by the catalog amenity key; unknown keys fall back to a check mark).
+  parking: 'M5 3h14v18H5zM10 17V7h3.5a3 3 0 0 1 0 6H10',
+  hanger: 'M12 7a2 2 0 1 1 2-2c0 1-2 1.5-2 3l8.4 6.2a1 1 0 0 1-.6 1.8H4.2a1 1 0 0 1-.6-1.8L12 8',
+  shower:
+    'M5 21V7a3 3 0 0 1 6 0M8 11h8a4 4 0 0 0-8 0M10 15v.01M13 15v.01M16 15v.01M11 18v.01M14 18v.01M17 18v.01',
+  dome: 'M4 21h16M6 21v-6a6 6 0 0 1 12 0v6M12 9V5.5M12 3.5v.01M10 21v-3a2 2 0 0 1 4 0v3',
+  cup: 'M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M12 3v3',
+  tag: 'M3 12V4h8l10 10-8 8zM7.5 8.5v.01',
+  seats: 'M7 4v9h10M7 13l-2 7M17 13l2 7M7 9h10',
+  accessible: 'M12 4.5v.01M11 8v6h6l2 5M11 11h5M8.5 10.3A5 5 0 1 0 15 18',
   // Sport icons (catalog keys).
   'ball-kick':
     'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5l3.8 2.8-1.5 4.4H9.7l-1.5-4.4zM12 3v4.5M20.4 9.6l-4.6.7M17.6 19.4l-3.3-4.7M6.4 19.4l3.3-4.7M3.6 9.6l4.6.7',

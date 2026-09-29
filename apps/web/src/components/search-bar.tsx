@@ -44,7 +44,7 @@ function Cell({
 }
 
 const select =
-  'absolute inset-0 w-full cursor-pointer appearance-none truncate rounded-2xl bg-transparent px-3 pb-2.5 pt-[26px] text-sm font-semibold text-ink transition-colors duration-200 hover:bg-canvas/70 focus:outline-none focus-visible:bg-canvas focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:text-ink-muted';
+  'absolute inset-0 w-full cursor-pointer appearance-none truncate rounded-2xl bg-transparent px-3 pb-2.5 pt-[26px] text-sm font-semibold text-ink transition-colors duration-200 hover:bg-canvas/70 focus:bg-canvas focus:outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:text-ink-muted';
 
 /**
  * Venue search: sport, governorate → area (Jordan-wide, no city hardcoded), day, time. A plain GET
@@ -85,7 +85,7 @@ export function SearchBar({
       action={`/${locale}/venues`}
       role="search"
       className={cx(
-        'flex flex-col gap-1 rounded-[1.625rem] bg-surface p-2.5 lg:flex-row lg:items-center',
+        'flex flex-col gap-1 rounded-[1.625rem] bg-surface p-2.5 ring-0 ring-primary/20 transition-[box-shadow] duration-base ease-soft focus-within:ring-4 lg:flex-row lg:items-center',
         floating ? 'shadow-float' : 'border border-line',
         className,
       )}
@@ -170,9 +170,13 @@ export function SearchBar({
       </div>
       <button
         type="submit"
-        className="flex h-[54px] shrink-0 items-center justify-center gap-2.5 rounded-[1.125rem] bg-primary px-8 text-base font-semibold text-on-primary transition-[background-color,transform] duration-200 hover:bg-primary-hover active:scale-[0.99]"
+        className="group flex h-[54px] shrink-0 items-center justify-center gap-2.5 rounded-[1.125rem] bg-primary px-8 text-base font-semibold text-on-primary transition-[background-color,transform] duration-fast ease-soft hover:bg-primary-hover active:scale-[0.97]"
       >
-        <Icon name="search" className="size-[19px]" strokeWidth={2.2} />
+        <Icon
+          name="search"
+          className="size-[19px] transition-transform duration-base ease-spring group-hover:scale-110 group-focus-visible:scale-110"
+          strokeWidth={2.2}
+        />
         {t('submit')}
       </button>
     </form>

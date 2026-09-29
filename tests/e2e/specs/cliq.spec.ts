@@ -59,6 +59,7 @@ test.describe('CliQ payments (plan §4–§5)', () => {
       .getByRole('button')
       .filter({ hasText: /^10:00/ })
       .click();
+    await page.getByTestId('book-selected').click();
     await expect(page).toHaveURL(/\/en\/bookings\/[0-9a-f-]{36}$/);
     const bookingUrl = page.url();
     await expect(page.getByTestId('cliq-due')).toHaveText('JOD 5.000');

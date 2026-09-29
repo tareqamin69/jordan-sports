@@ -559,6 +559,7 @@ export interface VenueFacilities {
 }
 
 export interface VenueMedia {
+  blur: string | null;
   byte_size: number;
   content_type: string;
   created_at: Generated<Timestamp>;

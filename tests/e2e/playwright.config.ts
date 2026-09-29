@@ -15,6 +15,9 @@ export default defineConfig({
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     trace: 'retain-on-failure',
+    // Scroll reveals start transparent until scrolled into view; tests (and axe's contrast checks)
+    // see the final state, like users who ask for reduced motion.
+    contextOptions: { reducedMotion: 'reduce' },
   },
   projects: [
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },

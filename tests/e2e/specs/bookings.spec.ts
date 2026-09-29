@@ -29,6 +29,7 @@ test.describe('bookings', () => {
     await page.goto(`${WEB}/en/venues/${venue.slug}`);
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
     await page.getByTestId('slot').getByRole('button').first().click();
+    await page.getByTestId('book-selected').click();
     await expect(page).toHaveURL(/\/en\/sign-in\?next=/);
     const phone = randomPhone();
     await page.locator('input[name="phone"]').fill(phone);
@@ -39,7 +40,10 @@ test.describe('bookings', () => {
     await page.locator('input[name="ageConfirmed"]').check();
     await page.locator('form button[type="submit"]').click();
     await page.getByTestId('mode-player').click();
-    await expect(page).toHaveURL(new RegExp(`/en/venues/${venue.slug}$`));
+    // Back on the venue with the chosen day and time still highlighted.
+    await expect(page).toHaveURL(
+      new RegExp(`/en/venues/${venue.slug}\\?date=\\d{4}-\\d{2}-\\d{2}&time=\\d{2}(%3A|:)\\d{2}$`),
+    );
 
     await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
     await page
@@ -52,6 +56,8 @@ test.describe('bookings', () => {
       .filter({ hasText: /^10:00/ });
     await expect(slot).toContainText('JOD 20.000');
     await slot.click();
+    await expect(page.getByTestId('booking-bar')).toContainText('JOD 20.000');
+    await page.getByTestId('book-selected').click();
     await expect(page).toHaveURL(/\/en\/bookings\/[0-9a-f-]{36}$/);
     await expect(page.getByRole('heading', { name: 'Complete your booking' })).toBeVisible();
     await expect(page.getByTestId('hold-countdown')).toContainText(/9:\d\d|10:00/);
@@ -108,6 +114,7 @@ test.describe('bookings', () => {
       .getByRole('button')
       .filter({ hasText: /^12:00/ })
       .click();
+    await page.getByTestId('book-selected').click();
     await expect(page.getByRole('heading', { name: 'كمّل حجزك' })).toBeVisible();
     await expect(page.getByTestId('booking-price')).toHaveText('20.000 د.أ');
     await page.getByRole('button', { name: 'إلغاء حجز الوقت' }).click();
