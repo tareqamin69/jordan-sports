@@ -31,5 +31,5 @@ export const tabPermission: Record<Tab, OrgPermission> = {
   today: 'booking.read',
   team: 'staff.manage',
   reports: 'reports.read',
-  settings: 'venue.archive',
+  settings: 'venue.edit',
 };

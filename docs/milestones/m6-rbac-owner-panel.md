@@ -34,3 +34,21 @@ Plan and permission matrix: `docs/rbac-plan.md` (decisions in §9).
 - Owner setup: see the "Staff accounts" section of `docs/production.md`.
 - IP allowlist recovery: `node dist/cli/admin.js clear-ip-allowlist` in the api container.
 - New env vars: `SMTP_URL`, `EMAIL_FROM` (`.env.example`).
+
+## QA pass on staging (20 items)
+
+Fixed together with regression tests (`qa-fixes.test.ts`, `launch-cleanup.test.ts`, `qa.spec.ts`,
+plus unit tests for `joinPlace`, `axisTicks`, `freeStarts` and Arabic plural forms).
+
+- **Real bugs found by the new tests:** a venue edit (owner or admin) silently reset the venue's
+  amenities to none (a Zod default under `.partial()`; `venueProfilePatchSchema` has no defaults
+  now), and owners could not reorder photos (missing `UPDATE (sort_order)` grant, migration 0024).
+- **Decisions:** the dashboard now opens on *Today* (the calendar is one tab away); new setting
+  "owner edits send the venue back to review" (default off; migration 0022); hidden sports are
+  hidden from players only (nothing deleted); Islamic holidays are estimates (migration 0023) to be
+  confirmed by the owner; the launch cleanup archives (soft) and cancels upcoming demo bookings
+  without sending messages.
+- **Not reproducible here:** the "30/08 in both date fields" report. Dates are now built from date
+  parts (some browsers format `en-CA` as DD/MM/YYYY, which matches no option), the selects always
+  contain their current value, the price tester starts at today and the bookings tab defaults to
+  today → +14 days.

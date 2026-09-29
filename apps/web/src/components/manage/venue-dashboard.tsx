@@ -32,6 +32,7 @@ import { RulesEditor } from './rules-editor';
 import { MyComplaints, ReportForm } from '../support-center';
 import { ReportsPanel, VenueSettingsPanel } from './reports-panel';
 import { TeamPanel } from './team-panel';
+import { VenueProfilePanel } from './venue-profile-panel';
 import { TodayPanel } from './today-panel';
 
 /** Venue switcher: only shown when the signed-in user manages more than one venue. */
@@ -50,7 +51,7 @@ function VenueSwitcher({ venueId, tab }: { venueId: string; tab: Tab }) {
         onChange={(e) =>
           router.push({
             pathname: `/manage/${e.target.value}`,
-            query: tab === 'calendar' ? {} : { tab },
+            query: tab === 'today' ? {} : { tab },
           })
         }
         className={cx(fieldControlClass, 'appearance-none pe-11')}
@@ -128,8 +129,8 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   if (schedule.isPending) return <Spinner label={tc('loading')} />;
   if (schedule.isError) return <Alert tone="error">{errorMessage(schedule.error)}</Alert>;
   const s = schedule.data;
-  // A tab the role can't use (e.g. an old link) falls back to the calendar.
-  const shown: Tab = visible(tab) ? tab : 'calendar';
+  // A tab the role can't use (e.g. an old link) falls back to today's view.
+  const shown: Tab = visible(tab) ? tab : 'today';
 
   return (
     <>
@@ -152,7 +153,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
                 <Link
                   href={{
                     pathname: `/manage/${venueId}`,
-                    query: key === 'calendar' ? {} : { tab: key },
+                    query: key === 'today' ? {} : { tab: key },
                   }}
                   aria-current={tab === key ? 'page' : undefined}
                   className={chipClass(tab === key, {
@@ -170,7 +171,12 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       {shown === 'calendar' ? <CalendarView schedule={s} /> : null}
       {shown === 'team' ? <TeamPanel venueId={venueId} /> : null}
       {shown === 'reports' ? <ReportsPanel venueId={venueId} /> : null}
-      {shown === 'settings' ? <VenueSettingsPanel schedule={s} /> : null}
+      {shown === 'settings' ? (
+        <div className="flex flex-col gap-6">
+          <VenueProfilePanel schedule={s} />
+          <VenueSettingsPanel schedule={s} />
+        </div>
+      ) : null}
       {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
       {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
       {shown === 'balance' ? <BalancePanel venueId={venueId} timezone={s.venue.timezone} /> : null}

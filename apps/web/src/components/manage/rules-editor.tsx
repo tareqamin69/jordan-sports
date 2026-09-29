@@ -33,9 +33,7 @@ export function RulesEditor({ schedule }: { schedule: VenueSchedule }) {
   const set = <K extends keyof BookingPolicy>(key: K, value: BookingPolicy[K]) =>
     setPolicy((p) => ({ ...p, [key]: value }));
   const minutes = (m: number) =>
-    m >= 60 && m % 60 === 0
-      ? t('hoursShort', { count: String(m / 60) })
-      : t('minutes', { count: String(m) });
+    m >= 60 && m % 60 === 0 ? t('hoursShort', { count: m / 60 }) : t('minutes', { count: m });
 
   return (
     <Card>
@@ -118,11 +116,13 @@ export function RulesEditor({ schedule }: { schedule: VenueSchedule }) {
           disabled={!editable}
           onChange={(e) => set('maxAdvanceDays', Number(e.target.value))}
         >
-          {ADVANCE.map((d) => (
-            <option key={d} value={d}>
-              {t('daysShort', { count: String(d) })}
-            </option>
-          ))}
+          {[...new Set([...ADVANCE, policy.maxAdvanceDays])]
+            .sort((a, b) => a - b)
+            .map((d) => (
+              <option key={d} value={d}>
+                {t('daysShort', { count: d })}
+              </option>
+            ))}
         </SelectField>
         <SelectField
           label={t('rules.bufferBefore')}

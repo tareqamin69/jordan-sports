@@ -33,6 +33,7 @@ import { useCatalog } from '@/lib/catalog';
 import { joinList, pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { useCan } from '@/lib/admin-session';
+import { ReviewSummary } from './review-summary';
 import {
   VenueArchivePanel,
   VenueCommissionPanel,
@@ -93,6 +94,7 @@ export function VenueEditor({ venueId }: { venueId: string }) {
         actions={<Badge data-testid="venue-status">{t(`statuses.${v.status}`)}</Badge>}
       />
       <div className="flex flex-col gap-6">
+        <ReviewSummary venue={v} />
         {can('venues.review') ? <StatusPanel venue={v} /> : null}
         <VenueStatsPanel venue={v} />
         {can('venues.rate') ? <VenueRatingPanel venue={v} /> : null}
@@ -119,8 +121,9 @@ function StatusPanel({ venue }: { venue: AdminVenue }) {
   const change = useVenueMutation(venue.id, (status: VenueStatus) =>
     api(adminSetVenueStatus, { params: { venueId: venue.id }, body: { status, reason } }),
   );
+  // Sticky: the approve/reject buttons stay reachable while the reviewer scrolls the long form.
   return (
-    <Card>
+    <Card className="sticky bottom-3 z-10 shadow-lift" data-testid="status-bar">
       <div className="flex flex-col gap-3">
         {change.isError ? <Alert tone="error">{errorMessage(change.error)}</Alert> : null}
         <TextField

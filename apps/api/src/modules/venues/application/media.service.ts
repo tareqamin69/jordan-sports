@@ -130,6 +130,41 @@ export class MediaService {
     }
   }
 
+  /** Sets the photo order; the first photo is the cover. `mediaIds` must be exactly the venue's photos. */
+  async reorder(venueId: string, mediaIds: readonly string[], actor: Actor): Promise<void> {
+    const current = await this.db
+      .selectFrom('venue.media as m')
+      .innerJoin('venue.venues as v', 'v.id', 'm.venue_id')
+      .select(['m.id', 'v.organization_id'])
+      .where('m.venue_id', '=', venueId)
+      .execute();
+    const ids = new Set(current.map((r) => r.id));
+    if (
+      mediaIds.length !== ids.size ||
+      new Set(mediaIds).size !== mediaIds.length ||
+      !mediaIds.every((id) => ids.has(id))
+    ) {
+      throw new AppError('VALIDATION_FAILED', 400, 'The list must contain each photo exactly once');
+    }
+    await this.db.transaction().execute(async (tx) => {
+      for (const [i, id] of mediaIds.entries()) {
+        await tx.updateTable('venue.media').set({ sort_order: i }).where('id', '=', id).execute();
+      }
+      await this.audit.record(
+        {
+          actorType: actor.type,
+          actorUserId: actor.userId,
+          action: 'venue.photos_reordered',
+          targetType: 'venue',
+          targetId: venueId,
+          organizationId: current[0]?.organization_id ?? null,
+          meta: actor.meta,
+        },
+        tx,
+      );
+    });
+  }
+
   async delete(mediaId: string, actor: Actor): Promise<string> {
     const row = await this.db
       .selectFrom('venue.media as m')

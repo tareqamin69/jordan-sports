@@ -125,3 +125,45 @@ export const adminGetVenueStats = endpoint({
   query: z.object({ days: z.coerce.number().int().min(1).max(365).default(30) }),
   response: venueStatsSchema,
 });
+
+// ---------------------------------------------------------------------------------------------
+// Review summary: what a reviewer needs at a glance before approving (hours and prices).
+// ---------------------------------------------------------------------------------------------
+
+export const venueReviewSummarySchema = z.object({
+  resources: z.array(
+    z.object({
+      id: uuidSchema,
+      status: z.enum(['active', 'inactive', 'archived']),
+      weeklyHours: z.array(
+        z.object({
+          dayOfWeek: z.number().int().min(1).max(7),
+          startMinute: z.number().int(),
+          durationMinutes: z.number().int(),
+        }),
+      ),
+      prices: z.array(
+        z.object({
+          daysOfWeek: z.array(z.number().int()),
+          startMinute: z.number().int(),
+          endMinute: z.number().int(),
+          currency: z.string(),
+          amounts: z.array(
+            z.object({ durationMinutes: z.number().int(), amount: z.number().int() }),
+          ),
+        }),
+      ),
+    }),
+  ),
+});
+export type VenueReviewSummary = z.infer<typeof venueReviewSummarySchema>;
+
+export const adminGetVenueReviewSummary = endpoint({
+  method: 'GET',
+  path: '/v1/admin/venues/:venueId/review-summary',
+  summary: "Opening hours and prices of every court of a venue, for the reviewer's summary",
+  auth: 'admin',
+  permission: 'venues.read',
+  params: venueParams,
+  response: venueReviewSummarySchema,
+});

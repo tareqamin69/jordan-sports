@@ -1,8 +1,9 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import {
   adminCreateArea,
   adminCreateGovernorate,
   adminCreateSport,
+  adminListSports,
   adminUpdateArea,
   adminUpdateGovernorate,
   adminUpdateSport,
@@ -44,6 +45,11 @@ export class AdminCatalogController {
   updateArea(@Param() params: unknown, @Body() body: unknown): Promise<Catalog> {
     const { areaId } = parseInput(adminUpdateArea.params, params);
     return this.catalog.updateArea(areaId, parseInput(adminUpdateArea.body, body));
+  }
+
+  @Get(adminListSports.path)
+  async listSports() {
+    return { items: await this.catalog.adminSports() };
   }
 
   @Post(adminCreateSport.path)

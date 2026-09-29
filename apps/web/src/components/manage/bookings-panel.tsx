@@ -3,6 +3,8 @@
 import {
   cancelVenueBooking,
   createManualBooking,
+  freeStarts,
+  getVenueCalendar,
   listVenueBookings,
   updateScheduleSettings,
   type VenueBooking,
@@ -23,6 +25,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
+import { useNow } from '@/lib/use-now';
 import { dmy } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { can, useSetSchedule } from '@/lib/manage';
@@ -41,7 +44,7 @@ export function BookingsPanel({ schedule }: { schedule: VenueSchedule }) {
   const errorMessage = useErrorMessage();
   const today = businessToday(schedule.venue.timezone, schedule.venue.businessDayStartMinute);
   const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(addDays(today, 13));
+  const [to, setTo] = useState(addDays(today, 14));
   const bookings = useQuery({
     queryKey: ['venue-bookings', venueId, from, to],
     queryFn: () => api(listVenueBookings, { params: { venueId }, query: { from, to } }),
@@ -215,13 +218,28 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
   const today = businessToday(schedule.venue.timezone, bdStart);
   const [resourceId, setResourceId] = useState(resources[0]?.id ?? '');
   const [date, setDate] = useState(today);
-  const [offset, setOffset] = useState(18 * 60 - bdStart);
+  const [offsetChoice, setOffsetChoice] = useState<number | null>(null);
   const [duration, setDuration] = useState(60);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [note, setNote] = useState('');
   const [weeks, setWeeks] = useState(1);
-  const offsets = Array.from({ length: 48 }, (_, i) => i * 30);
+  const now = useNow();
+  // Only times inside opening hours that are still free (and not in the past) are offered; the
+  // form starts on the first of them (QA #16).
+  const calendar = useQuery({
+    queryKey: ['calendar', schedule.venue.id, date],
+    queryFn: () =>
+      api(getVenueCalendar, { params: { venueId: schedule.venue.id }, query: { date } }),
+  });
+  const day = calendar.data?.resources.find((r) => r.id === resourceId);
+  const step = resources.find((r) => r.id === resourceId)?.policy.startAlignmentMinutes ?? 30;
+  const notBefore = calendar.data
+    ? Math.ceil((now - new Date(calendar.data.dayStart).getTime()) / 60_000)
+    : Number.NEGATIVE_INFINITY;
+  const offsets = day ? freeStarts(day.open, day.entries, duration, step, notBefore) : [];
+  const offset =
+    offsetChoice !== null && offsets.includes(offsetChoice) ? offsetChoice : (offsets[0] ?? null);
 
   const create = useMutation({
     mutationFn: () =>
@@ -230,7 +248,7 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
         body: {
           resourceId,
           date,
-          startTime: minutesToTime(bdStart + offset),
+          startTime: minutesToTime(bdStart + (offset ?? 0)),
           durationMinutes: duration,
           customer: { name: name.trim(), ...(phone.trim() ? { phone: phone.trim() } : {}) },
           ...(note.trim() ? { note: note.trim() } : {}),
@@ -302,8 +320,10 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
         />
         <SelectField
           label={t('start')}
-          value={offset}
-          onChange={(e) => setOffset(Number(e.target.value))}
+          value={offset ?? ''}
+          onChange={(e) => setOffsetChoice(Number(e.target.value))}
+          disabled={offsets.length === 0}
+          hint={offsets.length === 0 && !calendar.isPending ? t('noFreeTimes') : undefined}
           name="manualStart"
         >
           {offsets.map((o) => (
@@ -320,7 +340,7 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
         >
           {durations.map((d) => (
             <option key={d} value={d}>
-              {tm('minutes', { count: String(d) })}
+              {tm('minutes', { count: d })}
             </option>
           ))}
         </SelectField>
@@ -361,7 +381,7 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
           ))}
         </SelectField>
         <div className="flex items-end">
-          <Button type="submit" busy={create.isPending} disabled={!resourceId}>
+          <Button type="submit" busy={create.isPending} disabled={!resourceId || offset === null}>
             {t('add')}
           </Button>
         </div>

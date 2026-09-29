@@ -11,10 +11,11 @@ import {
   buttonClass,
 } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
 import { dmyTime } from '@/lib/format';
+import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
 interface Filters {
@@ -31,6 +32,15 @@ export function AuditPage() {
   const tc = useTranslations('common');
   const api = useApi();
   const errorMessage = useErrorMessage();
+  const locale = useLocale();
+  const ta = useTranslations('admin.audit.actions');
+  const tt = useTranslations('admin.audit.targets');
+  // Action keys are dotted ("venue.updated"); message keys use an underscore.
+  const actionLabel = (action: string) => {
+    const key = action.replace(/\./g, '_');
+    return ta.has(key as never) ? ta(key as never) : action;
+  };
+  const targetLabel = (type: string) => (tt.has(type as never) ? tt(type as never) : type);
   const [draft, setDraft] = useState<Filters>(EMPTY);
   const [filters, setFilters] = useState<Filters>(EMPTY);
   const query = Object.fromEntries(
@@ -136,11 +146,19 @@ export function AuditPage() {
                   <td className="px-4 py-3">
                     {entry.actorName ?? (entry.actorType === 'system' ? t('system') : '—')}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs" dir="ltr">
-                    {entry.action}
+                  <td className="px-4 py-3">
+                    <span className="block font-medium">{actionLabel(entry.action)}</span>
+                    <span className="block font-mono text-xs text-ink-muted" dir="ltr">
+                      {entry.action}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-ink-muted" dir="ltr">
-                    {entry.targetType ?? ''}
+                  <td className="px-4 py-3">
+                    {entry.targetName ? (
+                      <span className="block">{pick(entry.targetName, locale)}</span>
+                    ) : null}
+                    <span className="block text-xs text-ink-muted">
+                      {entry.targetType ? targetLabel(entry.targetType) : ''}
+                    </span>
                   </td>
                   <td className="px-4 py-3">{entry.reason ?? ''}</td>
                 </tr>

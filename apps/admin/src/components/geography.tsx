@@ -4,6 +4,7 @@ import {
   adminCreateArea,
   adminCreateGovernorate,
   adminCreateSport,
+  adminListSports,
   adminUpdateArea,
   adminUpdateGovernorate,
   adminUpdateSport,
@@ -18,7 +19,7 @@ import {
   Spinner,
   TextField,
 } from '@jordan-sports/ui';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
@@ -43,7 +44,7 @@ export function GeographyPage() {
         <div className="flex flex-col gap-8">
           <GovernoratesSection catalog={catalog.data} />
           <AreasSection catalog={catalog.data} />
-          <SportsSection catalog={catalog.data} />
+          <SportsSection />
         </div>
       ) : null}
     </>
@@ -125,7 +126,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
                 <span>{pick(g.name, locale)}</span>
                 <span className="flex items-center gap-3">
                   <span className="text-sm text-ink-muted">
-                    {t('areaCount', { count: String(g.areas.length) })}
+                    {t('areaCount', { count: g.areas.length })}
                   </span>
                   <Button
                     size="sm"
@@ -352,13 +353,24 @@ const defaultSportForm = {
   typeNameEn: '',
 };
 
-function SportsSection({ catalog }: { catalog: Catalog }) {
+function SportsSection() {
   const t = useTranslations('admin.geography');
   const locale = useLocale();
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [form, setForm] = useState(defaultSportForm);
+  // All sports, including hidden ones (the public catalog only has the active ones).
+  const sports = useQuery({ queryKey: ['admin-sports'], queryFn: () => api(adminListSports) });
+  const refreshSports = () => queryClient.invalidateQueries({ queryKey: ['admin-sports'] });
+  const toggle = useMutation({
+    mutationFn: (input: { id: string; active: boolean }) =>
+      api(adminUpdateSport, { params: { sportId: input.id }, body: { active: input.active } }),
+    onSuccess: async (data) => {
+      setCatalog(queryClient, data);
+      await refreshSports();
+    },
+  });
   const [renaming, setRenaming] = useState<{
     id: string;
     nameAr: string;
@@ -388,6 +400,7 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
       }),
     onSuccess: (data) => {
       setCatalog(queryClient, data);
+      void refreshSports();
       setForm(defaultSportForm);
     },
   });
@@ -399,6 +412,7 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
       }),
     onSuccess: (data) => {
       setCatalog(queryClient, data);
+      void refreshSports();
       setRenaming(null);
     },
   });
@@ -409,7 +423,7 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
       <p className="mb-3 text-sm text-ink-muted">{t('sportsHint')}</p>
       <Card className="mb-4 p-0">
         <ul className="divide-y divide-line">
-          {catalog.sports.map((s) =>
+          {(sports.data?.items ?? []).map((s) =>
             renaming?.id === s.id ? (
               <li key={s.id} className="flex flex-wrap items-end gap-3 px-5 py-3">
                 <TextField
@@ -451,26 +465,41 @@ function SportsSection({ catalog }: { catalog: Catalog }) {
               </li>
             ) : (
               <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                <span>
+                <span className={s.active ? '' : 'text-ink-muted'}>
                   {pick(s.name, locale)}
                   <span className="ms-2 text-sm text-ink-muted" dir="ltr">
                     ({s.icon})
                   </span>
+                  <span className="ms-2 text-sm text-ink-muted">
+                    {t('sportVenues', { count: s.venueCount })}
+                    {s.active ? '' : ` · ${t('sportHidden')}`}
+                  </span>
                 </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    setRenaming({
-                      id: s.id,
-                      nameAr: s.name.ar ?? '',
-                      nameEn: s.name.en ?? '',
-                      icon: s.icon,
-                    })
-                  }
-                >
-                  {t('rename')}
-                </Button>
+                <span className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    data-testid={`sport-toggle-${s.key}`}
+                    busy={toggle.isPending && toggle.variables?.id === s.id}
+                    onClick={() => toggle.mutate({ id: s.id, active: !s.active })}
+                  >
+                    {s.active ? t('hideSport') : t('showSport')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      setRenaming({
+                        id: s.id,
+                        nameAr: s.name.ar ?? '',
+                        nameEn: s.name.en ?? '',
+                        icon: s.icon,
+                      })
+                    }
+                  >
+                    {t('rename')}
+                  </Button>
+                </span>
               </li>
             ),
           )}

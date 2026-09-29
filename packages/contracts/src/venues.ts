@@ -83,6 +83,8 @@ export const publicVenueSchema = venueSummarySchema.extend({
   contactPhone: z.string().nullable(),
   timezone: z.string(),
   currency: z.string(),
+  /** How many days ahead players can book: the venue's "advance booking days" rule (one stored value). */
+  bookingWindowDays: z.number().int().min(1).max(365),
   amenities: z.array(namedRef),
   media: z.array(mediaSchema),
   resources: z.array(publicResourceSchema),
@@ -130,7 +132,7 @@ const locationInput = z.object({
   lng: z.number().min(-180).max(180),
 });
 
-export const venueProfileInputSchema = z.object({
+const venueProfileFields = z.object({
   slug: slugSchema,
   name: localizedTextSchema(120),
   description: localizedTextSchema(2000).optional(),
@@ -139,7 +141,7 @@ export const venueProfileInputSchema = z.object({
   address: localizedTextSchema(300).optional(),
   location: locationInput.nullable().optional(),
   contactPhone: phoneInputSchema.nullable().optional(),
-  amenityIds: z.array(uuidSchema).max(50).default([]),
+  amenityIds: z.array(uuidSchema).max(50),
   businessDayStartMinute: z.number().int().min(0).max(720).optional(),
   // Self-registration (plan §3, wizard step 8-9). Configuration only — no CliQ payment
   // processing exists yet (P4).
@@ -148,6 +150,15 @@ export const venueProfileInputSchema = z.object({
   cliqAliasHolderName: z.string().trim().min(1).max(120).nullable().optional(),
   depositPercentage: z.number().int().min(0).max(100).nullable().optional(),
 });
+/** Creation: a venue starts with no amenities unless it lists some. */
+export const venueProfileInputSchema = venueProfileFields.extend({
+  amenityIds: venueProfileFields.shape.amenityIds.default([]),
+});
+/**
+ * Editing: every field optional and NO defaults. (A default under `.partial()` is applied in
+ * Zod 4, which silently reset a venue's amenities to none on every edit of another field.)
+ */
+export const venueProfilePatchSchema = venueProfileFields.partial();
 export type VenueProfileInput = z.input<typeof venueProfileInputSchema>;
 
 export const adminResourceSchema = publicResourceSchema.extend({
@@ -244,7 +255,7 @@ export const adminUpdateVenue = endpoint({
   auth: 'admin',
   permission: 'venues.edit',
   params: venueParams,
-  body: venueProfileInputSchema.partial(),
+  body: venueProfilePatchSchema,
   response: adminVenueSchema,
 });
 
@@ -397,7 +408,7 @@ export const updateMyVenue = endpoint({
   auth: 'user',
   orgPermission: 'venue.edit',
   params: venueParams,
-  body: venueProfileInputSchema.omit({ slug: true }).partial(),
+  body: venueProfilePatchSchema.omit({ slug: true }),
   response: adminVenueSchema,
 });
 
@@ -457,6 +468,17 @@ export const uploadMyVenueMedia = endpoint({
   auth: 'user',
   orgPermission: 'venue.edit',
   params: venueParams,
+  response: adminVenueSchema,
+});
+
+export const reorderMyVenueMedia = endpoint({
+  method: 'PUT',
+  path: '/v1/manage/venues/:venueId/media/order',
+  summary: 'Set the photo order of a venue the caller manages (the first photo is the cover)',
+  auth: 'user',
+  orgPermission: 'venue.edit',
+  params: venueParams,
+  body: z.object({ mediaIds: z.array(uuidSchema).max(50) }),
   response: adminVenueSchema,
 });
 

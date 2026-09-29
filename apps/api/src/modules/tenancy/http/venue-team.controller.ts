@@ -54,12 +54,13 @@ export class VenueTeamController {
     @Req() request: FastifyRequest,
   ) {
     const { memberId } = parseInput(changeVenueTeamRole.params, params);
-    const { role } = parseInput(changeVenueTeamRole.body, body);
+    const { role, confirmOwner } = parseInput(changeVenueTeamRole.body, body);
     tenantOf(request);
     return this.team.changeRole(
       { userId: actor.userId, meta: requestMeta(request) },
       memberId,
       role,
+      confirmOwner,
     );
   }
 

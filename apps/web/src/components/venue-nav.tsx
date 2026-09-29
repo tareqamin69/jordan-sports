@@ -4,7 +4,8 @@ import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Link, usePathname } from '@/i18n/navigation';
-import { useManagedVenues } from '@/lib/manage';
+import { tabPermission, type Tab } from '@/lib/manage-tabs';
+import { can, useManagedVenues, useVenueSchedule } from '@/lib/manage';
 import { Icon } from './icons';
 
 const VENUE_ID = /^\/manage\/([0-9a-f-]{36})/;
@@ -27,7 +28,13 @@ export function VenueNav() {
   const single = venues.data?.items.length === 1 ? venues.data.items[0]!.id : undefined;
   const venueId = matched ?? single;
   const base = venueId ? `/manage/${venueId}` : '/manage';
-  const tab = matched ? (searchParams.get('tab') ?? 'calendar') : null;
+  const tab = matched ? (searchParams.get('tab') ?? 'today') : null;
+  // Each top-level item links to a tab this role can actually open (QA #18).
+  const schedule = useVenueSchedule(venueId ?? '');
+  const permitted = (key: Tab) => !schedule.data || can(schedule.data, tabPermission[key]);
+  const settingsTab = (['settings', 'hours', 'pricing', 'closures', 'rules'] as const).find(
+    permitted,
+  );
   const currentVenue = venues.data?.items.find((v) => v.id === venueId);
   // Calendar/bookings/hours only make sense once the venue is public: before that, replace them
   // with a single "status" item pointing at the dashboard, which explains where things stand.
@@ -47,10 +54,10 @@ export function VenueNav() {
       : ([
           {
             key: 'today',
-            href: base,
+            href: { pathname: base, query: { tab: 'today' } },
             icon: 'home',
             label: t('today'),
-            active: matched !== undefined && tab === 'calendar',
+            active: matched !== undefined && tab === 'today',
           },
           {
             key: 'bookings',
@@ -59,13 +66,17 @@ export function VenueNav() {
             label: t('bookings'),
             active: tab === 'bookings',
           },
-          {
-            key: 'settings',
-            href: { pathname: base, query: { tab: 'hours' } },
-            icon: 'sliders',
-            label: t('settings'),
-            active: tab !== null && tab !== 'calendar' && tab !== 'bookings',
-          },
+          ...(settingsTab
+            ? [
+                {
+                  key: 'settings',
+                  href: { pathname: base, query: { tab: settingsTab } },
+                  icon: 'sliders',
+                  label: t('settings'),
+                  active: tab !== null && tab !== 'today' && tab !== 'bookings',
+                },
+              ]
+            : []),
         ] as const)),
     {
       key: 'account',

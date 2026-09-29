@@ -2,7 +2,7 @@ import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { PageHeader, chipClass } from '@jordan-sports/ui';
+import { PageHeader, buttonClass, chipClass } from '@jordan-sports/ui';
 import { Icon } from '@/components/icons';
 import { SearchBar } from '@/components/search-bar';
 import { VenueCard } from '@/components/venue-card';
@@ -66,7 +66,10 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   ]);
   const sportName = catalog.sports.find((s) => s.key === sport)?.name;
 
-  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
+  const offeredSports = catalog.sports;
+  const sportHasVenues = sport
+    ? catalog.offeredSportIds.includes(catalog.sports.find((x) => x.key === sport)?.id ?? '')
+    : true;
   const keep = {
     ...(governorate ? { governorate } : {}),
     ...(area ? { area } : {}),
@@ -115,8 +118,25 @@ export default async function VenuesPage({ params, searchParams }: Props) {
       </nav>
 
       {venues.items.length === 0 ? (
-        <div className="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-ink-muted">
-          {date ? t('emptySearch') : t('empty')}
+        <div
+          className="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-ink-muted"
+          data-testid="venues-empty"
+        >
+          {sport && !sportHasVenues ? (
+            <>
+              <p>{t('emptySport')}</p>
+              <Link
+                href="/manage/register"
+                className={buttonClass({ size: 'sm', className: 'mt-4' })}
+              >
+                {t('emptySportCta')}
+              </Link>
+            </>
+          ) : date ? (
+            t('emptySearch')
+          ) : (
+            t('empty')
+          )}
         </div>
       ) : (
         <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

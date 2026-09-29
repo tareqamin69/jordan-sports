@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, Param, Post, Query, Req } from '@nestj
 import {
   adminArchiveVenue,
   adminGetVenueRating,
+  adminGetVenueReviewSummary,
   adminGetVenueStats,
   adminRateVenue,
   archiveOwnVenue,
@@ -36,6 +37,13 @@ export class AdminVenueOversightController {
       input,
     );
     return { ok: true as const };
+  }
+
+  @Get(adminGetVenueReviewSummary.path)
+  reviewSummary(@Param() params: unknown) {
+    return this.oversight.reviewSummary(
+      parseInput(adminGetVenueReviewSummary.params, params).venueId,
+    );
   }
 
   @Get(adminGetVenueRating.path)

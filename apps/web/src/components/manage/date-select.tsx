@@ -26,7 +26,12 @@ export function DateSelect({
 }) {
   const format = useFormatter();
   const options = Array.from({ length: days }, (_, i) => addDays(from, i));
-  if (value && !options.includes(value)) options.unshift(value);
+  // The current value is always an option (a select whose value matches nothing shows its first
+  // entry, which would silently look like a different date).
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value) && !options.includes(value)) {
+    options.push(value);
+    options.sort();
+  }
   return (
     <SelectField label={label} value={value} onChange={(e) => onChange(e.target.value)} name={name}>
       {options.map((d) => (

@@ -366,6 +366,46 @@ export class VenuesService {
     this.catalog.invalidate();
   }
 
+  /**
+   * A published venue whose owner changed its name or photos goes back to the review queue when
+   * the platform setting asks for it. Outside the normal transition table on purpose: it is the
+   * platform's rule, not a free move the owner can make.
+   */
+  async returnToReview(venueId: string, reason: string, actor: Actor): Promise<boolean> {
+    const changed = await this.db.transaction().execute(async (tx) => {
+      const current = await tx
+        .selectFrom('venue.venues')
+        .select(['status', 'organization_id'])
+        .where('id', '=', venueId)
+        .where('archived_at', 'is', null)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!current || current.status !== 'approved') return false;
+      await tx
+        .updateTable('venue.venues')
+        .set({ status: 'submitted', status_reason: reason })
+        .where('id', '=', venueId)
+        .execute();
+      await this.audit.record(
+        {
+          actorType: actor.type,
+          actorUserId: actor.userId,
+          action: 'venue.status_changed',
+          targetType: 'venue',
+          targetId: venueId,
+          organizationId: current.organization_id,
+          reason,
+          details: { from: 'approved', to: 'submitted', cause: 'owner_edit' },
+          meta: actor.meta,
+        },
+        tx,
+      );
+      return true;
+    });
+    if (changed) this.catalog.invalidate();
+    return changed;
+  }
+
   async addFacility(venueId: string, name: Localized, actor: Actor): Promise<void> {
     const venue = await this.find(venueId);
     await this.db.transaction().execute(async (tx) => {

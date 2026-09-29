@@ -141,6 +141,14 @@ export function Dashboard() {
                 formatValue={(v) => formatMoney({ amount: Math.round(v), currency: 'JOD' }, locale)}
                 formatDate={day}
                 tableLabel={t('showTable')}
+                minStep={1000}
+                formatTick={(v) =>
+                  format.number(v / 1000, {
+                    style: 'currency',
+                    currency: 'JOD',
+                    maximumFractionDigits: 0,
+                  })
+                }
               />
             </Card>
           ) : null}

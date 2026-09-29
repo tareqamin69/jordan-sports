@@ -1,15 +1,7 @@
 'use client';
 
+import { axisTicks } from '@jordan-sports/money';
 import { useId, useState } from 'react';
-
-/** Rounds up to a clean axis maximum (1, 2, 2.5, 5 × 10^n). */
-function niceMax(value: number): number {
-  if (value <= 0) return 1;
-  const exp = 10 ** Math.floor(Math.log10(value));
-  const f = value / exp;
-  const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
-  return nice * exp;
-}
 
 const W = 640;
 const H = 200;
@@ -26,22 +18,28 @@ export function DailyColumns({
   formatValue,
   formatDate,
   tableLabel,
+  formatTick,
+  minStep = 1,
 }: {
   title: string;
   points: ReadonlyArray<{ date: string; value: number }>;
   formatValue: (v: number) => string;
   formatDate: (date: string) => string;
   tableLabel: string;
+  /** Axis label for a tick (defaults to `formatValue`); money uses whole dinars. */
+  formatTick?: (v: number) => string;
+  /** Smallest axis step in value units (e.g. 1000 fils = 1 JOD). */
+  minStep?: number;
 }) {
   const id = useId();
   const [hover, setHover] = useState<number | null>(null);
-  const max = niceMax(Math.max(...points.map((p) => p.value), 0));
+  const ticks = axisTicks(Math.max(...points.map((p) => p.value), 0), minStep);
+  const max = ticks.at(-1)!;
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
   const band = plotW / Math.max(points.length, 1);
   const barW = Math.min(24, band * 0.6);
   const y = (v: number) => PAD.top + plotH - (v / max) * plotH;
-  const ticks = [0, max / 2, max];
   const labelEvery = Math.ceil(points.length / 7);
   const active = hover === null ? null : points[hover];
 
@@ -75,7 +73,7 @@ export function DailyColumns({
                 dominantBaseline="middle"
                 className="fill-ink-muted text-[11px] tabular-nums"
               >
-                {formatValue(tick)}
+                {(formatTick ?? formatValue)(tick)}
               </text>
             </g>
           ))}

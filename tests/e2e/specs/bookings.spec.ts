@@ -63,6 +63,8 @@ test.describe('bookings', () => {
     await page.getByLabel('I will pay at the venue and I accept the cancellation terms.').check();
     await confirm.click();
     await expect(page.getByText('Your booking is confirmed.')).toBeVisible();
+    // The banner belongs to this moment (?confirmed=1), not to later visits.
+    await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]{36}\?confirmed=1$/);
     await expect(page.getByTestId('booking-status')).toHaveText('Confirmed');
     const reference = (await page.getByTestId('booking-reference').textContent())?.trim();
     expect(reference).toMatch(/^[A-Z0-9]{8}$/);
@@ -82,9 +84,13 @@ test.describe('bookings', () => {
     await expect(page.getByTestId('my-booking')).toHaveCount(1);
     await expect(page.getByTestId('my-booking')).toContainText('Confirmed');
     await page.getByTestId('my-booking').click();
+    await expect(page.getByTestId('booking-status')).toHaveText('Confirmed');
+    await expect(page.getByText('Your booking is confirmed.')).toHaveCount(0);
     await page.getByRole('button', { name: 'Cancel booking' }).click();
     await page.getByRole('button', { name: 'Yes, cancel' }).click();
     await expect(page.getByTestId('booking-status')).toHaveText('Cancelled');
+    // "Cancelled" appears once (the status badge), not again as a notice.
+    await expect(page.getByText('Cancelled', { exact: true })).toHaveCount(1);
   });
 
   test('a player releases a held time in Arabic', async ({ page }) => {
@@ -130,10 +136,10 @@ test.describe('bookings', () => {
     await expect(page.getByTestId('venue-booking').first()).toContainText('Weekly');
     await expect(page.getByTestId('venue-booking')).toHaveCount(2);
 
-    // Same time again: taken.
-    await page.locator('input[name="manualName"]').fill('Walk-in');
-    await page.getByRole('button', { name: 'Add booking' }).click();
-    await expect(page.getByText('Sorry, this time was just taken.')).toBeVisible();
+    // The form only offers free times inside opening hours: 20:00 is taken now and no longer listed.
+    const starts = page.locator('select[name="manualStart"] option');
+    await expect(starts.filter({ hasText: '20:00' })).toHaveCount(0);
+    await expect(starts.first()).not.toHaveText('06:00');
 
     // Cancel one with a reason.
     const first = page.getByTestId('venue-booking').first();

@@ -1,5 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { VenueRating, VenueRatingTag, VenueStats } from '@jordan-sports/contracts';
+import type {
+  VenueRating,
+  VenueRatingTag,
+  VenueReviewSummary,
+  VenueStats,
+} from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
@@ -10,6 +15,8 @@ import { AppError, Errors } from '../../../platform/http/errors.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
 import { AuditService } from '../../audit/index.js';
 import { CatalogService } from '../../catalog/index.js';
+import { PricingService } from '../../pricing/index.js';
+import { ScheduleDataService } from '../../scheduling/index.js';
 
 interface Caller {
   readonly type: 'admin' | 'user';
@@ -31,6 +38,8 @@ export class VenueOversightService {
     @Inject(DATABASE) private readonly db: Db,
     private readonly audit: AuditService,
     private readonly catalog: CatalogService,
+    private readonly schedule: ScheduleDataService,
+    private readonly pricing: PricingService,
   ) {}
 
   private async ensureVenue(db: Db | Tx, venueId: string) {
@@ -109,6 +118,41 @@ export class VenueOversightService {
       );
     });
     this.catalog.invalidate();
+  }
+
+  async reviewSummary(venueId: string): Promise<VenueReviewSummary> {
+    await this.ensureVenue(this.db, venueId);
+    const resources = await this.db
+      .selectFrom('resource.resources')
+      .select(['id', 'status'])
+      .where('venue_id', '=', venueId)
+      .where('status', '!=', 'archived')
+      .orderBy('sort_order')
+      .orderBy('created_at')
+      .execute();
+    const ids = resources.map((r) => r.id);
+    const [hours, rules] = await Promise.all([
+      this.schedule.weeklyHours(ids),
+      this.pricing.rulesFor(ids),
+    ]);
+    return {
+      resources: resources.map((r) => ({
+        id: r.id,
+        status: r.status as 'active' | 'inactive',
+        weeklyHours: hours.get(r.id) ?? [],
+        prices: (rules.get(r.id) ?? [])
+          .filter((p) => p.dateFrom === null)
+          .map((p) => ({
+            daysOfWeek: [...p.daysOfWeek],
+            startMinute: p.startMinute,
+            endMinute: p.endMinute,
+            currency: p.currency,
+            amounts: [...p.amounts.entries()]
+              .map(([durationMinutes, amount]) => ({ durationMinutes, amount }))
+              .sort((a, b) => a.durationMinutes - b.durationMinutes),
+          })),
+      })),
+    };
   }
 
   async ratings(venueId: string): Promise<{ current: VenueRating | null; history: VenueRating[] }> {

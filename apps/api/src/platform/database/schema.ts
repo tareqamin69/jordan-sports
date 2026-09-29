@@ -373,6 +373,7 @@ export interface PlatformSettings {
   support_whatsapp: string | null;
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
+  venue_edits_need_review: Generated<boolean>;
 }
 
 export interface PlatformVenueRatings {

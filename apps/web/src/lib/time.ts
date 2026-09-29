@@ -22,13 +22,24 @@ export function businessToday(
   businessDayStartMinute: number,
   now = new Date(),
 ): string {
-  const shifted = new Date(now.getTime() - businessDayStartMinute * 60_000);
-  return new Intl.DateTimeFormat('en-CA', {
+  return isoDateInZone(new Date(now.getTime() - businessDayStartMinute * 60_000), timeZone);
+}
+
+/**
+ * Calendar date (YYYY-MM-DD, Western digits) of an instant in a time zone. Built from the date
+ * parts, not from a locale's date pattern: some browsers format `en-CA` as DD/MM/YYYY, which then
+ * matches no <option> and shows the first list entry instead of today (QA #15, #17).
+ */
+export function isoDateInZone(instant: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
+    numberingSystem: 'latn',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(shifted);
+  }).formatToParts(instant);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
 /** A noon-UTC Date for formatting a calendar date's weekday/day name. */

@@ -11,3 +11,5 @@ export function pick(
 export function joinList(items: string[], locale: string): string {
   return items.filter(Boolean).join(locale === 'ar' ? '، ' : ', ');
 }
+
+export { joinPlace } from '@jordan-sports/i18n/text';

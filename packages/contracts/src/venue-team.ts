@@ -43,7 +43,9 @@ export const addVenueTeamMember = endpoint({
   body: z.object({
     phone: phoneInputSchema,
     displayName: displayNameSchema,
-    role: membershipRoleSchema,
+    role: membershipRoleSchema.default('staff'),
+    /** Required to give someone the owner role (full control of the venue). */
+    confirmOwner: z.boolean().optional(),
   }),
   response: teamResponse,
 });
@@ -55,7 +57,7 @@ export const changeVenueTeamRole = endpoint({
   auth: 'user',
   orgPermission: 'staff.manage',
   params: memberParams,
-  body: z.object({ role: membershipRoleSchema }),
+  body: z.object({ role: membershipRoleSchema, confirmOwner: z.boolean().optional() }),
   response: teamResponse,
 });
 

@@ -1,4 +1,5 @@
 import { BRAND_NAME_LATIN } from '@jordan-sports/brand';
+import { isoDateInZone } from './time';
 
 /** Jordanian numeric date: DD/MM/YYYY (Western digits) from a YYYY-MM-DD calendar date. */
 export function dmy(date: string): string {
@@ -13,12 +14,7 @@ export function dayLabel(date: string, weekday: string): string {
 
 /** Calendar date (YYYY-MM-DD) of an instant in a time zone. */
 export function dateInZone(instant: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(instant);
+  return isoDateInZone(instant, timeZone);
 }
 
 /** "HH:mm" of an instant in a time zone. */

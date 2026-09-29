@@ -169,13 +169,38 @@ export const adminCreateSport = endpoint({
   response: catalogSchema,
 });
 
+export const adminSportSchema = z.object({
+  id: uuidSchema,
+  key: z.string(),
+  name: localizedSchema,
+  icon: z.string(),
+  /** Inactive sports are hidden from players; nothing is deleted. */
+  active: z.boolean(),
+  /** Approved venues that offer the sport. */
+  venueCount: z.number().int(),
+});
+export type AdminSport = z.infer<typeof adminSportSchema>;
+
+export const adminListSports = endpoint({
+  method: 'GET',
+  path: '/v1/admin/sports',
+  summary: 'Every sport, active or hidden, with how many approved venues offer it',
+  auth: 'admin',
+  permission: 'catalog.manage',
+  response: z.object({ items: z.array(adminSportSchema) }),
+});
+
 export const adminUpdateSport = endpoint({
   method: 'PATCH',
   path: '/v1/admin/sports/:sportId',
-  summary: 'Rename or re-icon a sport',
+  summary: 'Rename, re-icon, hide or show a sport',
   auth: 'admin',
   permission: 'catalog.manage',
   params: z.object({ sportId: uuidSchema }),
-  body: z.object({ name: localizedSchema.optional(), icon: z.string().max(60).optional() }),
+  body: z.object({
+    name: localizedSchema.optional(),
+    icon: z.string().max(60).optional(),
+    active: z.boolean().optional(),
+  }),
   response: catalogSchema,
 });

@@ -132,3 +132,23 @@ export function formatMoney(value: Money, locale: string): string {
   const symbol = symbols[value.currency] ?? { ar: value.currency, en: value.currency };
   return locale === 'ar' ? `${number} ${symbol.ar}` : `${symbol.en} ${number}`;
 }
+
+/**
+ * Axis ticks on whole steps (1, 2, 5 × 10ⁿ), never below `minStep`: counts never show 0.5
+ * bookings and money never shows fractions of a dinar (QA #14).
+ */
+export function axisTicks(max: number, minStep = 1): number[] {
+  const target = Math.max(max, minStep) / 3;
+  let step = minStep;
+  for (let exp = 10 ** Math.floor(Math.log10(Math.max(target, 1))); ; exp *= 10) {
+    const found = [1, 2, 5, 10].map((f) => f * exp).find((c) => c >= target && c >= minStep);
+    if (found !== undefined) {
+      step = found;
+      break;
+    }
+  }
+  const top = Math.max(Math.ceil(max / step), 1) * step;
+  const ticks: number[] = [];
+  for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
+  return ticks;
+}

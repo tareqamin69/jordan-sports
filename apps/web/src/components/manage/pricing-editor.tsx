@@ -27,13 +27,7 @@ import { useApi } from '@/lib/api';
 import { dmy } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
-import {
-  addDays,
-  businessToday,
-  isoWeekdayDate,
-  minutesToTime,
-  weekdaysInDisplayOrder,
-} from '@/lib/time';
+import { businessToday, isoWeekdayDate, minutesToTime, weekdaysInDisplayOrder } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { DateSelect } from './date-select';
 
@@ -124,7 +118,7 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
                   {joinList(
                     g.rule.amounts.map(
                       (a) =>
-                        `${t('minutes', { count: String(a.durationMinutes) })}: ${formatMoney({ amount: a.amount, currency: g.rule.currency }, locale)}`,
+                        `${t('minutes', { count: a.durationMinutes })}: ${formatMoney({ amount: a.amount, currency: g.rule.currency }, locale)}`,
                     ),
                     locale,
                   )}
@@ -389,7 +383,7 @@ function BandForm({
         {durations.map((d) => (
           <TextField
             key={d}
-            label={t('pricing.priceFor', { duration: t('minutes', { count: String(d) }) })}
+            label={t('pricing.priceFor', { duration: t('minutes', { count: d }) })}
             placeholder={t('pricing.pricePlaceholder')}
             inputMode="decimal"
             dir="ltr"
@@ -511,7 +505,7 @@ function PricePreview({ schedule, bdStart }: { schedule: VenueSchedule; bdStart:
           ))}
         </SelectField>
         <DateSelect
-          from={addDays(today, -7)}
+          from={today}
           days={60}
           label={t('pricing.previewDate')}
           value={date}
@@ -538,7 +532,7 @@ function PricePreview({ schedule, bdStart }: { schedule: VenueSchedule; bdStart:
         >
           {(resource?.policy.slotDurations ?? [60]).map((d) => (
             <option key={d} value={d}>
-              {t('minutes', { count: String(d) })}
+              {t('minutes', { count: d })}
             </option>
           ))}
         </SelectField>

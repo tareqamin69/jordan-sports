@@ -62,7 +62,14 @@ export function VenueGallery({
           ))}
         </div>
       ) : (
-        <CourtArt icon={icon} className="absolute inset-0" />
+        // The illustration only fills the area above the title block, so its court lines never
+        // cross the venue name or address (QA #3).
+        <div
+          className="absolute inset-x-0 top-0 h-[calc(100%-15rem)] min-h-40 overflow-hidden"
+          style={{ maskImage: 'linear-gradient(to bottom, black 65%, transparent)' }}
+        >
+          <CourtArt icon={icon} />
+        </div>
       )}
       <div
         aria-hidden
@@ -70,7 +77,10 @@ export function VenueGallery({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-35% to-night/90"
+        className={cx(
+          'pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-35% to-night/90',
+          media.length === 0 && 'from-55%',
+        )}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-10 sm:pb-12">
         <div className="pointer-events-auto mx-auto flex max-w-6xl animate-rise flex-col gap-2 px-6 text-canvas sm:px-8">

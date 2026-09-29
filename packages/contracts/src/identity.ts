@@ -274,6 +274,8 @@ export const auditLogSchema = z.object({
   action: z.string(),
   targetType: z.string().nullable(),
   targetId: z.string().nullable(),
+  /** The target's name (venue, organization, user, booking reference…) when it can be resolved. */
+  targetName: z.object({ ar: z.string().optional(), en: z.string().optional() }).nullable(),
   organizationId: uuidSchema.nullable(),
   reason: z.string().nullable(),
   details: z.record(z.string(), z.unknown()),

@@ -24,6 +24,8 @@ type Slot = PricedAvailability['resources'][number]['slots'][number];
 interface Props {
   slug: string;
   timezone: string;
+  /** Days ahead players can book (the venue's rule). */
+  windowDays: number;
   resources: PublicResource[];
   initialDate?: string | undefined;
   initialTime?: string | undefined;
@@ -33,8 +35,6 @@ interface Choice {
   resourceId: string;
   slot: Slot;
 }
-
-const WEEKS = 4;
 
 const dayTile = (active: boolean) =>
   cx(
@@ -51,7 +51,15 @@ const arrow =
  * Public booking picker: length first, then day, then start time — across any free court (the
  * cheapest free court at that time is booked) or per court. Tapping a time holds it.
  */
-export function VenueAvailability({ slug, timezone, resources, initialDate, initialTime }: Props) {
+export function VenueAvailability({
+  slug,
+  timezone,
+  windowDays,
+  resources,
+  initialDate,
+  initialTime,
+}: Props) {
+  const WEEKS = Math.max(1, Math.ceil(windowDays / 7));
   const t = useTranslations('web.availability');
   const locale = useLocale();
   const format = useFormatter();
@@ -62,7 +70,7 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
   const queryClient = useQueryClient();
   // Business day start is not exposed publicly; 06:00 matches the default and only affects 00:00–06:00.
   const today = businessToday(timezone, 360);
-  const lastDay = addDays(today, WEEKS * 7 - 1);
+  const lastDay = addDays(today, windowDays - 1);
   const startDate =
     initialDate && initialDate >= today && initialDate <= lastDay ? initialDate : today;
   const [week, setWeek] = useState(() =>
@@ -233,8 +241,9 @@ export function VenueAvailability({ slug, timezone, resources, initialDate, init
               key={d}
               type="button"
               onClick={() => setDate(d)}
+              disabled={d > lastDay}
               aria-pressed={d === date}
-              className={dayTile(d === date)}
+              className={cx(dayTile(d === date), d > lastDay && 'pointer-events-none opacity-30')}
             >
               <span className="text-[11px] leading-4 opacity-80">
                 {format.dateTime(dateForLabel(d), { weekday: 'short' })}

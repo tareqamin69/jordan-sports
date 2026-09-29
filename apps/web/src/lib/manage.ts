@@ -20,6 +20,7 @@ export function useVenueSchedule(venueId: string) {
   return useQuery({
     queryKey: ['schedule', venueId],
     queryFn: () => api(getVenueSchedule, { params: { venueId } }),
+    enabled: venueId !== '',
   });
 }
 

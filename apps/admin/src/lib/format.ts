@@ -6,12 +6,15 @@ export function dmy(date: string): string {
 
 /** "DD/MM/YYYY HH:mm" of an instant in Amman time. */
 export function dmyTime(instant: Date, timeZone = 'Asia/Amman'): string {
-  const date = new Intl.DateTimeFormat('en-CA', {
+  const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
+    numberingSystem: 'latn',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(instant);
+  }).formatToParts(instant);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  const date = `${get('year')}-${get('month')}-${get('day')}`;
   const time = new Intl.DateTimeFormat('en-GB', {
     timeZone,
     hour: '2-digit',

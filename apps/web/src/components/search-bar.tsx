@@ -68,8 +68,8 @@ export function SearchBar({
   const [governorateKey, setGovernorateKey] = useState(values.governorate ?? '');
   const governorate = catalog.governorates.find((g) => g.key === governorateKey);
   const areas = governorate?.areas ?? [];
-  // Players only choose from sports that at least one approved venue actually offers.
-  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
+  // Every active sport can be chosen, even before it has venues.
+  const offeredSports = catalog.sports;
   const today = businessToday('Asia/Amman', 360);
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
   const dayLabel = (d: string, i: number) =>

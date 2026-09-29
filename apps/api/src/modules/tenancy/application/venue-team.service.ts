@@ -8,6 +8,13 @@ import type { RequestMeta } from '../../../platform/http/request-context.js';
 import { AuditService } from '../../audit/index.js';
 import { normalizePhone, UsersService } from '../../identity/index.js';
 
+/** Giving someone full control of the venue must be confirmed explicitly (QA #1). */
+function ensureOwnerConfirmed(role: MembershipRole, confirmOwner: boolean | undefined): void {
+  if (role === 'owner' && confirmOwner !== true) {
+    throw new AppError('VALIDATION_FAILED', 400, 'Confirm giving the owner role');
+  }
+}
+
 interface Caller {
   readonly userId: string;
   readonly meta: RequestMeta;
@@ -48,8 +55,14 @@ export class VenueTeamService {
   async add(
     caller: Caller,
     organizationId: string,
-    input: { phone: string; displayName: string; role: MembershipRole },
+    input: {
+      phone: string;
+      displayName: string;
+      role: MembershipRole;
+      confirmOwner?: boolean | undefined;
+    },
   ) {
+    ensureOwnerConfirmed(input.role, input.confirmOwner);
     const phone = normalizePhone(input.phone);
     if (!phone) throw new AppError('INVALID_PHONE', 400);
     return this.db.transaction().execute(async (tx) => {
@@ -111,7 +124,13 @@ export class VenueTeamService {
     if (owners.length === 0) throw Errors.conflict('LAST_OWNER');
   }
 
-  async changeRole(caller: Caller, memberId: string, role: MembershipRole) {
+  async changeRole(
+    caller: Caller,
+    memberId: string,
+    role: MembershipRole,
+    confirmOwner?: boolean | undefined,
+  ) {
+    ensureOwnerConfirmed(role, confirmOwner);
     return this.db.transaction().execute(async (tx) => {
       const member = await this.target(tx, caller, memberId);
       if (member.role === 'owner' && role !== 'owner') {

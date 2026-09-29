@@ -10,22 +10,12 @@ import {
 import { Alert, Badge, Button, Card, Ltr, Spinner } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
 import { businessToday } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
-
-/** The current time, refreshed every 30 seconds (button windows open and close with it). */
-function useNow(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
+import { useNow } from '@/lib/use-now';
 
 /** Front desk: today's bookings in time order, with arrival and no-show buttons. */
 export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {

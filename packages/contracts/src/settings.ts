@@ -19,6 +19,8 @@ export const platformSettingsSchema = z.object({
   /** Default commission on online bookings in basis points (800 = 8%). */
   commissionBps: z.number().int().min(0).max(5000),
   supportWhatsapp: z.string().nullable(),
+  /** Owner edits of a published venue's name or photos send it back to review. */
+  venueEditsNeedReview: z.boolean(),
   features: featureFlagsSchema,
   /** Server defaults and the values in effect after applying the owner's overrides. */
   effectiveFeatures: z.object({ cliqPayments: z.boolean() }),
@@ -50,6 +52,7 @@ export const adminUpdateSettings = endpoint({
       commissionBps: z.number().int().min(0).max(5000).optional(),
       /** Any Jordanian mobile format; stored in international form. */
       supportWhatsapp: phoneInputSchema.nullable().optional(),
+      venueEditsNeedReview: z.boolean().optional(),
       features: featureFlagsSchema.partial().optional(),
       adminIpAllowlist: z.array(ipOrCidrSchema).max(50).optional(),
     })

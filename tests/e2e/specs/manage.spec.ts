@@ -21,7 +21,8 @@ test.describe('venue dashboard (/manage)', () => {
 
     await signUpPlayer(page, 'en', 'Venue Owner', venue.ownerPhone, 'venue');
     await page.getByTestId('managed-venue').click();
-    // No opening hours yet: the calendar asks for them first (with a link to the editor).
+    // The dashboard opens on Today; the calendar tab asks for them first (with a link to the editor).
+    await page.getByRole('link', { name: 'Calendar', exact: true }).click();
     await expect(page.getByText('Set opening hours first')).toBeVisible();
 
     // Opening hours: open every day (editor default 16:00–00:00).

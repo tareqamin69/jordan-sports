@@ -18,6 +18,9 @@ type Localized = { ar?: string; en?: string };
  * Read-side composition of venues, resources, media and catalog into API views (the "search"
  * module of docs/architecture.md §E). Holds no state of its own.
  */
+/** Same default as `resource.booking_policies.max_advance_days`. */
+export const DEFAULT_BOOKING_WINDOW_DAYS = 14;
+
 @Injectable()
 export class VenueViewsService {
   constructor(
@@ -111,6 +114,17 @@ export class VenueViewsService {
     const resources = (await this.resources.listForVenue(venue.id)).filter(
       (r) => r.status === 'active',
     );
+    const window = resources.length
+      ? await this.db
+          .selectFrom('resource.booking_policies')
+          .select((eb) => eb.fn.max('max_advance_days').as('days'))
+          .where(
+            'resource_id',
+            'in',
+            resources.map((r) => r.id),
+          )
+          .executeTakeFirst()
+      : undefined;
     const [media, amenityIds] = await Promise.all([
       this.media.forVenue(venue.id),
       this.venues.amenityIds(venue.id),
@@ -126,6 +140,7 @@ export class VenueViewsService {
       contactPhone: venue.contactPhone,
       timezone: venue.timezone,
       currency: venue.currency,
+      bookingWindowDays: Number(window?.days ?? DEFAULT_BOOKING_WINDOW_DAYS),
       sports: this.sportsOf(catalog, resources),
       amenities: catalog.amenities.filter((a) => amenityIds.includes(a.id)),
       media,

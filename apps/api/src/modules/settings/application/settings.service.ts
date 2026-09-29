@@ -16,6 +16,7 @@ const CACHE_MS = 5_000;
 interface Loaded {
   commissionBps: number;
   supportWhatsapp: string | null;
+  venueEditsNeedReview: boolean;
   features: { cliqPayments: boolean | null };
   adminIpAllowlist: string[];
   updatedAt: Date;
@@ -26,6 +27,7 @@ interface Loaded {
 export type SettingsPatch = {
   commissionBps?: number | undefined;
   supportWhatsapp?: string | null | undefined;
+  venueEditsNeedReview?: boolean | undefined;
   features?: { cliqPayments?: boolean | null | undefined } | undefined;
   adminIpAllowlist?: string[] | undefined;
 };
@@ -81,6 +83,7 @@ export class SettingsService {
     const value: Loaded = {
       commissionBps: row.commission_bps,
       supportWhatsapp: row.support_whatsapp,
+      venueEditsNeedReview: row.venue_edits_need_review,
       features: { cliqPayments: features.cliqPayments ?? null },
       adminIpAllowlist: row.admin_ip_allowlist,
       updatedAt: row.updated_at,
@@ -99,6 +102,10 @@ export class SettingsService {
     return (await this.load()).features.cliqPayments ?? this.config.features.cliqPayments;
   }
 
+  async venueEditsNeedReview(): Promise<boolean> {
+    return (await this.load()).venueEditsNeedReview;
+  }
+
   async supportWhatsapp(): Promise<string | null> {
     return (await this.load()).supportWhatsapp;
   }
@@ -114,6 +121,7 @@ export class SettingsService {
     return {
       commissionBps: s.commissionBps,
       supportWhatsapp: s.supportWhatsapp,
+      venueEditsNeedReview: s.venueEditsNeedReview,
       features: s.features,
       effectiveFeatures: {
         cliqPayments: s.features.cliqPayments ?? this.config.features.cliqPayments,
@@ -168,6 +176,9 @@ export class SettingsService {
         .set({
           ...(patch.commissionBps !== undefined ? { commission_bps: patch.commissionBps } : {}),
           ...(whatsapp !== undefined ? { support_whatsapp: whatsapp } : {}),
+          ...(patch.venueEditsNeedReview !== undefined
+            ? { venue_edits_need_review: patch.venueEditsNeedReview }
+            : {}),
           ...(patch.features !== undefined ? { features: JSON.stringify(features) } : {}),
           ...(patch.adminIpAllowlist !== undefined
             ? { admin_ip_allowlist: patch.adminIpAllowlist }
@@ -180,6 +191,7 @@ export class SettingsService {
       const snapshot = (r: typeof before) => ({
         commissionBps: r.commission_bps,
         supportWhatsapp: r.support_whatsapp,
+        venueEditsNeedReview: r.venue_edits_need_review,
         features: r.features,
         adminIpAllowlist: r.admin_ip_allowlist,
       });

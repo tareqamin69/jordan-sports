@@ -380,7 +380,7 @@ function BlockForm({ schedule, date }: { schedule: VenueSchedule; date: string }
         >
           {durations.map((d) => (
             <option key={d} value={d}>
-              {t('minutes', { count: String(d) })}
+              {t('minutes', { count: d })}
             </option>
           ))}
         </SelectField>

@@ -62,7 +62,16 @@ const statusTone: Record<Booking['status'], string> = {
 const actionClass =
   'flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-center text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-canvas';
 
-export function BookingView({ bookingId }: { bookingId: string }) {
+/**
+ * `justConfirmed` (from `?confirmed=1`) shows the success banner; later visits do not (QA #5).
+ */
+export function BookingView({
+  bookingId,
+  justConfirmed = false,
+}: {
+  bookingId: string;
+  justConfirmed?: boolean;
+}) {
   const t = useTranslations('web.booking');
   const tc = useTranslations('common');
   const locale = useLocale();
@@ -75,6 +84,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
   const [busy, setBusy] = useState<'confirm' | 'cancel' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [showConfirmed, setShowConfirmed] = useState(justConfirmed);
   const [notice, setNotice] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   // One key per page visit: a retried confirmation is recognized by the server.
@@ -135,15 +145,22 @@ export function BookingView({ bookingId }: { bookingId: string }) {
     }
   }
 
-  const confirm = () =>
-    run('confirm', () =>
-      api(confirmBooking, {
+  const confirm = async () => {
+    await run('confirm', async () => {
+      const confirmed = await api(confirmBooking, {
         params: { bookingId },
         body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
         idempotencyKey: confirmKey,
-      }),
-    );
-  const cancel = (done: string) =>
+      });
+      // The banner belongs to this moment only: it is tied to the URL, so a reload right after
+      // confirming keeps it and a later visit from "My bookings" does not.
+      setShowConfirmed(true);
+      window.history.replaceState(null, '', `${window.location.pathname}?confirmed=1`);
+      return confirmed;
+    });
+  };
+  // The status badge at the top already says "cancelled": no second notice.
+  const cancel = (done?: string) =>
     run('cancel', () => api(cancelBooking, { params: { bookingId }, body: {} }), done);
 
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
@@ -201,7 +218,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
         </span>
       </div>
 
-      {b.status === 'CONFIRMED' ? (
+      {b.status === 'CONFIRMED' && showConfirmed ? (
         <div
           role="status"
           className="flex items-center gap-4 rounded-card bg-primary p-5 text-on-primary"
@@ -425,11 +442,7 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             <Card className="flex flex-col gap-4 p-5">
               <p className="font-medium">{late ? t('lateQuestion') : t('cancelQuestion')}</p>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="danger"
-                  onClick={() => void cancel(t('statuses.CANCELLED'))}
-                  busy={busy === 'cancel'}
-                >
+                <Button variant="danger" onClick={() => void cancel()} busy={busy === 'cancel'}>
                   {t('cancelConfirm')}
                 </Button>
                 <Button variant="secondary" onClick={() => setAsking(false)}>

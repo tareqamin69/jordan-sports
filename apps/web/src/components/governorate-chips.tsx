@@ -33,7 +33,7 @@ export function GovernorateChips({ governorates }: { governorates: Catalog['gove
       {hidden > 0 ? (
         <li>
           <button type="button" onClick={() => setAll(true)} className={chipClass(false)}>
-            <bdi dir="ltr">{t('moreGovernorates', { count: String(hidden) })}</bdi>
+            <bdi dir="ltr">{t('moreGovernorates', { count: hidden })}</bdi>
           </button>
         </li>
       ) : null}

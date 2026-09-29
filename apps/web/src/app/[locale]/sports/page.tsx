@@ -30,8 +30,8 @@ export default async function SportsPage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations('web.sports');
   const catalog = await serverApi(getCatalog);
-  // Only sports with at least one approved venue — same rule as everywhere else in the app.
-  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
+  // Every active sport, even one without venues yet (its page explains and invites venues).
+  const offeredSports = catalog.sports;
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">

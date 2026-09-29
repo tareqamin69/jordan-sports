@@ -9,6 +9,7 @@ import {
   Alert,
   Button,
   Card,
+  CheckboxField,
   Ltr,
   PageHeader,
   SelectField,
@@ -31,6 +32,7 @@ interface Form {
   commissionPercent: string;
   supportWhatsapp: string;
   cliqPayments: Flag;
+  venueEdits: boolean;
   allowlist: string;
 }
 
@@ -39,6 +41,7 @@ function toForm(s: PlatformSettings): Form {
     commissionPercent: String(s.commissionBps / 100),
     supportWhatsapp: s.supportWhatsapp ?? '',
     cliqPayments: toFlag(s.features.cliqPayments),
+    venueEdits: s.venueEditsNeedReview,
     allowlist: s.adminIpAllowlist.join('\n'),
   };
 }
@@ -61,6 +64,7 @@ export function SettingsPage() {
         body: {
           commissionBps: Math.round(Number(f.commissionPercent) * 100),
           supportWhatsapp: f.supportWhatsapp.trim() || null,
+          venueEditsNeedReview: f.venueEdits,
           features: { cliqPayments: fromFlag(f.cliqPayments) },
           adminIpAllowlist: f.allowlist
             .split(/[\s,]+/)
@@ -143,6 +147,13 @@ export function SettingsPage() {
             <option value="on">{t('on')}</option>
             <option value="off">{t('off')}</option>
           </SelectField>
+          <CheckboxField
+            label={`${t('venueEdits')} — ${t('venueEditsHint')}`}
+            disabled={!editable}
+            checked={current.venueEdits}
+            onChange={(e) => set({ venueEdits: e.target.checked })}
+            name="venueEdits"
+          />
           <TextAreaField
             label={t('allowlist')}
             hint={t('allowlistHint')}

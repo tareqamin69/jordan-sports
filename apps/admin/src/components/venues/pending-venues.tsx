@@ -54,7 +54,9 @@ export function PendingVenues() {
           </Alert>
         ) : null}
         {venues.data && venues.data.items.length === 0 ? (
-          <p className="mt-3 text-ink-muted">{t('pendingEmpty')}</p>
+          <p className="mt-3 text-ink-muted" data-testid="venues-empty">
+            {t(`emptyByStatus.${status}`)}
+          </p>
         ) : null}
         <ul className="mt-3 divide-y divide-line">
           {venues.data?.items.map((v) => (

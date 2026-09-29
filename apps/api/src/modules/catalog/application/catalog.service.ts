@@ -1,5 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { attributeFieldSchema, type AttributeField, type Catalog } from '@jordan-sports/contracts';
+import {
+  attributeFieldSchema,
+  type AdminSport,
+  type AttributeField,
+  type Catalog,
+} from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Db } from '../../../platform/database/database.js';
@@ -386,10 +391,45 @@ export class CatalogService {
     return this.get();
   }
 
-  async updateSport(sportId: string, patch: { name?: Localized; icon?: string }): Promise<Catalog> {
+  /** Every sport (hidden ones too) with the number of approved venues offering it. */
+  async adminSports(): Promise<AdminSport[]> {
+    const [sports, counts] = await Promise.all([
+      this.db.selectFrom('catalog.sports').selectAll().orderBy('sort_order').execute(),
+      this.db
+        .selectFrom('catalog.sport_formats as sf')
+        .innerJoin('resource.resource_formats as rf', 'rf.sport_format_id', 'sf.id')
+        .innerJoin('resource.resources as r', (join) =>
+          join.onRef('r.id', '=', 'rf.resource_id').on('r.status', '=', 'active'),
+        )
+        .innerJoin('venue.venues as v', (join) =>
+          join
+            .onRef('v.id', '=', 'r.venue_id')
+            .on('v.status', '=', 'approved')
+            .on('v.archived_at', 'is', null),
+        )
+        .select(['sf.sport_id', sql<string>`count(DISTINCT v.id)`.as('n')])
+        .groupBy('sf.sport_id')
+        .execute(),
+    ]);
+    const byId = new Map(counts.map((c) => [c.sport_id, Number(c.n)]));
+    return sports.map((s) => ({
+      id: s.id,
+      key: s.key,
+      name: s.name as Localized,
+      icon: s.icon,
+      active: s.active,
+      venueCount: byId.get(s.id) ?? 0,
+    }));
+  }
+
+  async updateSport(
+    sportId: string,
+    patch: { name?: Localized; icon?: string; active?: boolean },
+  ): Promise<Catalog> {
     const updated = await this.db
       .updateTable('catalog.sports')
       .set({
+        ...(patch.active !== undefined ? { active: patch.active } : {}),
         ...(patch.name !== undefined ? { name: JSON.stringify(patch.name) } : {}),
         ...(patch.icon !== undefined ? { icon: patch.icon } : {}),
       })

@@ -2,12 +2,12 @@ import type { VenueSummary } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { joinList, pick } from '@/lib/localized';
+import { joinPlace, pick } from '@/lib/localized';
 import { Icon } from './icons';
 import { VenuePhoto } from './venue-photo';
 
 export function venuePlace(venue: VenueSummary, locale: string): string {
-  return joinList(
+  return joinPlace(
     [venue.area ? pick(venue.area.name, locale) : '', pick(venue.governorate.name, locale)],
     locale,
   );

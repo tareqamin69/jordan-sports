@@ -42,7 +42,7 @@ export function VenueList({ organizationId }: { organizationId: string }) {
             >
               <span className="font-medium">{pick(v.name, locale)}</span>
               <span className="flex items-center gap-2 text-sm text-ink-muted">
-                {t('resourceCount', { count: String(v.resourceCount) })}
+                {t('resourceCount', { count: v.resourceCount })}
                 <Badge>{t(`statuses.${v.status}`)}</Badge>
               </span>
             </Link>

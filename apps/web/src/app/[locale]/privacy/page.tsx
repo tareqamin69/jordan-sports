@@ -1,5 +1,5 @@
 import type { Locale } from '@jordan-sports/i18n';
-import { Alert, PageHeader } from '@jordan-sports/ui';
+import { PageHeader } from '@jordan-sports/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -39,9 +39,6 @@ export default async function PrivacyPage({ params }: Props) {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <PageHeader title={t('title')} description={t('description', { appName })} />
-      <Alert tone="warning" className="mb-6">
-        {tl('placeholderNotice')}
-      </Alert>
       <p className="text-ink">{t('body', { appName })}</p>
       <p className="mt-6 text-sm text-ink-muted">
         {tl('lastUpdated', { date: format.dateTime(DRAFTED_AT, { dateStyle: 'long' }) })}

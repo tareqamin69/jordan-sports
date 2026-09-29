@@ -115,7 +115,7 @@ export function QuickBookingSheet({
           >
             {durations.map((d) => (
               <option key={d} value={d}>
-                {t('minutes', { count: String(d) })}
+                {t('minutes', { count: d })}
               </option>
             ))}
           </SelectField>

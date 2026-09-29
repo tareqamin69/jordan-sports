@@ -7,6 +7,9 @@ import { toCsv } from '../../../platform/http/csv.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
 
+type TargetName = { ar?: string; en?: string };
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface AuditFilters {
   organizationId?: string | undefined;
   action?: string | undefined;
@@ -103,6 +106,7 @@ export class AuditService {
       );
     }
     const rows = await query.execute();
+    const names = await this.targetNames(rows.slice(0, options.limit));
     const items = rows.slice(0, options.limit).map((r) => ({
       id: r.id,
       occurredAt: r.occurred_at.toISOString(),
@@ -112,11 +116,91 @@ export class AuditService {
       action: r.action,
       targetType: r.target_type,
       targetId: r.target_id,
+      targetName: names.get(`${r.target_type}:${r.target_id}`) ?? null,
       organizationId: r.organization_id,
       reason: r.reason,
       details: (r.details ?? {}) as Record<string, unknown>,
     }));
     return { items, nextCursor: rows.length > options.limit ? items.at(-1)!.id : null };
+  }
+
+  /** Resolves the display name of each entry's target (one query per target type). */
+  private async targetNames(
+    rows: ReadonlyArray<{ target_type: string | null; target_id: string | null }>,
+  ): Promise<Map<string, TargetName>> {
+    const byType = new Map<string, Set<string>>();
+    for (const r of rows) {
+      if (!r.target_type || !r.target_id || !UUID.test(r.target_id)) continue;
+      byType.set(r.target_type, (byType.get(r.target_type) ?? new Set()).add(r.target_id));
+    }
+    const out = new Map<string, TargetName>();
+    const put = (type: string, id: string, name: TargetName) => out.set(`${type}:${id}`, name);
+    const ids = (type: string) => [...(byType.get(type) ?? [])];
+    const same = (n: string | null): TargetName => (n ? { ar: n, en: n } : {});
+    if (ids('venue').length) {
+      for (const v of await this.db
+        .selectFrom('venue.venues')
+        .select(['id', 'name'])
+        .where('id', 'in', ids('venue'))
+        .execute()) {
+        put('venue', v.id, v.name as TargetName);
+      }
+    }
+    if (ids('organization').length) {
+      for (const o of await this.db
+        .selectFrom('tenancy.organizations')
+        .select(['id', 'name'])
+        .where('id', 'in', ids('organization'))
+        .execute()) {
+        put('organization', o.id, o.name as TargetName);
+      }
+    }
+    if (ids('user').length) {
+      for (const u of await this.db
+        .selectFrom('identity.users')
+        .select(['id', 'display_name', 'email', 'phone'])
+        .where('id', 'in', ids('user'))
+        .execute()) {
+        put('user', u.id, same(u.display_name ?? u.email ?? u.phone));
+      }
+    }
+    if (ids('booking').length) {
+      for (const b of await this.db
+        .selectFrom('booking.bookings')
+        .select(['id', 'reference'])
+        .where('id', 'in', ids('booking'))
+        .execute()) {
+        put('booking', b.id, same(b.reference));
+      }
+    }
+    if (ids('complaint').length) {
+      for (const c of await this.db
+        .selectFrom('support.complaints')
+        .select(['id', 'reference'])
+        .where('id', 'in', ids('complaint'))
+        .execute()) {
+        put('complaint', c.id, same(c.reference));
+      }
+    }
+    if (ids('resource').length) {
+      for (const r of await this.db
+        .selectFrom('resource.resources')
+        .select(['id', 'name'])
+        .where('id', 'in', ids('resource'))
+        .execute()) {
+        put('resource', r.id, r.name as TargetName);
+      }
+    }
+    if (ids('setup_link').length) {
+      for (const l of await this.db
+        .selectFrom('identity.account_setup_tokens')
+        .select(['id', 'email'])
+        .where('id', 'in', ids('setup_link'))
+        .execute()) {
+        put('setup_link', l.id, same(l.email));
+      }
+    }
+    return out;
   }
 
   /** CSV export with the list's filters (newest first, at most 20,000 rows). */
@@ -131,6 +215,7 @@ export class AuditService {
         'action',
         'target_type',
         'target_id',
+        'target_name',
         'organization_id',
         'reason',
         'details',
@@ -143,6 +228,7 @@ export class AuditService {
         e.action,
         e.targetType,
         e.targetId,
+        e.targetName?.ar ?? e.targetName?.en ?? null,
         e.organizationId,
         e.reason,
         e.details,

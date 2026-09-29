@@ -12,6 +12,7 @@ import {
   Badge,
   Button,
   Card,
+  CheckboxField,
   Ltr,
   SelectField,
   Spinner,
@@ -23,7 +24,8 @@ import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 
-const ROLES: MembershipRole[] = ['owner', 'manager', 'staff'];
+/** Least power first: front-desk staff is the default for new people. */
+const ROLES: MembershipRole[] = ['staff', 'manager', 'owner'];
 
 /** Venue owner: who works with them and what each can do. */
 export function TeamPanel({ venueId }: { venueId: string }) {
@@ -38,17 +40,26 @@ export function TeamPanel({ venueId }: { venueId: string }) {
     queryKey: key,
     queryFn: () => api(listVenueTeam, { params: { venueId } }),
   });
-  const [form, setForm] = useState({ phone: '', displayName: '', role: 'staff' as MembershipRole });
+  const empty = {
+    phone: '',
+    displayName: '',
+    role: 'staff' as MembershipRole,
+    confirmOwner: false,
+  };
+  const [form, setForm] = useState(empty);
   const add = useMutation({
     mutationFn: () => api(addVenueTeamMember, { params: { venueId }, body: form }),
     onSuccess: (data) => {
       queryClient.setQueryData(key, data);
-      setForm({ phone: '', displayName: '', role: 'staff' });
+      setForm(empty);
     },
   });
   const change = useMutation({
     mutationFn: (v: { memberId: string; role: MembershipRole }) =>
-      api(changeVenueTeamRole, { params: { memberId: v.memberId }, body: { role: v.role } }),
+      api(changeVenueTeamRole, {
+        params: { memberId: v.memberId },
+        body: { role: v.role, confirmOwner: v.role === 'owner' },
+      }),
     onSuccess: (data) => queryClient.setQueryData(key, data),
   });
   const remove = useMutation({
@@ -93,6 +104,8 @@ export function TeamPanel({ venueId }: { venueId: string }) {
                     label={t('role')}
                     value={m.role}
                     onChange={(e) =>
+                      (e.target.value !== 'owner' ||
+                        window.confirm(t('ownerConfirmPrompt', { name: m.displayName ?? '' }))) &&
                       change.mutate({
                         memberId: m.memberId,
                         role: e.target.value as MembershipRole,
@@ -152,7 +165,13 @@ export function TeamPanel({ venueId }: { venueId: string }) {
           <SelectField
             label={t('role')}
             value={form.role}
-            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as MembershipRole }))}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                role: e.target.value as MembershipRole,
+                confirmOwner: false,
+              }))
+            }
             name="memberRole"
           >
             {ROLES.map((r) => (
@@ -161,9 +180,24 @@ export function TeamPanel({ venueId }: { venueId: string }) {
               </option>
             ))}
           </SelectField>
-          <Button type="submit" busy={add.isPending}>
+          <Button
+            type="submit"
+            busy={add.isPending}
+            disabled={form.role === 'owner' && !form.confirmOwner}
+          >
             {t('add')}
           </Button>
+          {form.role === 'owner' ? (
+            <div className="sm:col-span-4" data-testid="owner-confirm">
+              <Alert tone="warning">{t('ownerWarning')}</Alert>
+              <CheckboxField
+                label={t('ownerConfirm')}
+                checked={form.confirmOwner}
+                onChange={(e) => setForm((f) => ({ ...f, confirmOwner: e.target.checked }))}
+                name="confirmOwner"
+              />
+            </div>
+          ) : null}
         </form>
         <p className="mt-3 text-sm text-ink-muted">{t('addHint')}</p>
       </Card>

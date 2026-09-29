@@ -12,7 +12,7 @@ import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
 import { VenueMap } from '@/components/venue-map-lazy';
 import { directionsUrl } from '@/lib/format';
-import { joinList, pick } from '@/lib/localized';
+import { joinList, joinPlace, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
 
 export const dynamic = 'force-dynamic';
@@ -112,7 +112,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
   ].filter(Boolean);
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${t('shareText', { name, appName: tc('appName') })} ${url}`)}`;
 
-  const address = joinList(place, locale);
+  const address = joinPlace(place, locale);
   const directions = directionsUrl(venue.location, `${name} ${address}`);
 
   const priceFrom = venue.priceFrom;
@@ -138,11 +138,8 @@ export default async function VenuePage({ params, searchParams }: Props) {
         </h1>
         <p className="flex items-center gap-1.5 text-sm text-canvas/85">
           <Icon name="pin" className="size-4 shrink-0" />
-          {joinList(
-            [
-              venue.area ? pick(venue.area.name, locale) : '',
-              pick(venue.governorate.name, locale),
-            ].filter(Boolean),
+          {joinPlace(
+            [venue.area ? pick(venue.area.name, locale) : '', pick(venue.governorate.name, locale)],
             locale,
           )}
         </p>
@@ -160,7 +157,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
                       {formatMoney(priceFrom, locale)}
                     </span>
                     <span className="text-xs text-ink-muted">
-                      {t('perDuration', { minutes: String(priceFrom.durationMinutes) })}
+                      {t('perDuration', { minutes: priceFrom.durationMinutes })}
                     </span>
                   </p>
                 ) : (
@@ -201,6 +198,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
               <VenueAvailability
                 slug={venue.slug}
                 timezone={venue.timezone}
+                windowDays={venue.bookingWindowDays}
                 resources={venue.resources}
                 initialDate={date}
                 initialTime={time}
@@ -252,7 +250,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
                       ) : null}
                       {r.unitCount > 1 ? (
                         <span className="text-sm text-primary">
-                          {t('combines', { count: String(r.unitCount) })}
+                          {t('combines', { count: r.unitCount })}
                         </span>
                       ) : null}
                     </span>
@@ -271,7 +269,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
                     {formatMoney(priceFrom, locale)}
                   </span>
                   <span className="text-sm text-ink-muted">
-                    {t('perDuration', { minutes: String(priceFrom.durationMinutes) })}
+                    {t('perDuration', { minutes: priceFrom.durationMinutes })}
                   </span>
                 </p>
               ) : null}

@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, Res } from '@nestjs/common';
 import {
   createMyFacility,
   createMyResource,
   deleteMyVenueMedia,
   getMyVenueProfile,
   registerVenue,
+  reorderMyVenueMedia,
   submitMyVenue,
   updateMyResource,
   updateMyVenue,
@@ -21,6 +22,7 @@ import { parseInput } from '../../../platform/http/validation.js';
 import { slugify } from '../../../platform/text/slugify.js';
 import { VenueViewsService } from '../../directory/index.js';
 import { ResourcesService } from '../../resources/index.js';
+import { SettingsService } from '../../settings/index.js';
 import { OrganizationsService } from '../../tenancy/index.js';
 import { MediaService, VenueAccessService, VenuesService, type Actor } from '../../venues/index.js';
 
@@ -51,7 +53,15 @@ export class ManageVenuesController {
     private readonly views: VenueViewsService,
     private readonly access: VenueAccessService,
     private readonly organizations: OrganizationsService,
+    private readonly settings: SettingsService,
   ) {}
+
+  /** Name or photo changes on a published venue go back to review only if the platform says so. */
+  private async reviewIfRequired(venueId: string, actor: Actor): Promise<void> {
+    if (await this.settings.venueEditsNeedReview()) {
+      await this.venues.returnToReview(venueId, 'Changed by the venue owner', actor);
+    }
+  }
 
   @Post(registerVenue.path)
   async register(
@@ -102,6 +112,7 @@ export class ManageVenuesController {
     const input = parseInput(updateMyVenue.body, body);
     await this.access.require(requireUserId(actor), venueId, 'venue.edit');
     await this.venues.update(venueId, input, userActor(actor, request));
+    if (input.name !== undefined) await this.reviewIfRequired(venueId, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }
 
@@ -198,6 +209,22 @@ export class ManageVenuesController {
       contentType,
       userActor(actor, request),
     );
+    await this.reviewIfRequired(venueId, userActor(actor, request));
+    return this.views.adminVenue(venueId);
+  }
+
+  @Put(reorderMyVenueMedia.path)
+  async reorderPhotos(
+    @Param() params: unknown,
+    @Body() body: unknown,
+    @CurrentActor() actor: SessionActor,
+    @Req() request: FastifyRequest,
+  ): Promise<AdminVenue> {
+    const { venueId } = parseInput(reorderMyVenueMedia.params, params);
+    const { mediaIds } = parseInput(reorderMyVenueMedia.body, body);
+    await this.access.require(requireUserId(actor), venueId, 'venue.edit');
+    await this.media.reorder(venueId, mediaIds, userActor(actor, request));
+    await this.reviewIfRequired(venueId, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }
 
@@ -212,6 +239,7 @@ export class ManageVenuesController {
     const owningVenueId = await this.media.venueIdOf(mediaId);
     await this.access.require(userId, owningVenueId, 'venue.edit');
     const venueId = await this.media.delete(mediaId, userActor(actor, request));
+    await this.reviewIfRequired(venueId, userActor(actor, request));
     return this.views.adminVenue(venueId);
   }
 

@@ -17,7 +17,7 @@ export default function VenueDashboardPage({ params, searchParams }: Props) {
   const { tab } = use(searchParams);
   setRequestLocale(locale);
   if (!/^[0-9a-f-]{36}$/.test(venueId)) notFound();
-  const current: Tab = (tabs as readonly string[]).includes(tab ?? '') ? (tab as Tab) : 'calendar';
+  const current: Tab = (tabs as readonly string[]).includes(tab ?? '') ? (tab as Tab) : 'today';
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <VenueDashboard venueId={venueId} tab={current} />

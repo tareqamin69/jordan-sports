@@ -15,9 +15,6 @@ export const dynamic = 'force-dynamic';
 
 type Props = { params: Promise<{ locale: Locale }> };
 
-/** Sport tiles shown on the home page before the "and more" tile. */
-const TILES = 5;
-
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -27,10 +24,8 @@ export default async function HomePage({ params }: Props) {
     serverApi(getCatalog),
     serverApi(listVenues, { query: { limit: 6 } }),
   ]);
-  // Players only see sports that at least one approved venue actually offers.
-  const offeredSports = catalog.sports.filter((s) => catalog.offeredSportIds.includes(s.id));
-  const tiles = offeredSports.length > TILES + 1 ? offeredSports.slice(0, TILES) : offeredSports;
-  const more = tiles.length < offeredSports.length;
+  // Every active sport is shown, even before it has venues (the admin can hide one later).
+  const tiles = catalog.sports;
 
   return (
     <main className="flex-1">
@@ -92,20 +87,6 @@ export default async function HomePage({ params }: Props) {
                 </Link>
               </li>
             ))}
-            {more ? (
-              <li>
-                <Link
-                  href="/sports"
-                  className={tileClass(
-                    false,
-                    'h-26 hover:border-primary hover:bg-primary hover:text-on-primary',
-                  )}
-                >
-                  <Icon name="more" className="size-7" strokeWidth={3} />
-                  <span className="truncate text-sm font-semibold">{t('moreSports')}</span>
-                </Link>
-              </li>
-            ) : null}
           </ul>
         </section>
 
