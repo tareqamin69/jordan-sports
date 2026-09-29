@@ -1,9 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuditLogEntry } from '@jordan-sports/contracts';
+import { sql } from 'kysely';
 import type { Db, DbOrTx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
+import { toCsv } from '../../../platform/http/csv.js';
 import { uuidv7 } from '../../../platform/database/ids.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
+
+export interface AuditFilters {
+  organizationId?: string | undefined;
+  action?: string | undefined;
+  actorUserId?: string | undefined;
+  targetType?: string | undefined;
+  targetId?: string | undefined;
+  from?: string | undefined;
+  to?: string | undefined;
+}
 
 export interface AuditEntry {
   readonly actorType: 'user' | 'admin' | 'system';
@@ -44,11 +56,12 @@ export class AuditService {
       .execute();
   }
 
-  async list(options: {
-    limit: number;
-    cursor?: string;
-    organizationId?: string;
-  }): Promise<{ items: AuditLogEntry[]; nextCursor: string | null }> {
+  async list(
+    options: AuditFilters & {
+      limit: number;
+      cursor?: string | undefined;
+    },
+  ): Promise<{ items: AuditLogEntry[]; nextCursor: string | null }> {
     let query = this.db
       .selectFrom('audit.audit_logs as a')
       .leftJoin('identity.users as u', 'u.id', 'a.actor_user_id')
@@ -71,6 +84,24 @@ export class AuditService {
     if (options.cursor) query = query.where('a.id', '<', options.cursor);
     if (options.organizationId)
       query = query.where('a.organization_id', '=', options.organizationId);
+    if (options.action) {
+      query = options.action.endsWith('.')
+        ? query.where('a.action', 'like', `${options.action.replace(/[\\%_]/g, (c) => `\\${c}`)}%`)
+        : query.where('a.action', '=', options.action);
+    }
+    if (options.actorUserId) query = query.where('a.actor_user_id', '=', options.actorUserId);
+    if (options.targetType) query = query.where('a.target_type', '=', options.targetType);
+    if (options.targetId) query = query.where('a.target_id', '=', options.targetId);
+    if (options.from) {
+      query = query.where(
+        sql<boolean>`(a.occurred_at AT TIME ZONE 'Asia/Amman')::date >= ${options.from}::date`,
+      );
+    }
+    if (options.to) {
+      query = query.where(
+        sql<boolean>`(a.occurred_at AT TIME ZONE 'Asia/Amman')::date <= ${options.to}::date`,
+      );
+    }
     const rows = await query.execute();
     const items = rows.slice(0, options.limit).map((r) => ({
       id: r.id,
@@ -86,5 +117,36 @@ export class AuditService {
       details: (r.details ?? {}) as Record<string, unknown>,
     }));
     return { items, nextCursor: rows.length > options.limit ? items.at(-1)!.id : null };
+  }
+
+  /** CSV export with the list's filters (newest first, at most 20,000 rows). */
+  async csv(filters: AuditFilters): Promise<string> {
+    const { items } = await this.list({ ...filters, limit: 20_000 });
+    return toCsv(
+      [
+        'occurred_at',
+        'actor_type',
+        'actor',
+        'actor_user_id',
+        'action',
+        'target_type',
+        'target_id',
+        'organization_id',
+        'reason',
+        'details',
+      ],
+      items.map((e) => [
+        e.occurredAt,
+        e.actorType,
+        e.actorName,
+        e.actorUserId,
+        e.action,
+        e.targetType,
+        e.targetId,
+        e.organizationId,
+        e.reason,
+        e.details,
+      ]),
+    );
   }
 }

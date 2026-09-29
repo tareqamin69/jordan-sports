@@ -286,6 +286,16 @@ export const adminListAuditLogs = endpoint({
   summary: 'Audit log (newest first)',
   auth: 'admin',
   permission: 'audit.read',
-  query: pageQuerySchema.extend({ organizationId: uuidSchema.optional() }),
+  query: pageQuerySchema.extend({
+    organizationId: uuidSchema.optional(),
+    /** Exact action or a prefix ending in a dot, e.g. `venue.` */
+    action: z.string().trim().max(100).optional(),
+    actorUserId: uuidSchema.optional(),
+    targetType: z.string().trim().max(50).optional(),
+    targetId: z.string().trim().max(100).optional(),
+    /** Amman dates, inclusive. */
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  }),
   response: page(auditLogSchema),
 });

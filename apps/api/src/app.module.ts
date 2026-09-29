@@ -9,6 +9,7 @@ import { FinanceModule } from './modules/finance/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { RequestAuditInterceptor } from './modules/audit/http/request-audit.interceptor.js';
 import { ComplaintsModule } from './modules/complaints/index.js';
+import { ReportsModule } from './modules/reports/index.js';
 import { SettingsModule } from './modules/settings/index.js';
 import { NotificationsModule } from './modules/notifications/index.js';
 import { PricingModule } from './modules/pricing/index.js';
@@ -62,6 +63,7 @@ export class AppModule {
         NotificationsModule,
         BookingsModule,
         ComplaintsModule,
+        ReportsModule,
       ],
       controllers: [OpenApiController],
       providers: [
