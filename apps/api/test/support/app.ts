@@ -308,7 +308,7 @@ export async function createVenue(
 }
 
 /**
- * An approved venue with one court open every day 08:00–24:00 (60-minute slots), and its owner's
+ * An approved venue with one court open every day 08:00–24:00 (60-minute slots, 20 JOD), and its owner's
  * web session. Enough for bookings by players and by the venue.
  */
 export async function bookableVenue(
@@ -345,6 +345,22 @@ export async function bookableVenue(
     bufferBeforeMinutes: 0,
     bufferAfterMinutes: 0,
   });
+  const priced = await call(app, {
+    method: 'POST',
+    url: `/v1/manage/venues/${v.venueId}/pricing`,
+    cookie: ownerCookie,
+    body: {
+      resourceIds: [resourceId],
+      rule: {
+        daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+        startMinute: 0,
+        endMinute: 1440,
+        priority: 1,
+        amounts: [{ durationMinutes: 60, amount: 20_000 }],
+      },
+    },
+  });
+  if (priced.statusCode !== 201) throw new Error(`Price rule failed: ${priced.body}`);
   return {
     organizationId: org.id,
     venueId: v.venueId,

@@ -22,6 +22,7 @@ const sections: ReadonlyArray<{
   { href: '/organizations', key: 'organizations', permission: 'organizations.read' },
   { href: '/users', key: 'users', permission: 'users.read' },
   { href: '/bookings', key: 'bookings', permission: 'bookings.read' },
+  { href: '/complaints', key: 'complaints', permission: 'complaints.read' },
   { href: '/geography', key: 'geography', permission: 'catalog.manage' },
   { href: '/holidays', key: 'holidays', permission: 'catalog.manage' },
   { href: '/settings', key: 'settings', permission: 'settings.read' },

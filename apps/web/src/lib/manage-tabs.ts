@@ -9,6 +9,7 @@ export const tabs = [
   'pricing',
   'closures',
   'balance',
+  'support',
 ] as const;
 export type Tab = (typeof tabs)[number];
 
@@ -22,4 +23,5 @@ export const tabPermission: Record<Tab, OrgPermission> = {
   pricing: 'pricing.read',
   closures: 'schedule.closures',
   balance: 'reports.read',
+  support: 'complaints.create',
 };

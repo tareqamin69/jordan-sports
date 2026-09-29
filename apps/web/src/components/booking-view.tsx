@@ -380,6 +380,14 @@ export function BookingView({ bookingId }: { bookingId: string }) {
             <Icon name="share" className="size-4" />
             {t('inviteFriends')}
           </a>
+          <Link
+            className={actionClass}
+            href={{ pathname: '/support', query: { booking: b.id, ref: b.reference } }}
+            data-testid="report-problem"
+          >
+            <Icon name="share" className="size-4" />
+            {t('reportProblem')}
+          </Link>
           {b.venue.contactPhone ? (
             <a className={actionClass} href={`tel:${b.venue.contactPhone}`}>
               <Icon name="phone" className="size-4" />

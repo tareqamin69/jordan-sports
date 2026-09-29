@@ -504,6 +504,33 @@ export interface SchedulingWeeklyHours {
   start_minute: number;
 }
 
+export interface SupportComplaintMessages {
+  author_kind: string;
+  author_user_id: string;
+  body: string;
+  complaint_id: string;
+  created_at: Generated<Timestamp>;
+  id: string;
+  internal: Generated<boolean>;
+}
+
+export interface SupportComplaints {
+  assignee_id: string | null;
+  body: string;
+  booking_id: string | null;
+  category: string;
+  created_at: Generated<Timestamp>;
+  id: string;
+  organization_id: string | null;
+  reference: string;
+  reporter_kind: string;
+  reporter_user_id: string;
+  resolved_at: Timestamp | null;
+  status: Generated<string>;
+  updated_at: Generated<Timestamp>;
+  venue_id: string | null;
+}
+
 export interface TenancyMemberships {
   created_at: Generated<Timestamp>;
   id: string;
@@ -620,6 +647,8 @@ export interface DB {
   'scheduling.holidays': SchedulingHolidays;
   'scheduling.occupancies': SchedulingOccupancies;
   'scheduling.weekly_hours': SchedulingWeeklyHours;
+  'support.complaint_messages': SupportComplaintMessages;
+  'support.complaints': SupportComplaints;
   'tenancy.memberships': TenancyMemberships;
   'tenancy.organizations': TenancyOrganizations;
   'venue.facilities': VenueFacilities;

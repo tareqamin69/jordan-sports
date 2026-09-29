@@ -15,3 +15,4 @@ export * from './permissions.js';
 export * from './settings.js';
 export * from './team.js';
 export * from './venue-oversight.js';
+export * from './complaints.js';

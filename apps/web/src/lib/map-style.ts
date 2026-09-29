@@ -52,6 +52,10 @@ export function localizeMapLabels(map: MapLibreMap, locale: 'ar' | 'en'): void {
   for (const layer of map.getStyle()?.layers ?? []) {
     if (layer.type !== 'symbol') continue;
     if (map.getLayoutProperty(layer.id, 'text-field') === undefined) continue;
-    map.setLayoutProperty(layer.id, 'text-field', ['coalesce', ['get', preferred], ['get', 'name']]);
+    map.setLayoutProperty(layer.id, 'text-field', [
+      'coalesce',
+      ['get', preferred],
+      ['get', 'name'],
+    ]);
   }
 }

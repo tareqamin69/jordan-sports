@@ -69,7 +69,11 @@ function priorVisitRecorded(): boolean {
  * recorded in localStorage, so it survives closing the tab) or they've spent 30s on this one.
  */
 function useHasBrowsedEnough(): boolean {
-  const isSecondVisit = useSyncExternalStore(noSubscription, priorVisitRecorded, serverSnapshotFalse);
+  const isSecondVisit = useSyncExternalStore(
+    noSubscription,
+    priorVisitRecorded,
+    serverSnapshotFalse,
+  );
   const [timerFired, setTimerFired] = useState(false);
   useEffect(() => {
     try {

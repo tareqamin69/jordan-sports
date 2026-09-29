@@ -29,6 +29,7 @@ import { OnboardingChecklist } from './onboarding-checklist';
 import { PaymentsPanel } from './payments-panel';
 import { PricingEditor } from './pricing-editor';
 import { RulesEditor } from './rules-editor';
+import { MyComplaints, ReportForm } from '../support-center';
 
 /** Venue switcher: only shown when the signed-in user manages more than one venue. */
 function VenueSwitcher({ venueId, tab }: { venueId: string; tab: Tab }) {
@@ -170,6 +171,12 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       {shown === 'rules' ? <RulesEditor schedule={s} /> : null}
       {shown === 'pricing' ? <PricingEditor schedule={s} /> : null}
       {shown === 'closures' ? <ClosuresEditor schedule={s} /> : null}
+      {shown === 'support' ? (
+        <div className="flex flex-col gap-4">
+          <ReportForm venueId={venueId} asVenue />
+          <MyComplaints venueId={venueId} />
+        </div>
+      ) : null}
     </>
   );
 }
