@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { adminApi, arrangeVenue, createAdmin, signUpPlayer } from './helpers';
+import { adminApi, arrangeVenue, createAdmin, randomPhone, signUpPlayer, userApi } from './helpers';
 import { API, expectNoAccessibilityViolations, WEB } from './support';
 
 function ammanDate(offsetDays: number): string {
@@ -72,5 +72,27 @@ test.describe('venue dashboard (/manage)', () => {
     await signUpPlayer(page, 'ar', 'لاعب');
     await page.goto(`${WEB}/ar/manage`);
     await expect(page.getByText('ما عندك ملاعب لسا.')).toBeVisible();
+  });
+
+  test('the owner adds front-desk staff by phone; staff see only their tabs', async ({ page }) => {
+    const venue = await arrangeVenue(await adminApi(createAdmin()));
+    const owner = await userApi(venue.ownerPhone, 'Owner');
+    const staffPhone = randomPhone();
+    const added = await owner.post(`/v1/manage/venues/${venue.venueId}/team`, {
+      data: { phone: staffPhone, displayName: 'Front desk', role: 'staff' },
+    });
+    expect(added.status()).toBe(201);
+
+    await signUpPlayer(page, 'en', 'Front desk', staffPhone, 'venue');
+    await page.getByTestId('managed-venue').click();
+    const tabs = page.getByRole('navigation', { name: 'Venue dashboard sections' });
+    await expect(tabs.getByRole('link', { name: 'Today', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('link', { name: 'Calendar', exact: true })).toBeVisible();
+    for (const hidden of ['Prices', 'Team', 'Reports', 'Opening hours', 'Venue settings']) {
+      await expect(tabs.getByRole('link', { name: hidden, exact: true })).toHaveCount(0);
+    }
+    // An old link to a tab the role can't use falls back to the calendar.
+    await page.goto(`${WEB}/en/manage/${venue.venueId}?tab=team`);
+    await expect(page.getByTestId('team-panel')).toHaveCount(0);
   });
 });

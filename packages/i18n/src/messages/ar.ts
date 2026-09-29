@@ -915,7 +915,7 @@ export const ar = {
       topAreas: 'أكثر المناطق حجوزات',
       export: 'تصدير الحجوزات (CSV)',
       from: 'من',
-      to: 'لـ',
+      to: 'إلى',
       download: 'نزّل الملف',
     },
     setup: {
@@ -1147,7 +1147,7 @@ export const ar = {
         targetType: 'نوع الهدف',
         targetId: 'رقم الهدف',
         from: 'من',
-        to: 'لـ',
+        to: 'إلى',
         csv: 'نزّل CSV',
       },
       title: 'سجل العمليات',

@@ -161,4 +161,58 @@ A player only ever sees their own bookings and reports (others' → 404).
 
 ## 9. Decisions taken during the build
 
-Filled in as the work lands; see the end of this file.
+Made without the owner during the autonomous build; each can be changed later.
+
+**Roles and permissions**
+- Platform Admin may also *edit* venue details (not only approve/suspend); archiving stays owner-only.
+- Catalog (sports, governorates/areas), public holidays, balance adjustments and per-venue
+  commission are owner-only (`catalog.manage`, `finance.manage`).
+- Support sees dashboard counts but never money; Finance can read the complaints queue but not
+  handle it, and cannot adjust balances (read-only everywhere except exports).
+- Only team members whose role can handle complaints (owner, admin, support) can be assigned one.
+- Venue booking rules (lead time, cutoff, slot policy) are venue-owner only; managers change hours,
+  prices and closures. Front-desk staff cannot cancel bookings and never receive prices (removed on
+  the server, not just hidden).
+- Admins cannot suspend/ban platform staff from the users page (so an admin can never lock out
+  the owner); staff access is managed only from the owner's team page.
+
+**Owner account and security**
+- The migration made the oldest former `super_admin` the owner. On staging that is the bootstrap
+  test account, so the real owner's first setup link must use `--replace-owner` (the old account
+  becomes an admin and can then be removed from the team page).
+- The setup link carries its token in the URL fragment (never sent to servers or written to logs);
+  the owner link lasts 30 minutes, staff invitations 48 hours; both single-use, stored hashed.
+- Staff invitation links are shown once to the owner, who sends them (WhatsApp, etc.). They are not
+  emailed, so a token is never stored in the notifications table.
+- Lockout: 5 failed sign-ins → 15 minutes; the distinct "locked" message is shown only when the
+  password and code were right. Staff sessions: 4 hours maximum, 30 minutes idle.
+- Re-authentication (password + code, valid 10 minutes) for archive, finance, settings and team
+  changes; signing in counts as a fresh re-authentication.
+- Email alerts: every owner sign-in and any staff sign-in from a new browser, through the outbox
+  and SMTP (`SMTP_URL`). Without SMTP configured they are only logged (not a startup error).
+- The IP allowlist applies to the whole admin API including sign-in; saving a list that excludes
+  your own address is refused; `admin.js clear-ip-allowlist` recovers from a lockout.
+- Every mutating admin and venue-staff request is audited automatically (inputs redacted:
+  passwords, codes, tokens, secrets; the private venue rating body is not logged at all).
+  Important services also record explicit before/after values.
+
+**Features**
+- Settings: the CliQ flag moved to the database with the server env as the default ("server
+  default" option); venue commission became an optional override of the platform default (venues
+  on the old 8% default now follow the setting).
+- Archive is refused while a venue has upcoming held/confirmed bookings.
+- Complaints: reporters see staff replies as "platform team" (no staff names); a reporter's reply
+  reopens a resolved complaint; no SMS/WhatsApp notification yet (in-app only).
+- Admin cancellation is treated like a venue cancellation for money (deposit owed back) and the
+  player is notified.
+- Ban is a separate permanent status next to suspension; both end sessions and refuse sign-in.
+- No-show can be recorded from the start of the booking up to 2 days after its end, never after a
+  check-in; check-in opens an hour before the start.
+- Dashboard "bookings" counts bookings *made* in the period; charts use one brand colour with a
+  table view for every value.
+
+**Not done / needs the owner**
+- Generating the owner setup link (by design: the owner runs the command).
+- Creating the `production` branch (owner only; see docs/releases.md).
+- UptimeRobot monitors and SMTP credentials must be set up by the owner (docs/monitoring.md,
+  docs/production.md).
