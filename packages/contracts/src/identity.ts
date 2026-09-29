@@ -294,8 +294,14 @@ export const adminListAuditLogs = endpoint({
     targetType: z.string().trim().max(50).optional(),
     targetId: z.string().trim().max(100).optional(),
     /** Amman dates, inclusive. */
-    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    from: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    to: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
   }),
   response: page(auditLogSchema),
 });
