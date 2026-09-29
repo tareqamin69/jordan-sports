@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import {
+  adminGetUser,
   adminListUsers,
   adminSetUserStatus,
   type AdminUser,
@@ -25,6 +26,12 @@ export class AdminUsersController {
       ...(q.cursor ? { cursor: q.cursor } : {}),
       ...(q.q ? { q: q.q } : {}),
     });
+  }
+
+  @Get(adminGetUser.path)
+  @AdminAuth()
+  get(@Param() params: unknown) {
+    return this.users.adminGet(parseInput(adminGetUser.params, params).userId);
   }
 
   @Post(adminSetUserStatus.path)

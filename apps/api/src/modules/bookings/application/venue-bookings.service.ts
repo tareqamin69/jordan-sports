@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { VenueBooking } from '@jordan-sports/contracts';
+import type { AdminBookingDetail, VenueBooking } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
@@ -376,11 +376,32 @@ export class VenueBookingsService {
     limit: number;
     cursor?: string | undefined;
     venueId?: string | undefined;
+    userId?: string | undefined;
+    status?: BookingStatus | undefined;
+    from?: string | undefined;
+    to?: string | undefined;
+    q?: string | undefined;
   }) {
     return this.db.transaction().execute(async (tx) => {
       await bypassTenant(tx);
       let q = bookingQuery(tx).where('b.status', '<>', 'EXPIRED');
       if (input.venueId) q = q.where('b.venue_id', '=', input.venueId);
+      if (input.userId) q = q.where('b.customer_user_id', '=', input.userId);
+      if (input.status) q = q.where('b.status', '=', input.status);
+      if (input.from) q = q.where('b.business_date', '>=', input.from);
+      if (input.to) q = q.where('b.business_date', '<=', input.to);
+      if (input.q) {
+        const like = `%${input.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+        q = q.where((eb) =>
+          eb.or([
+            eb('b.reference', 'ilike', like),
+            eb('u.display_name', 'ilike', like),
+            eb('u.phone', 'like', like),
+            eb('vc.name', 'ilike', like),
+            eb('vc.phone', 'like', like),
+          ]),
+        );
+      }
       if (input.cursor) q = q.where('b.id', '<', input.cursor);
       const rows = await q
         .orderBy('b.id', 'desc')
@@ -391,6 +412,105 @@ export class VenueBookingsService {
         items,
         nextCursor: rows.length > input.limit ? (items.at(-1)?.id ?? null) : null,
       };
+    });
+  }
+
+  private async adminDetail(tx: Tx, bookingId: string): Promise<AdminBookingDetail> {
+    const row = await bookingQuery(tx).where('b.id', '=', bookingId).executeTakeFirst();
+    if (!row) throw Errors.notFound();
+    const history = await tx
+      .selectFrom('booking.status_history')
+      .select(['from_status', 'to_status', 'actor_type', 'reason', 'occurred_at'])
+      .where('booking_id', '=', bookingId)
+      .orderBy('occurred_at')
+      .orderBy('id')
+      .execute();
+    return {
+      ...toVenueBooking(row),
+      customerUserId: row.customer_user_id,
+      history: history.map((h) => ({
+        from: h.from_status,
+        to: h.to_status,
+        actorType: h.actor_type,
+        reason: h.reason,
+        at: h.occurred_at.toISOString(),
+      })),
+    };
+  }
+
+  async adminGet(bookingId: string): Promise<AdminBookingDetail> {
+    return this.db.transaction().execute(async (tx) => {
+      await bypassTenant(tx);
+      return this.adminDetail(tx, bookingId);
+    });
+  }
+
+  /**
+   * Platform staff cancel a held or confirmed booking (e.g. after a complaint). Treated like a
+   * venue-side cancellation for money: any deposit is owed back to the player.
+   */
+  async adminCancel(
+    actor: StaffActor,
+    bookingId: string,
+    reason: string,
+    now = new Date(),
+  ): Promise<AdminBookingDetail> {
+    return transaction(this.db, async (tx) => {
+      await bypassTenant(tx);
+      const booking = await tx
+        .selectFrom('booking.bookings')
+        .select(['status', 'organization_id', sql<Date>`upper(during)`.as('end')])
+        .where('id', '=', bookingId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!booking) throw Errors.notFound();
+      const status = booking.status as BookingStatus;
+      if (!canTransition(status, 'CANCELLED')) throw new AppError('INVALID_STATE_TRANSITION', 409);
+      if (new Date(booking.end) <= now) throw new AppError('CANCELLATION_NOT_ALLOWED', 409);
+      await tx
+        .updateTable('booking.bookings')
+        .set({
+          status: 'CANCELLED',
+          cancelled_at: now,
+          cancelled_by: actor.userId,
+          cancelled_by_role: 'admin',
+          cancel_reason: reason,
+          late_cancellation: null,
+        })
+        .where('id', '=', bookingId)
+        .execute();
+      await releaseOccupancies(tx, [bookingId]);
+      await setTenant(tx, booking.organization_id);
+      await refundDeposit(tx, bookingId, now);
+      await recordStatus(tx, [
+        {
+          bookingId,
+          from: status,
+          to: 'CANCELLED',
+          actorType: 'admin',
+          actorUserId: actor.userId,
+          reason,
+        },
+      ]);
+      if (status === 'CONFIRMED') {
+        await enqueue(tx, { type: 'booking.cancelled', payload: { bookingId, by: 'admin' } });
+      }
+      await this.audit.record(
+        {
+          actorType: 'admin',
+          actorUserId: actor.userId,
+          action: 'booking.cancelled_by_admin',
+          targetType: 'booking',
+          targetId: bookingId,
+          organizationId: booking.organization_id,
+          reason,
+          details: { before: { status }, after: { status: 'CANCELLED' } },
+          meta: actor.meta,
+        },
+        tx,
+      );
+      await bypassTenant(tx);
+      return this.adminDetail(tx, bookingId);
     });
   }
 }

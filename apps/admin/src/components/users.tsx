@@ -1,11 +1,29 @@
 'use client';
 
-import { adminListUsers, adminSetUserStatus, type AdminUser } from '@jordan-sports/contracts';
-import { Alert, Badge, Button, Card, Ltr, PageHeader, Spinner, TextField } from '@jordan-sports/ui';
+import {
+  adminGetUser,
+  adminListUsers,
+  adminSetUserStatus,
+  type AdminUser,
+} from '@jordan-sports/contracts';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Ltr,
+  PageHeader,
+  SelectField,
+  Spinner,
+  TextField,
+} from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Link } from '@/i18n/navigation';
+import { useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
+import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
 export function UsersPage() {
@@ -65,23 +83,28 @@ function UserRow({ user }: { user: AdminUser }) {
   const t = useTranslations('admin.users');
   const tc = useTranslations('common.actions');
   const api = useApi();
+  const can = useCan();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<null | 'status' | 'details'>(null);
   const [reason, setReason] = useState('');
-  const next = user.status === 'active' ? 'suspended' : 'active';
+  const [next, setNext] = useState<'active' | 'suspended' | 'banned'>(
+    user.status === 'active' ? 'suspended' : 'active',
+  );
   const change = useMutation({
     mutationFn: () =>
       api(adminSetUserStatus, { params: { userId: user.id }, body: { status: next, reason } }),
     onSuccess: async () => {
-      setOpen(false);
+      setOpen(null);
       setReason('');
       await queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
+  // Staff accounts are managed by the owner from the team page.
+  const manageable = can('users.manage') && !user.platformRole;
 
   return (
-    <li className="px-5 py-4">
+    <li className="px-5 py-4" data-testid="admin-user">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-medium">{user.displayName ?? '—'}</p>
@@ -89,19 +112,29 @@ function UserRow({ user }: { user: AdminUser }) {
             <Ltr>{user.phone ?? user.email}</Ltr>
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge>{t(`statuses.${user.status}`)}</Badge>
           {user.platformRole ? <Badge>{user.platformRole}</Badge> : null}
           <Button
             size="sm"
-            variant={next === 'suspended' ? 'danger' : 'secondary'}
-            onClick={() => setOpen((v) => !v)}
+            variant="secondary"
+            onClick={() => setOpen((v) => (v === 'details' ? null : 'details'))}
           >
-            {next === 'suspended' ? t('suspend') : t('reactivate')}
+            {t('details')}
           </Button>
+          {manageable ? (
+            <Button
+              size="sm"
+              variant={user.status === 'active' ? 'danger' : 'secondary'}
+              onClick={() => setOpen((v) => (v === 'status' ? null : 'status'))}
+            >
+              {user.status === 'active' ? t('suspend') : t('reactivate')}
+            </Button>
+          ) : null}
         </div>
       </div>
-      {open ? (
+      {open === 'details' ? <UserDetails userId={user.id} /> : null}
+      {open === 'status' ? (
         <form
           className="mt-4 flex flex-col gap-3"
           onSubmit={(e) => {
@@ -110,6 +143,20 @@ function UserRow({ user }: { user: AdminUser }) {
           }}
         >
           {change.isError ? <Alert tone="error">{errorMessage(change.error)}</Alert> : null}
+          <SelectField
+            label={t('newStatus')}
+            value={next}
+            onChange={(e) => setNext(e.target.value as typeof next)}
+            name="newStatus"
+          >
+            {(['active', 'suspended', 'banned'] as const)
+              .filter((s) => s !== user.status)
+              .map((s) => (
+                <option key={s} value={s}>
+                  {t(`statuses.${s}`)}
+                </option>
+              ))}
+          </SelectField>
           <TextField
             label={t('reasonLabel')}
             value={reason}
@@ -122,17 +169,66 @@ function UserRow({ user }: { user: AdminUser }) {
             <Button
               type="submit"
               size="sm"
-              variant={next === 'suspended' ? 'danger' : 'primary'}
+              variant={next === 'active' ? 'primary' : 'danger'}
               busy={change.isPending}
             >
               {t('confirm')}
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setOpen(false)}>
+            <Button size="sm" variant="secondary" onClick={() => setOpen(null)}>
               {tc('cancel')}
             </Button>
           </div>
         </form>
       ) : null}
     </li>
+  );
+}
+
+function UserDetails({ userId }: { userId: string }) {
+  const t = useTranslations('admin.users');
+  const tc = useTranslations('common');
+  const locale = useLocale();
+  const api = useApi();
+  const errorMessage = useErrorMessage();
+  const user = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => api(adminGetUser, { params: { userId } }),
+  });
+  if (user.isError) return <Alert tone="error">{errorMessage(user.error)}</Alert>;
+  if (!user.data) return <Spinner label={tc('loading')} />;
+  const r = user.data.reliability;
+  const tiles: Array<[string, string | number]> = [
+    [t('reliability.bookings'), r.bookings],
+    [t('reliability.kept'), r.keptPercent === null ? '—' : `${r.keptPercent}%`],
+    [t('reliability.cancelled'), r.cancelled],
+    [t('reliability.late'), r.lateCancellations],
+    [t('reliability.noShows'), r.noShows],
+    [t('reliability.complaints'), user.data.complaints],
+  ];
+  return (
+    <div className="mt-4 flex flex-col gap-3" data-testid="user-details">
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-6">
+        {tiles.map(([label, value]) => (
+          <div key={label} className="rounded-lg bg-canvas p-2">
+            <dt className="text-xs text-ink-muted">{label}</dt>
+            <dd className="font-display text-lg tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {user.data.memberships.length > 0 ? (
+        <p className="text-sm">
+          {t('memberships')}{' '}
+          {user.data.memberships
+            .map((m) => `${pick(m.organizationName, locale)} (${m.role})`)
+            .join('، ')}
+        </p>
+      ) : null}
+      <Link
+        href={{ pathname: '/bookings', query: { user: userId } }}
+        className="text-sm text-primary"
+      >
+        {t('bookingsLink')}
+      </Link>
+    </div>
   );
 }

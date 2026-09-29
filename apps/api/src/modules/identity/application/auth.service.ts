@@ -169,7 +169,7 @@ export class AuthService {
         .select(['id', 'status', 'age_confirmed_at'])
         .where('phone', '=', phone)
         .executeTakeFirst();
-      if (user?.status === 'suspended') return { error: 'ACCOUNT_SUSPENDED' as const };
+      if (user && user.status !== 'active') return { error: 'ACCOUNT_SUSPENDED' as const };
 
       if (user?.age_confirmed_at) {
         await tx
@@ -224,7 +224,7 @@ export class AuthService {
         .where('phone', '=', challenge.phone)
         .forUpdate()
         .executeTakeFirst();
-      if (existing?.status === 'suspended') throw new AppError('ACCOUNT_SUSPENDED', 403);
+      if (existing && existing.status !== 'active') throw new AppError('ACCOUNT_SUSPENDED', 403);
 
       let userId: string;
       if (existing) {

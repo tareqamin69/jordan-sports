@@ -295,6 +295,50 @@ export const adminListBookings = endpoint({
   summary: 'Bookings across the platform (newest first)',
   auth: 'admin',
   permission: 'bookings.read',
-  query: pageQuerySchema.extend({ venueId: uuidSchema.optional() }),
+  query: pageQuerySchema.extend({
+    venueId: uuidSchema.optional(),
+    userId: uuidSchema.optional(),
+    status: z.enum(['HELD', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW']).optional(),
+    /** Business dates (venue-local), inclusive. */
+    from: dateSchema.optional(),
+    to: dateSchema.optional(),
+    /** Booking reference, or the customer's name or phone. */
+    q: z.string().trim().max(100).optional(),
+  }),
   response: page(venueBookingSchema),
+});
+
+export const adminBookingDetailSchema = venueBookingSchema.extend({
+  customerUserId: uuidSchema.nullable(),
+  history: z.array(
+    z.object({
+      from: z.string().nullable(),
+      to: z.string(),
+      actorType: z.string(),
+      reason: z.string().nullable(),
+      at: z.string(),
+    }),
+  ),
+});
+export type AdminBookingDetail = z.infer<typeof adminBookingDetailSchema>;
+
+export const adminGetBooking = endpoint({
+  method: 'GET',
+  path: '/v1/admin/bookings/:bookingId',
+  summary: 'One booking with its status history',
+  auth: 'admin',
+  permission: 'bookings.read',
+  params: z.object({ bookingId: uuidSchema }),
+  response: adminBookingDetailSchema,
+});
+
+export const adminCancelBooking = endpoint({
+  method: 'POST',
+  path: '/v1/admin/bookings/:bookingId/cancel',
+  summary: 'Cancel a held or confirmed booking on behalf of the platform (reason required)',
+  auth: 'admin',
+  permission: 'bookings.cancel',
+  params: z.object({ bookingId: uuidSchema }),
+  body: z.object({ reason: z.string().trim().min(3).max(500) }),
+  response: adminBookingDetailSchema,
 });

@@ -200,7 +200,7 @@ export const adminUserSchema = z.object({
   phone: z.string().nullable(),
   email: z.string().nullable(),
   displayName: z.string().nullable(),
-  status: z.enum(['active', 'suspended']),
+  status: z.enum(['active', 'suspended', 'banned']),
   platformRole: platformRoleSchema.nullable(),
   createdAt: z.string(),
 });
@@ -221,12 +221,48 @@ export const reasonSchema = z.object({ reason: z.string().trim().min(3).max(500)
 export const adminSetUserStatus = endpoint({
   method: 'POST',
   path: '/v1/admin/users/:userId/status',
-  summary: 'Suspend or reactivate a user (audited, reason required)',
+  summary: 'Suspend, ban or reactivate a user (audited, reason required)',
   auth: 'admin',
   permission: 'users.manage',
   params: z.object({ userId: uuidSchema }),
-  body: reasonSchema.extend({ status: z.enum(['active', 'suspended']) }),
+  /** suspended: temporary; banned: permanent. Staff accounts are managed from the team page. */
+  body: reasonSchema.extend({ status: z.enum(['active', 'suspended', 'banned']) }),
   response: adminUserSchema,
+});
+
+export const reliabilitySchema = z.object({
+  bookings: z.number().int(),
+  completed: z.number().int(),
+  cancelled: z.number().int(),
+  lateCancellations: z.number().int(),
+  noShows: z.number().int(),
+  /** Share of past bookings kept (completed or confirmed), 0–100; null without history. */
+  keptPercent: z.number().int().nullable(),
+  lastBookingAt: z.string().nullable(),
+});
+
+export const adminUserDetailSchema = adminUserSchema.extend({
+  locale: z.string(),
+  reliability: reliabilitySchema,
+  memberships: z.array(
+    z.object({
+      organizationId: uuidSchema,
+      organizationName: z.object({ ar: z.string().optional(), en: z.string().optional() }),
+      role: z.string(),
+    }),
+  ),
+  complaints: z.number().int(),
+});
+export type AdminUserDetail = z.infer<typeof adminUserDetailSchema>;
+
+export const adminGetUser = endpoint({
+  method: 'GET',
+  path: '/v1/admin/users/:userId',
+  summary: 'A user profile with reliability signals and memberships',
+  auth: 'admin',
+  permission: 'users.read',
+  params: z.object({ userId: uuidSchema }),
+  response: adminUserDetailSchema,
 });
 
 export const auditLogSchema = z.object({
