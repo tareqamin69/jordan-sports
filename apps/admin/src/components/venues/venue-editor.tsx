@@ -32,6 +32,13 @@ import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
 import { joinList, pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+import { useCan } from '@/lib/admin-session';
+import {
+  VenueArchivePanel,
+  VenueCommissionPanel,
+  VenueRatingPanel,
+  VenueStatsPanel,
+} from './venue-oversight';
 
 const transitions: Record<VenueStatus, VenueStatus[]> = {
   draft: ['approved', 'submitted', 'rejected'],
@@ -67,6 +74,7 @@ export function VenueEditor({ venueId }: { venueId: string }) {
   const api = useApi();
   const errorMessage = useErrorMessage();
   const catalog = useCatalog();
+  const can = useCan();
   const venue = useQuery({
     queryKey: ['venue', venueId],
     queryFn: () => api(adminGetVenue, { params: { venueId } }),
@@ -85,11 +93,19 @@ export function VenueEditor({ venueId }: { venueId: string }) {
         actions={<Badge data-testid="venue-status">{t(`statuses.${v.status}`)}</Badge>}
       />
       <div className="flex flex-col gap-6">
-        <StatusPanel venue={v} />
-        <ProfileForm venue={v} catalog={catalog.data} />
-        <ResourcesPanel venue={v} catalog={catalog.data} />
-        <FacilitiesPanel venue={v} />
-        <PhotosPanel venue={v} />
+        {can('venues.review') ? <StatusPanel venue={v} /> : null}
+        <VenueStatsPanel venue={v} />
+        {can('venues.rate') ? <VenueRatingPanel venue={v} /> : null}
+        {can('venues.edit') ? (
+          <>
+            <ProfileForm venue={v} catalog={catalog.data} />
+            <ResourcesPanel venue={v} catalog={catalog.data} />
+            <FacilitiesPanel venue={v} />
+            <PhotosPanel venue={v} />
+          </>
+        ) : null}
+        {can('finance.manage') ? <VenueCommissionPanel venue={v} /> : null}
+        {can('venues.archive') ? <VenueArchivePanel venue={v} /> : null}
       </div>
     </>
   );

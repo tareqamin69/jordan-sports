@@ -194,6 +194,7 @@ export class VenueViewsService {
       cliqAlias: venue.cliqAlias,
       cliqAliasHolderName: venue.cliqAliasHolder,
       depositPercentage: venue.depositPercentage,
+      commissionBps: venue.commissionBps,
       businessDayStartMinute: venue.businessDayStartMinute,
       amenityIds,
       facilities: facilities as Array<{ id: string; name: Localized }>,

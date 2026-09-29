@@ -375,6 +375,16 @@ export interface PlatformSettings {
   updated_by: string | null;
 }
 
+export interface PlatformVenueRatings {
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  id: string;
+  note: string | null;
+  score: number;
+  tags: Generated<string[]>;
+  venue_id: string;
+}
+
 export interface PricingPriceRuleAmounts {
   amount: Int8;
   duration_minutes: number;
@@ -597,6 +607,7 @@ export interface DB {
   'platform.idempotency_keys': PlatformIdempotencyKeys;
   'platform.outbox_events': PlatformOutboxEvents;
   'platform.settings': PlatformSettings;
+  'platform.venue_ratings': PlatformVenueRatings;
   'pricing.price_rule_amounts': PricingPriceRuleAmounts;
   'pricing.price_rules': PricingPriceRules;
   'resource.booking_policies': ResourceBookingPolicies;

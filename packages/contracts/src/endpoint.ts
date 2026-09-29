@@ -27,6 +27,8 @@ export interface Endpoint {
    * (resolved on the server from the path parameter, never from the body).
    */
   readonly orgPermission?: OrgPermission;
+  /** The request body is private (e.g. the owner's venue notes): kept out of the audit log. */
+  readonly privateBody?: boolean;
 }
 
 export function endpoint<const E extends Endpoint>(definition: E): E {

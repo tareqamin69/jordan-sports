@@ -58,7 +58,12 @@ export class RequestAuditInterceptor implements NestInterceptor {
         const upload =
           Buffer.isBuffer(raw) ||
           String(request.headers['content-type'] ?? '').startsWith('multipart/');
-        let body = upload ? { upload: true } : redact(raw);
+        const contract = endpointFor(request.method, route);
+        let body = upload
+          ? { upload: true }
+          : contract?.privateBody
+            ? { private: true }
+            : redact(raw);
         if (JSON.stringify(body ?? null).length > MAX_DETAILS) body = { truncated: true };
         try {
           await this.audit.record({
@@ -71,7 +76,7 @@ export class RequestAuditInterceptor implements NestInterceptor {
             organizationId: request.tenant?.organizationId ?? null,
             details: {
               endpoint: `${request.method} ${route}`,
-              summary: endpointFor(request.method, route)?.summary ?? null,
+              summary: contract?.summary ?? null,
               params,
               body: body ?? null,
               ...(request.tenant ? { venueRole: request.tenant.role } : {}),

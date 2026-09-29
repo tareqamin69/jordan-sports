@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import pg from 'pg';
 import { pino } from 'pino';
@@ -305,4 +305,79 @@ export async function createVenue(
   }
   const resources = (resource.json() as { resources: Array<{ id: string }> }).resources;
   return { venueId, slug, resourceIds: resources.map((r) => r.id) };
+}
+
+/**
+ * An approved venue with one court open every day 08:00–24:00 (60-minute slots), and its owner's
+ * web session. Enough for bookings by players and by the venue.
+ */
+export async function bookableVenue(
+  app: NestFastifyApplication,
+  adminCookie: string,
+): Promise<{
+  organizationId: string;
+  venueId: string;
+  slug: string;
+  resourceId: string;
+  ownerCookie: string;
+  ownerPhone: string;
+}> {
+  const org = await createOrganization(app, adminCookie);
+  const v = await createVenue(app, adminCookie, org.id, { approve: true });
+  const resourceId = v.resourceIds[0]!;
+  const ownerCookie = (await signInPlayer(app, { phone: org.ownerPhone })).cookie;
+  const put = async (url: string, body: unknown) => {
+    const r = await call(app, { method: 'PUT', url, cookie: ownerCookie, body });
+    if (r.statusCode !== 200) throw new Error(`${url} failed: ${r.body}`);
+  };
+  await put(`/v1/manage/resources/${resourceId}/weekly-hours`, {
+    windows: [1, 2, 3, 4, 5, 6, 7].map((d) => ({
+      dayOfWeek: d,
+      startMinute: 480,
+      durationMinutes: 960,
+    })),
+  });
+  await put(`/v1/manage/resources/${resourceId}/policy`, {
+    slotDurations: [60],
+    startAlignmentMinutes: 60,
+    minLeadMinutes: 0,
+    maxAdvanceDays: 30,
+    bufferBeforeMinutes: 0,
+    bufferAfterMinutes: 0,
+  });
+  return {
+    organizationId: org.id,
+    venueId: v.venueId,
+    slug: v.slug,
+    resourceId,
+    ownerCookie,
+    ownerPhone: org.ownerPhone,
+  };
+}
+
+/** A booking taken by the venue (phone/walk-in), `daysAhead` days from today at `startTime`. */
+export async function manualBooking(
+  app: NestFastifyApplication,
+  cookie: string,
+  venue: { venueId: string; resourceId: string },
+  daysAhead = 2,
+  startTime = '10:00',
+): Promise<{ id: string; reference: string }> {
+  const { DateTime } = await import('luxon');
+  const r = await call(app, {
+    method: 'POST',
+    url: `/v1/manage/venues/${venue.venueId}/bookings`,
+    cookie,
+    headers: { 'idempotency-key': randomUUID() },
+    body: {
+      resourceId: venue.resourceId,
+      date: DateTime.now().setZone('Asia/Amman').plus({ days: daysAhead }).toISODate(),
+      startTime,
+      durationMinutes: 60,
+      customer: { name: 'Walk-in', phone: '0791234567' },
+    },
+  });
+  if (r.statusCode !== 201) throw new Error(`Manual booking failed: ${r.body}`);
+  const created = (r.json() as { created: Array<{ id: string; reference: string }> }).created[0]!;
+  return created;
 }

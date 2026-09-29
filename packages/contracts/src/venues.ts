@@ -182,6 +182,8 @@ export const adminVenueSchema = z.object({
   cliqAlias: z.string().nullable(),
   cliqAliasHolderName: z.string().nullable(),
   depositPercentage: z.number().int().nullable(),
+  /** Commission in effect (basis points): the venue's own rate or the platform default. */
+  commissionBps: z.number().int(),
   businessDayStartMinute: z.number().int(),
   amenityIds: z.array(uuidSchema),
   facilities: z.array(z.object({ id: uuidSchema, name: localizedSchema })),
