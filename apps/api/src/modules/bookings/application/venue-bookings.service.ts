@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { AdminBookingDetail, VenueBooking } from '@jordan-sports/contracts';
+import type { AdminBookingDetail, MembershipRole, VenueBooking } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
 import type { Db, Tx } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
@@ -368,6 +368,99 @@ export class VenueBookingsService {
       }
       const [view] = await this.loadForVenue(tx, venue.organizationId, [bookingId]);
       return view!;
+    });
+  }
+
+  /** Check-in window opens an hour before the start; a no-show can be recorded up to 2 days after. */
+  static readonly CHECK_IN_EARLY_MS = 60 * 60 * 1000;
+  static readonly NO_SHOW_LATE_MS = 48 * 60 * 60 * 1000;
+
+  /**
+   * Front desk: the customer arrived, or did not come. The guard checked `booking.checkin` in
+   * the booking's organization; `role` decides whether prices are shown back.
+   */
+  async markArrival(
+    actor: StaffActor,
+    tenant: { organizationId: string; role: MembershipRole },
+    bookingId: string,
+    arrived: boolean,
+    now = new Date(),
+  ): Promise<VenueBooking> {
+    return transaction(this.db, async (tx) => {
+      await setTenant(tx, tenant.organizationId);
+      const booking = await tx
+        .selectFrom('booking.bookings')
+        .select([
+          'status',
+          'checked_in_at',
+          sql<Date>`lower(during)`.as('start'),
+          sql<Date>`upper(during)`.as('end'),
+        ])
+        .where('id', '=', bookingId)
+        .where('organization_id', '=', tenant.organizationId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!booking) throw Errors.notFound();
+      const status = booking.status as BookingStatus;
+      const start = new Date(booking.start).getTime();
+      const end = new Date(booking.end).getTime();
+      if (arrived) {
+        if (status !== 'CONFIRMED' && status !== 'COMPLETED') {
+          throw new AppError('INVALID_STATE_TRANSITION', 409);
+        }
+        if (now.getTime() < start - VenueBookingsService.CHECK_IN_EARLY_MS || now.getTime() > end) {
+          throw new AppError('INVALID_STATE_TRANSITION', 409, 'Outside the check-in window');
+        }
+        if (!booking.checked_in_at) {
+          await tx
+            .updateTable('booking.bookings')
+            .set({ checked_in_at: now, checked_in_by: actor.userId })
+            .where('id', '=', bookingId)
+            .execute();
+        }
+      } else {
+        if (
+          !canTransition(status, 'NO_SHOW') ||
+          booking.checked_in_at !== null ||
+          now.getTime() < start ||
+          now.getTime() > end + VenueBookingsService.NO_SHOW_LATE_MS
+        ) {
+          throw new AppError('INVALID_STATE_TRANSITION', 409);
+        }
+        await tx
+          .updateTable('booking.bookings')
+          .set({ status: 'NO_SHOW' })
+          .where('id', '=', bookingId)
+          .execute();
+        await releaseOccupancies(tx, [bookingId]);
+        await recordStatus(tx, [
+          {
+            bookingId,
+            from: status,
+            to: 'NO_SHOW',
+            actorType: 'venue',
+            actorUserId: actor.userId,
+          },
+        ]);
+      }
+      await this.audit.record(
+        {
+          actorType: 'user',
+          actorUserId: actor.userId,
+          action: arrived ? 'booking.checked_in' : 'booking.no_show',
+          targetType: 'booking',
+          targetId: bookingId,
+          organizationId: tenant.organizationId,
+          details: {
+            before: { status, checkedIn: booking.checked_in_at !== null },
+            after: arrived ? { status, checkedIn: true } : { status: 'NO_SHOW', checkedIn: false },
+          },
+          meta: actor.meta,
+        },
+        tx,
+      );
+      const [view] = await this.loadForVenue(tx, tenant.organizationId, [bookingId]);
+      return forVenueRole(view!, tenant.role);
     });
   }
 

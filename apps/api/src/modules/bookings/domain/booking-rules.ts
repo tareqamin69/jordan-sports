@@ -34,7 +34,8 @@ const transitions: Record<BookingStatus, readonly BookingStatus[]> = {
   CONFIRMED: ['CANCELLED', 'COMPLETED', 'NO_SHOW'],
   CANCELLED: [],
   EXPIRED: [],
-  COMPLETED: [],
+  // The venue may still record a no-show after the booking ended (never after a check-in).
+  COMPLETED: ['NO_SHOW'],
   NO_SHOW: [],
 };
 

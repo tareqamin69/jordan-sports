@@ -30,6 +30,9 @@ import { PaymentsPanel } from './payments-panel';
 import { PricingEditor } from './pricing-editor';
 import { RulesEditor } from './rules-editor';
 import { MyComplaints, ReportForm } from '../support-center';
+import { ReportsPanel, VenueSettingsPanel } from './reports-panel';
+import { TeamPanel } from './team-panel';
+import { TodayPanel } from './today-panel';
 
 /** Venue switcher: only shown when the signed-in user manages more than one venue. */
 function VenueSwitcher({ venueId, tab }: { venueId: string; tab: Tab }) {
@@ -163,7 +166,11 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
             ))}
         </ul>
       </nav>
+      {shown === 'today' ? <TodayPanel schedule={s} /> : null}
       {shown === 'calendar' ? <CalendarView schedule={s} /> : null}
+      {shown === 'team' ? <TeamPanel venueId={venueId} /> : null}
+      {shown === 'reports' ? <ReportsPanel venueId={venueId} /> : null}
+      {shown === 'settings' ? <VenueSettingsPanel schedule={s} /> : null}
       {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
       {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
       {shown === 'balance' ? <BalancePanel venueId={venueId} timezone={s.venue.timezone} /> : null}

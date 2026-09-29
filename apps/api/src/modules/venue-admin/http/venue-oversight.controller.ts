@@ -5,6 +5,7 @@ import {
   adminGetVenueStats,
   adminRateVenue,
   archiveOwnVenue,
+  getVenueStats,
   hasPlatformPermission,
 } from '@jordan-sports/contracts';
 import type { FastifyRequest } from 'fastify';
@@ -74,6 +75,14 @@ export class AdminVenueOversightController {
 @UserAuth()
 export class ManageVenueOversightController {
   constructor(private readonly oversight: VenueOversightService) {}
+
+  @Get(getVenueStats.path)
+  stats(@Param() params: unknown, @Query() query: unknown) {
+    const { venueId } = parseInput(getVenueStats.params, params);
+    const { days } = parseInput(getVenueStats.query, query);
+    // The guard checked `reports.read` (venue owners) in the venue's organization.
+    return this.oversight.stats(venueId, days, true);
+  }
 
   @Post(archiveOwnVenue.path)
   @HttpCode(200)

@@ -1,6 +1,7 @@
 import type { OrgPermission } from '@jordan-sports/contracts';
 
 export const tabs = [
+  'today',
   'calendar',
   'bookings',
   'payments',
@@ -10,6 +11,9 @@ export const tabs = [
   'closures',
   'balance',
   'support',
+  'team',
+  'reports',
+  'settings',
 ] as const;
 export type Tab = (typeof tabs)[number];
 
@@ -24,4 +28,8 @@ export const tabPermission: Record<Tab, OrgPermission> = {
   closures: 'schedule.closures',
   balance: 'reports.read',
   support: 'complaints.create',
+  today: 'booking.read',
+  team: 'staff.manage',
+  reports: 'reports.read',
+  settings: 'venue.archive',
 };

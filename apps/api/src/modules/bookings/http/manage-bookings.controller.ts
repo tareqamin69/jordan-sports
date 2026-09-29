@@ -1,6 +1,8 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query, Req } from '@nestjs/common';
 import {
   cancelVenueBooking,
+  checkInBooking,
+  markNoShow,
   confirmVenuePayment,
   createManualBooking,
   listVenueBookings,
@@ -12,6 +14,7 @@ import {
 import type { FastifyRequest } from 'fastify';
 import type { Actor } from '../../../platform/auth/actor.js';
 import { CurrentActor, UserAuth } from '../../../platform/auth/decorators.js';
+import { Errors } from '../../../platform/http/errors.js';
 import { requestMeta } from '../../../platform/http/request-context.js';
 import { parseInput } from '../../../platform/http/validation.js';
 import { VenueBookingsService } from '../application/venue-bookings.service.js';
@@ -24,6 +27,32 @@ export class ManageBookingsController {
     private readonly bookings: VenueBookingsService,
     private readonly payments: VenuePaymentsService,
   ) {}
+
+  @Post(checkInBooking.path)
+  @HttpCode(200)
+  checkIn(@Param() params: unknown, @CurrentActor() actor: Actor, @Req() request: FastifyRequest) {
+    const { bookingId } = parseInput(checkInBooking.params, params);
+    if (!request.tenant) throw Errors.forbidden();
+    return this.bookings.markArrival(
+      { userId: actor.userId, meta: requestMeta(request) },
+      request.tenant,
+      bookingId,
+      true,
+    );
+  }
+
+  @Post(markNoShow.path)
+  @HttpCode(200)
+  noShow(@Param() params: unknown, @CurrentActor() actor: Actor, @Req() request: FastifyRequest) {
+    const { bookingId } = parseInput(markNoShow.params, params);
+    if (!request.tenant) throw Errors.forbidden();
+    return this.bookings.markArrival(
+      { userId: actor.userId, meta: requestMeta(request) },
+      request.tenant,
+      bookingId,
+      false,
+    );
+  }
 
   @Get(listVenueBookings.path)
   list(@Param() params: unknown, @Query() query: unknown, @CurrentActor() actor: Actor) {
