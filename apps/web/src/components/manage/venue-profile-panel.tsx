@@ -14,7 +14,7 @@ import {
   Button,
   Card,
   CheckboxField,
-  Spinner,
+  FormSkeleton,
   TextAreaField,
   TextField,
   buttonClass,
@@ -67,7 +67,7 @@ export function VenueProfilePanel({ schedule }: { schedule: VenueSchedule }) {
     queryFn: () => api(getMyVenueProfile, { params: { venueId } }),
   });
   if (profile.isError) return <Alert tone="error">{errorMessage(profile.error)}</Alert>;
-  if (!profile.data) return <Spinner label={tc('loading')} />;
+  if (!profile.data) return <FormSkeleton label={tc('loading')} fields={5} />;
   return (
     <div className="flex flex-col gap-6" data-testid="venue-profile">
       <ProfileForm venue={profile.data} />
@@ -118,6 +118,7 @@ function ProfileForm({ venue }: { venue: AdminVenue }) {
           amenityIds: f.amenityIds,
         },
       }),
+    meta: { toast: t('saved') },
     onSuccess: (data) => {
       cache(data);
       setEdited(null);
@@ -134,9 +135,10 @@ function ProfileForm({ venue }: { venue: AdminVenue }) {
           {errorMessage(save.error)}
         </Alert>
       ) : null}
-      {save.isSuccess && edited === null ? (
-        <Alert tone="success" className="mb-3">
-          {venue.status === 'submitted' && venue.statusReason ? t('backToReview') : t('saved')}
+      {/* "Saved" is a toast; that the venue went back to review stays on screen. */}
+      {save.isSuccess && edited === null && venue.status === 'submitted' && venue.statusReason ? (
+        <Alert tone="info" className="mb-3">
+          {t('backToReview')}
         </Alert>
       ) : null}
       <form
@@ -250,13 +252,16 @@ function PhotosEditor({ venue }: { venue: AdminVenue }) {
   const api = useApi();
   const errorMessage = useErrorMessage();
   const cache = useProfileCache(venue.id);
+  const tt = useTranslations('common.toast');
   const inputId = useId();
   const upload = useMutation({
     mutationFn: (file: File) => api(uploadMyVenueMedia, { params: { venueId: venue.id }, file }),
+    meta: { toast: tt('uploaded') },
     onSuccess: cache,
   });
   const remove = useMutation({
     mutationFn: (mediaId: string) => api(deleteMyVenueMedia, { params: { mediaId } }),
+    meta: { toast: tt('removed') },
     onSuccess: cache,
   });
   const reorder = useMutation({

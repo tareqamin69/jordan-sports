@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Badge, buttonClass, Card, PageHeader, Spinner } from '@jordan-sports/ui';
+import { Alert, Badge, EmptyState, ListSkeleton, PageHeader, buttonClass } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -26,23 +26,23 @@ export function ManageHome() {
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
-      {venues.isPending ? <Spinner label={tc('loading')} /> : null}
+      {venues.isPending ? <ListSkeleton label={tc('loading')} rows={2} /> : null}
       {venues.isError && !isApiError(venues.error, 'UNAUTHENTICATED') ? (
         <Alert tone="error">{errorMessage(venues.error)}</Alert>
       ) : null}
       {venues.data?.items.length === 0 ? (
-        <Card className="flex flex-col items-start gap-2">
-          <span className="grid size-11 place-items-center rounded-full bg-brand-50 text-primary">
-            <Icon name="grid" className="size-5" />
-          </span>
-          <p className="font-semibold text-ink">{t('empty')}</p>
-          <p className="text-sm text-ink-muted">{t('emptyHint')}</p>
-          <Link href="/manage/register" className={buttonClass({ size: 'sm', className: 'mt-2' })}>
-            {t('registerCta')}
-          </Link>
-        </Card>
+        <EmptyState
+          art="venues"
+          title={t('empty')}
+          description={t('emptyHint')}
+          action={
+            <Link href="/manage/register" className={buttonClass({ size: 'sm' })}>
+              {t('registerCta')}
+            </Link>
+          }
+        />
       ) : null}
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="reveal-stagger grid gap-3 sm:grid-cols-2">
         {venues.data?.items.map((v) => {
           // Self-registered owners have one venue per organization, auto-named from it — showing
           // the org name above the (identical) venue name would just repeat it.
@@ -52,7 +52,7 @@ export function ManageHome() {
               <Link
                 href={`/manage/${v.id}`}
                 data-testid="managed-venue"
-                className="group flex h-full items-center gap-4 rounded-card border border-line bg-surface p-4 pe-5 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-lift"
+                className="lift group flex h-full items-center gap-4 rounded-card border border-line bg-surface p-4 pe-5 hover:border-line-strong"
               >
                 <span className="relative size-20 shrink-0 overflow-hidden rounded-tile bg-night">
                   {v.coverMediaId ? (

@@ -15,19 +15,19 @@ import {
 import {
   Alert,
   Button,
-  buttonClass,
   Card,
   CheckboxField,
-  cx,
+  FormSkeleton,
   PageHeader,
   SelectField,
-  Spinner,
   TextAreaField,
   TextField,
+  buttonClass,
+  cx,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
@@ -37,6 +37,8 @@ import { wizardSteps, type WizardStep } from '@/lib/wizard-steps';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { VenueMap } from '@/components/venue-map';
+import { BookingSuccess } from '../booking-success';
+import { Icon } from '../icons';
 import { LocationPicker } from './location-picker';
 
 type Localized = { ar?: string; en?: string };
@@ -55,29 +57,41 @@ function Stepper({ current, cliqEnabled }: { current: Step; cliqEnabled: boolean
   const t = useTranslations('web.manage.register');
   const index = steps.indexOf(current);
   return (
-    <ol className="no-scrollbar mb-6 flex gap-2 overflow-x-auto">
-      {steps.map((s, i) => (
-        <li
-          key={s}
-          className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium ${
-            i === index
-              ? 'border-primary bg-brand-50 text-primary'
-              : i < index
-                ? 'border-line-strong text-ink'
-                : 'border-line text-ink-muted'
-          }`}
-        >
-          <span
-            className={`grid size-5 shrink-0 place-items-center rounded-full text-xs ${
-              i <= index ? 'bg-primary text-canvas' : 'bg-canvas-deep text-ink-muted'
-            }`}
+    <div className="mb-6 flex flex-col gap-3">
+      {/* Progress bar: grows (transform only) as steps are completed. */}
+      <div className="h-1.5 overflow-hidden rounded-full bg-canvas-deep" aria-hidden>
+        <div
+          className="h-full origin-left rounded-full bg-primary transition-transform duration-slow ease-soft rtl:origin-right"
+          style={{ transform: `scaleX(${(index + 1) / steps.length})` }}
+        />
+      </div>
+      <ol className="no-scrollbar flex gap-2 overflow-x-auto">
+        {steps.map((s, i) => (
+          <li
+            key={s}
+            aria-current={i === index ? 'step' : undefined}
+            className={cx(
+              'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors duration-base',
+              i === index
+                ? 'animate-pop border-primary bg-brand-50 text-primary'
+                : i < index
+                  ? 'border-line-strong text-ink'
+                  : 'border-line text-ink-muted',
+            )}
           >
-            {i + 1}
-          </span>
-          {s === 'payment' && !cliqEnabled ? t('steps.contact') : t(`steps.${s}`)}
-        </li>
-      ))}
-    </ol>
+            <span
+              className={cx(
+                'grid size-5 shrink-0 place-items-center rounded-full text-xs transition-colors duration-base',
+                i <= index ? 'bg-primary text-canvas' : 'bg-canvas-deep text-ink-muted',
+              )}
+            >
+              {i < index ? <Icon name="check" className="size-3.5" strokeWidth={2.6} /> : i + 1}
+            </span>
+            {s === 'payment' && !cliqEnabled ? t('steps.contact') : t(`steps.${s}`)}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -104,6 +118,15 @@ export function RegisterWizard({
   const [venue, setVenue] = useState<AdminVenue | null>(null);
   const [step, setStep] = useState<Step>(initialStep);
   const [submitted, setSubmitted] = useState(false);
+  // A new step starts at the top of the page (the previous one may have been scrolled far down).
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   const existing = useQuery({
     queryKey: ['my-venue', initialVenueId],
@@ -113,12 +136,12 @@ export function RegisterWizard({
   if (existing.data && venue === null) setVenue(existing.data);
 
   if (initialVenueId && existing.isPending && venue === null) {
-    return <Spinner label={t('title')} />;
+    return <FormSkeleton label={t('title')} fields={4} />;
   }
   if (existing.isError) {
     return <Alert tone="error">{errorMessage(existing.error)}</Alert>;
   }
-  if (catalog.isPending) return <Spinner label={t('title')} />;
+  if (catalog.isPending) return <FormSkeleton label={t('title')} fields={4} />;
   if (catalog.isError) return <Alert tone="error">{errorMessage(catalog.error)}</Alert>;
 
   function onCreated(v: AdminVenue) {
@@ -128,11 +151,11 @@ export function RegisterWizard({
 
   if (submitted && venue) {
     return (
-      <Card className="flex flex-col items-start gap-3 text-start">
-        <p className="font-display text-2xl">{t('submitted')}</p>
+      <div className="flex flex-col items-start gap-4">
+        <BookingSuccess message={t('submitted')} />
         <p className="text-ink-muted">{t('submittedHint')}</p>
         <Button onClick={() => router.push(`/manage/${venue.id}`)}>{t('goToDashboard')}</Button>
-      </Card>
+      </div>
     );
   }
 
@@ -143,71 +166,74 @@ export function RegisterWizard({
         description={t('stepOf', { step: steps.indexOf(step) + 1, total: steps.length })}
       />
       <Stepper current={step} cliqEnabled={catalog.data.features.cliqPayments} />
-      {step === 'info' ? (
-        <InfoStep
-          venue={venue}
-          catalog={catalog.data}
-          onNext={(v) => {
-            onCreated(v);
-            setStep('location');
-          }}
-        />
-      ) : null}
-      {step === 'location' && venue ? (
-        <LocationStep
-          venue={venue}
-          catalog={catalog.data}
-          onBack={() => setStep('info')}
-          onNext={(v) => {
-            setVenue(v);
-            setStep('photos');
-          }}
-        />
-      ) : null}
-      {step === 'photos' && venue ? (
-        <PhotosStep
-          venue={venue}
-          onBack={() => setStep('location')}
-          onNext={(v) => {
-            setVenue(v);
-            setStep('courts');
-          }}
-        />
-      ) : null}
-      {step === 'courts' && venue ? (
-        <CourtsStep
-          venue={venue}
-          catalog={catalog.data}
-          onBack={() => setStep('photos')}
-          onNext={(v) => {
-            setVenue(v);
-            setStep('payment');
-          }}
-        />
-      ) : null}
-      {step === 'payment' && venue ? (
-        <PaymentStep
-          venue={venue}
-          cliqEnabled={catalog.data.features.cliqPayments}
-          onBack={() => setStep('courts')}
-          onNext={(v) => {
-            setVenue(v);
-            setStep('review');
-          }}
-        />
-      ) : null}
-      {step === 'review' && venue ? (
-        <ReviewStep
-          venue={venue}
-          cliqEnabled={catalog.data.features.cliqPayments}
-          catalog={catalog.data}
-          onBack={() => setStep('payment')}
-          onSubmitted={() => {
-            void queryClient.invalidateQueries({ queryKey: ['managed-venues'] });
-            setSubmitted(true);
-          }}
-        />
-      ) : null}
+      {/* Keyed by step so each step eases in. */}
+      <div key={step} className="animate-rise">
+        {step === 'info' ? (
+          <InfoStep
+            venue={venue}
+            catalog={catalog.data}
+            onNext={(v) => {
+              onCreated(v);
+              setStep('location');
+            }}
+          />
+        ) : null}
+        {step === 'location' && venue ? (
+          <LocationStep
+            venue={venue}
+            catalog={catalog.data}
+            onBack={() => setStep('info')}
+            onNext={(v) => {
+              setVenue(v);
+              setStep('photos');
+            }}
+          />
+        ) : null}
+        {step === 'photos' && venue ? (
+          <PhotosStep
+            venue={venue}
+            onBack={() => setStep('location')}
+            onNext={(v) => {
+              setVenue(v);
+              setStep('courts');
+            }}
+          />
+        ) : null}
+        {step === 'courts' && venue ? (
+          <CourtsStep
+            venue={venue}
+            catalog={catalog.data}
+            onBack={() => setStep('photos')}
+            onNext={(v) => {
+              setVenue(v);
+              setStep('payment');
+            }}
+          />
+        ) : null}
+        {step === 'payment' && venue ? (
+          <PaymentStep
+            venue={venue}
+            cliqEnabled={catalog.data.features.cliqPayments}
+            onBack={() => setStep('courts')}
+            onNext={(v) => {
+              setVenue(v);
+              setStep('review');
+            }}
+          />
+        ) : null}
+        {step === 'review' && venue ? (
+          <ReviewStep
+            venue={venue}
+            cliqEnabled={catalog.data.features.cliqPayments}
+            catalog={catalog.data}
+            onBack={() => setStep('payment')}
+            onSubmitted={() => {
+              void queryClient.invalidateQueries({ queryKey: ['managed-venues'] });
+              setSubmitted(true);
+            }}
+          />
+        ) : null}
+      </div>
     </>
   );
 }
@@ -490,13 +516,16 @@ function PhotosStep({
   const api = useApi();
   const errorMessage = useErrorMessage();
   const inputId = useId();
+  const tt = useTranslations('common.toast');
   const [current, setCurrent] = useState(venue);
   const upload = useMutation({
     mutationFn: (file: File) => api(uploadMyVenueMedia, { params: { venueId: venue.id }, file }),
+    meta: { toast: tt('uploaded') },
     onSuccess: setCurrent,
   });
   const remove = useMutation({
     mutationFn: (mediaId: string) => api(deleteMyVenueMedia, { params: { mediaId } }),
+    meta: { toast: tt('removed') },
     onSuccess: setCurrent,
   });
   const error = upload.error ?? remove.error;
@@ -581,6 +610,7 @@ function CourtsStep({
   onNext: (venue: AdminVenue) => void;
 }) {
   const t = useTranslations('web.manage.register');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
@@ -611,6 +641,7 @@ function CourtsStep({
           attributes: {},
         },
       }),
+    meta: { toast: tt('added') },
     onSuccess: (v) => {
       setCurrent(v);
       setNameAr('');
@@ -624,6 +655,7 @@ function CourtsStep({
   const remove = useMutation({
     mutationFn: (resourceId: string) =>
       api(updateMyResource, { params: { resourceId }, body: { status: 'archived' } }),
+    meta: { toast: tt('removed') },
     onSuccess: setCurrent,
   });
 
@@ -778,6 +810,7 @@ function EditCourtForm({
   onCancel: () => void;
 }) {
   const t = useTranslations('web.manage.register');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
@@ -797,6 +830,7 @@ function EditCourtForm({
         params: { resourceId: resource.id },
         body: { name: localized(nameAr, nameEn) ?? {}, sportFormatIds: formatIds },
       }),
+    meta: { toast: tt('saved') },
     onSuccess: onDone,
   });
   const fieldError = fieldErrors(save.error);

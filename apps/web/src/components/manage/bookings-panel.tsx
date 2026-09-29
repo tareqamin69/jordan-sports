@@ -16,9 +16,9 @@ import {
   Badge,
   Button,
   Card,
+  ListSkeleton,
   Ltr,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -77,7 +77,9 @@ export function BookingsPanel({ schedule }: { schedule: VenueSchedule }) {
           name="bookingsTo"
         />
       </div>
-      {bookings.isPending && from <= to ? <Spinner label={tc('loading')} /> : null}
+      {bookings.isPending && from <= to ? (
+        <ListSkeleton label={tc('loading')} rows={3} thumb={false} />
+      ) : null}
       {bookings.isError ? <Alert tone="error">{errorMessage(bookings.error)}</Alert> : null}
       {bookings.data && bookings.data.items.length === 0 ? (
         <p className="text-ink-muted">{t('empty')}</p>
@@ -118,6 +120,7 @@ function DayGroup({
 function BookingRow({ booking: b, schedule }: { booking: VenueBooking; schedule: VenueSchedule }) {
   const t = useTranslations('web.manage.bookings');
   const tb = useTranslations('web.booking');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -126,6 +129,7 @@ function BookingRow({ booking: b, schedule }: { booking: VenueBooking; schedule:
   const [reason, setReason] = useState('');
   const cancel = useMutation({
     mutationFn: () => api(cancelVenueBooking, { params: { bookingId: b.id }, body: { reason } }),
+    meta: { toast: tt('cancelled') },
     onSuccess: async () => {
       setAsking(false);
       await queryClient.invalidateQueries({ queryKey: ['venue-bookings', schedule.venue.id] });
@@ -255,6 +259,12 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
           repeatWeeks: weeks,
         },
       }),
+    meta: {
+      toast: (data) => {
+        const n = (data as { created: unknown[] }).created.length;
+        return t('added', { count: n, n: String(n) });
+      },
+    },
     onSuccess: async () => {
       setName('');
       setPhone('');
@@ -281,22 +291,14 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
             {errorMessage(create.error)}
           </Alert>
         ) : null}
-        {create.data ? (
-          <Alert tone="success" className="sm:col-span-2 lg:col-span-3">
-            {t('added', {
-              count: create.data.created.length,
-              n: String(create.data.created.length),
+        {create.data && create.data.skipped.length > 0 ? (
+          <Alert tone="warning" className="sm:col-span-2 lg:col-span-3">
+            {t('skipped', {
+              dates: joinList(
+                create.data.skipped.map((s) => dmy(s.date)),
+                locale,
+              ),
             })}
-            {create.data.skipped.length > 0 ? (
-              <span className="block">
-                {t('skipped', {
-                  dates: joinList(
-                    create.data.skipped.map((s) => dmy(s.date)),
-                    locale,
-                  ),
-                })}
-              </span>
-            ) : null}
           </Alert>
         ) : null}
         <SelectField
@@ -403,6 +405,7 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
         params: { venueId: schedule.venue.id },
         body: { cancellationCutoffHours: Number(hours) },
       }),
+    meta: { toast: t('saved') },
     onSuccess: setSchedule,
   });
   return (
@@ -417,7 +420,6 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
         <h2 className="font-display text-2xl leading-tight">{t('cutoffTitle')}</h2>
         <p className="text-sm text-ink-muted">{t('cutoffHint')}</p>
         {save.isError ? <Alert tone="error">{errorMessage(save.error)}</Alert> : null}
-        {save.isSuccess ? <Alert tone="success">{t('saved')}</Alert> : null}
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-40">
             <TextField

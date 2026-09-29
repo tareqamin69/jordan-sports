@@ -1,4 +1,4 @@
-# M7 — Design polish ("alive" pass), phase 1: home, venue, booking
+# M7 — Design polish ("alive" pass)
 
 Goal: make the player-facing app feel premium and alive (Playtomic/Airbnb-level) without hurting
 speed or RTL, keeping Design B "Clubhouse" tokens. Phase 1 covers the three key screens (home,
@@ -70,12 +70,49 @@ Lessons recorded here so they are not repeated:
 - A page-wrapper transition that keeps a `transform` makes that wrapper the containing block of
   every `position: fixed` bar inside it. The route transition was removed; heroes keep `animate-rise`.
 
-## Deliberately deferred (after the user's review)
-- Rest of the app: owner dashboard (KPI count-ups, calendar interactions, drag-to-create), toasts
-  on every save/delete in manage/admin, pull-to-refresh on My bookings, bottom tab bar labels
-  (الرئيسية، استكشف، حجوزاتي، حسابي), empty-state illustrations, skeletons on the remaining screens.
-- Venue page LCP (~4 s simulated) is bound by hydration JS; next step is trimming client JS on
-  that page.
+## Phase 2 (after the user approved phase 1): the rest of the site + stabilization
+
+- **Stock photos are skipped for now (no Pexels key).** Everything falls back to the illustrated
+  art: sport tiles show icons, heroes show the drawn pitch/courts, venues without uploads show
+  court art with no "صورة توضيحية" label. `/credits` returns 404 while there are no stock photos
+  (and is linked only from the label on a stock venue hero, not the footer). The importer stays;
+  it no-ops without `PEXELS_API_KEY`.
+- `/sports` subtitle no longer claims every sport has an approved venue.
+- **Shared building blocks** (`packages/ui`): skeleton presets (`ListSkeleton`, `StatsSkeleton`,
+  `FormSkeleton`, `DetailSkeleton`, `GridSkeleton`), `EmptyState` with on-brand illustrations
+  (venues / bookings / search / inbox), `CountUp` (CSS), `notify()` for toasts from outside React.
+- **Toasts everywhere:** both apps' query clients have a `MutationCache` that shows
+  `meta.toast` on success; every save/add/remove/confirm mutation declares one (common texts in
+  `common.toast`). Inline "saved" alerts were replaced; errors stay inline next to the form.
+  Info that must stay on screen stays inline (e.g. "back to review", skipped repeat dates, the
+  staff invite link).
+- **No spinners left:** every loading state is a skeleton shaped like its screen (web + admin).
+- Player: venues list (reveal, empty states), `/sports` tiles, My bookings (skeleton, empty
+  state, pull-to-refresh on touch), account (lift rows), support (toasts), sign-in (6-box code
+  input over a single real input, step dots, step transitions), tab bar press feedback.
+- Owner: dashboard skeleton, tab content eases in, active tab scrolled into view on phones,
+  KPI count-ups in reports, quick-booking sheet slides up, registration wizard progress bar with
+  checked steps, step transitions, scroll-to-top per step, and a success screen.
+- Admin: toasts, skeletons, dashboard count-ups, empty states, active menu item kept in view.
+
+### Stabilization pass
+Automated walkthrough of every page (guest, player incl. book + confirm, owner on all tabs,
+admin on all sections) at 375 px and 1366 px on the demo data, checking JS errors, 5xx,
+horizontal overflow, broken images, error alerts and touch targets. Fixed:
+- Hydration mismatch (React #418) on venue pages: the header hydrates late (Suspense) and the
+  account label could already know the user → `useHydrated()` keeps the server label until then.
+- "We sent a code to ." — the phone was never shown on the OTP screen (rich-text misuse); now
+  covered by e2e.
+- Toast items were `<button role=status>` (axe: button-name) → plain live-region items.
+- Admin geography rows overflowed at 375 px → wrap.
+- Touch targets: header brand, "all sports" link, gallery dots, admin dashboard links.
+Accepted as is: card title links (the whole card is the target), inline e-mail link, the owner
+calendar's 30-minute grid cells (28 px, a dense time grid).
+
+## Deliberately deferred
+- Calendar drag-to-create.
+- Venue page LCP (~4 s simulated) is bound by hydration JS; next step is trimming client JS there.
+- Pexels stock photos until a key is added (see `docs/image-credits.md`).
 
 ## Open decisions
 - Whether to keep the numbered ("01", "02") style on carousel cards.

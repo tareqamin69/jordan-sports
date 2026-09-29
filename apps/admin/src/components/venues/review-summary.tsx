@@ -6,7 +6,7 @@ import {
   type VenueReviewSummary,
 } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Card, Ltr, Spinner } from '@jordan-sports/ui';
+import { Alert, Card, Ltr, SkeletonGroup, SkeletonText } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useApi } from '@/lib/api';
@@ -67,7 +67,11 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
           <section>
             <h2 className="mb-2 text-sm font-medium text-ink-muted">{t('courts')}</h2>
             {summary.isError ? <Alert tone="error">{errorMessage(summary.error)}</Alert> : null}
-            {summary.isPending ? <Spinner label={tc('loading')} /> : null}
+            {summary.isPending ? (
+              <SkeletonGroup label={tc('loading')}>
+                <SkeletonText lines={4} />
+              </SkeletonGroup>
+            ) : null}
             {resources.length === 0 ? <p className="text-sm text-danger">{t('noCourts')}</p> : null}
             <ul className="flex flex-col gap-3">
               {resources.map((r) => {

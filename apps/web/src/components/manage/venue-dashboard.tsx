@@ -3,9 +3,11 @@
 import { getMyVenueProfile } from '@jordan-sports/contracts';
 import {
   Alert,
+  ListSkeleton,
   PageHeader,
   SelectChevron,
-  Spinner,
+  Skeleton,
+  SkeletonGroup,
   chipClass,
   cx,
   fieldControlClass,
@@ -19,6 +21,7 @@ import { pick } from '@/lib/localized';
 import { can, useManagedVenues, useVenueSchedule } from '@/lib/manage';
 import { tabPermission, tabs, type Tab } from '@/lib/manage-tabs';
 import { useCatalog } from '@/lib/catalog';
+import { useActiveInView } from '@/lib/use-active-in-view';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { BalanceBanner, BalancePanel, useVenueBalance } from './balance-panel';
 import { BookingsPanel } from './bookings-panel';
@@ -116,6 +119,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   const cliqEnabled = useCatalog().data?.features.cliqPayments ?? false;
   const seesMoney = cliqEnabled && can(schedule.data, 'reports.read');
   const balance = useVenueBalance(venueId, seesMoney);
+  const tabList = useActiveInView<HTMLUListElement>(`${tab}:${Boolean(schedule.data)}`);
 
   useEffect(() => {
     if (isApiError(schedule.error, 'UNAUTHENTICATED')) router.replace('/sign-in');
@@ -126,7 +130,20 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
     can(schedule.data, tabPermission[key]) &&
     (key === 'payments' || key === 'balance' ? cliqEnabled : true);
 
-  if (schedule.isPending) return <Spinner label={tc('loading')} />;
+  if (schedule.isPending) {
+    return (
+      <SkeletonGroup label={tc('loading')} className="flex flex-col gap-6">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-10 w-64" />
+        <div className="flex gap-2">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-11 w-24 rounded-full" />
+          ))}
+        </div>
+        <ListSkeleton label={tc('loading')} rows={3} thumb={false} />
+      </SkeletonGroup>
+    );
+  }
   if (schedule.isError) return <Alert tone="error">{errorMessage(schedule.error)}</Alert>;
   const s = schedule.data;
   // A tab the role can't use (e.g. an old link) falls back to today's view.
@@ -145,7 +162,10 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
       ) : null}
       <OnboardingChecklist schedule={s} />
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
-        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
+        <ul
+          ref={tabList}
+          className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0"
+        >
           {tabs
             .filter((key) => visible(key))
             .map((key) => (
@@ -167,29 +187,34 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
             ))}
         </ul>
       </nav>
-      {shown === 'today' ? <TodayPanel schedule={s} /> : null}
-      {shown === 'calendar' ? <CalendarView schedule={s} /> : null}
-      {shown === 'team' ? <TeamPanel venueId={venueId} /> : null}
-      {shown === 'reports' ? <ReportsPanel venueId={venueId} /> : null}
-      {shown === 'settings' ? (
-        <div className="flex flex-col gap-6">
-          <VenueProfilePanel schedule={s} />
-          <VenueSettingsPanel schedule={s} />
-        </div>
-      ) : null}
-      {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
-      {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
-      {shown === 'balance' ? <BalancePanel venueId={venueId} timezone={s.venue.timezone} /> : null}
-      {shown === 'hours' ? <HoursEditor schedule={s} /> : null}
-      {shown === 'rules' ? <RulesEditor schedule={s} /> : null}
-      {shown === 'pricing' ? <PricingEditor schedule={s} /> : null}
-      {shown === 'closures' ? <ClosuresEditor schedule={s} /> : null}
-      {shown === 'support' ? (
-        <div className="flex flex-col gap-4">
-          <ReportForm venueId={venueId} asVenue />
-          <MyComplaints venueId={venueId} />
-        </div>
-      ) : null}
+      {/* Keyed by tab so each tab's content eases in. */}
+      <div key={shown} className="animate-rise">
+        {shown === 'today' ? <TodayPanel schedule={s} /> : null}
+        {shown === 'calendar' ? <CalendarView schedule={s} /> : null}
+        {shown === 'team' ? <TeamPanel venueId={venueId} /> : null}
+        {shown === 'reports' ? <ReportsPanel venueId={venueId} /> : null}
+        {shown === 'settings' ? (
+          <div className="flex flex-col gap-6">
+            <VenueProfilePanel schedule={s} />
+            <VenueSettingsPanel schedule={s} />
+          </div>
+        ) : null}
+        {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
+        {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
+        {shown === 'balance' ? (
+          <BalancePanel venueId={venueId} timezone={s.venue.timezone} />
+        ) : null}
+        {shown === 'hours' ? <HoursEditor schedule={s} /> : null}
+        {shown === 'rules' ? <RulesEditor schedule={s} /> : null}
+        {shown === 'pricing' ? <PricingEditor schedule={s} /> : null}
+        {shown === 'closures' ? <ClosuresEditor schedule={s} /> : null}
+        {shown === 'support' ? (
+          <div className="flex flex-col gap-4">
+            <ReportForm venueId={venueId} asVenue />
+            <MyComplaints venueId={venueId} />
+          </div>
+        ) : null}
+      </div>
     </>
   );
 }

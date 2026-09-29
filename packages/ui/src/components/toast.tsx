@@ -25,6 +25,14 @@ type Show = (message: string, tone?: ToastTone) => void;
 
 const ToastContext = createContext<Show | null>(null);
 
+// The mounted provider, for code outside React (e.g. a query client's global mutation callbacks).
+let mounted: Show | null = null;
+
+/** Shows a toast from anywhere (no-op when no `ToastProvider` is mounted). */
+export function notify(message: string, tone: ToastTone = 'success'): void {
+  mounted?.(message, tone);
+}
+
 const DURATION_MS = 3800;
 const LEAVE_MS = 220;
 
@@ -61,6 +69,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    mounted = show;
+    return () => {
+      if (mounted === show) mounted = null;
+    };
+  }, [show]);
+
+  useEffect(() => {
     const map = timers.current;
     return () => map.forEach((t) => clearTimeout(t));
   }, []);
@@ -76,13 +91,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-relevant="additions"
       >
         {items.map((t) => (
-          <button
+          // Not a button: the live region announces it, it leaves on its own, and a tap (pointer
+          // only) just clears it sooner. Errors are also role=alert (announced assertively).
+          <div
             key={t.id}
-            type="button"
             onClick={() => dismiss(t.id)}
-            role={t.tone === 'error' ? 'alert' : 'status'}
+            role={t.tone === 'error' ? 'alert' : undefined}
             className={cx(
-              'pointer-events-auto flex max-w-md items-center gap-3 rounded-full px-5 py-3 text-start text-sm font-medium shadow-float',
+              'pointer-events-auto flex max-w-md cursor-pointer items-center gap-3 rounded-full px-5 py-3 text-start text-sm font-medium shadow-float',
               'transition-[transform,opacity] duration-200 ease-soft',
               t.tone === 'error' ? 'bg-danger text-white' : 'bg-night text-canvas',
               t.leaving ? 'translate-y-2 opacity-0' : 'animate-pop',
@@ -91,7 +107,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <ToastIcon tone={t.tone} />
             <span>{t.message}</span>
-          </button>
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

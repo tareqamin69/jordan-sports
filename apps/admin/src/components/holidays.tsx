@@ -5,7 +5,15 @@ import {
   adminDeleteHoliday,
   adminListHolidays,
 } from '@jordan-sports/contracts';
-import { Alert, Button, Card, PageHeader, Spinner, TextField } from '@jordan-sports/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  EmptyState,
+  ListSkeleton,
+  PageHeader,
+  TextField,
+} from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
@@ -16,6 +24,7 @@ import { useErrorMessage } from '@/lib/use-error-message';
 
 export function HolidaysPage() {
   const t = useTranslations('admin.holidays');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common');
   const locale = useLocale();
   const api = useApi();
@@ -27,6 +36,7 @@ export function HolidaysPage() {
   });
   const [form, setForm] = useState({ date: '', nameAr: '', nameEn: '' });
   const add = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateHoliday, {
         body: {
@@ -44,6 +54,7 @@ export function HolidaysPage() {
     },
   });
   const remove = useMutation({
+    meta: { toast: tt('removed') },
     mutationFn: (holidayId: string) => api(adminDeleteHoliday, { params: { holidayId } }),
     onSuccess: (data) => queryClient.setQueryData(['holidays'], data),
   });
@@ -92,8 +103,8 @@ export function HolidaysPage() {
           </Button>
         </form>
       </Card>
-      {list.isPending ? <Spinner label={tc('loading')} /> : null}
-      {list.data?.items.length === 0 ? <p className="text-ink-muted">{t('empty')}</p> : null}
+      {list.isPending ? <ListSkeleton label={tc('loading')} rows={4} thumb={false} /> : null}
+      {list.data?.items.length === 0 ? <EmptyState art="inbox" title={t('empty')} /> : null}
       <Card className="p-0">
         <ul className="divide-y divide-line">
           {list.data?.items.map((h) => (

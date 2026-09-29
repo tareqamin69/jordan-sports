@@ -1,7 +1,7 @@
 'use client';
 
 import { adminListPendingVenues, type VenueStatus } from '@jordan-sports/contracts';
-import { Alert, Badge, Card, Ltr, PageHeader, SelectField, Spinner } from '@jordan-sports/ui';
+import { Alert, Badge, Card, ListSkeleton, Ltr, PageHeader, SelectField } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -47,7 +47,7 @@ export function PendingVenues() {
             ))}
           </SelectField>
         </div>
-        {venues.isPending ? <Spinner label={tc('loading')} /> : null}
+        {venues.isPending ? <ListSkeleton label={tc('loading')} rows={3} /> : null}
         {venues.isError ? (
           <Alert tone="error" className="mt-3">
             {errorMessage(venues.error)}

@@ -28,6 +28,7 @@ export function RulesEditor({ schedule }: { schedule: VenueSchedule }) {
   const editable = can(schedule, 'schedule.rules');
   const save = useMutation({
     mutationFn: () => api(setBookingPolicy, { params: { resourceId }, body: policy }),
+    meta: { toast: t('rules.saved') },
     onSuccess: setSchedule,
   });
   const set = <K extends keyof BookingPolicy>(key: K, value: BookingPolicy[K]) =>
@@ -58,11 +59,6 @@ export function RulesEditor({ schedule }: { schedule: VenueSchedule }) {
         {save.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
-          </Alert>
-        ) : null}
-        {save.isSuccess ? (
-          <Alert tone="success" className="sm:col-span-2">
-            {t('rules.saved')}
           </Alert>
         ) : null}
         <fieldset className="sm:col-span-2">

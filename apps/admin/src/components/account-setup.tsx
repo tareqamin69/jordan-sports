@@ -1,7 +1,7 @@
 'use client';
 
 import { completeAccountSetup, inspectAccountSetup } from '@jordan-sports/contracts';
-import { Alert, Button, Card, Ltr, Spinner, TextField } from '@jordan-sports/ui';
+import { Alert, Button, Card, FormSkeleton, Ltr, TextField } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
@@ -78,7 +78,7 @@ export function AccountSetupForm() {
   };
 
   if (token === undefined || (token && !details && !loadError)) {
-    return <Spinner label={tc('loading')} />;
+    return <FormSkeleton label={tc('loading')} fields={3} />;
   }
   if (!token || loadError || !details) {
     return (

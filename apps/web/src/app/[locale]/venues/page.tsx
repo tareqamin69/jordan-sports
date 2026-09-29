@@ -2,7 +2,7 @@ import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { PageHeader, buttonClass, chipClass } from '@jordan-sports/ui';
+import { EmptyState, PageHeader, buttonClass, chipClass } from '@jordan-sports/ui';
 import { Icon } from '@/components/icons';
 import { SearchBar } from '@/components/search-bar';
 import { VenueCard } from '@/components/venue-card';
@@ -118,30 +118,23 @@ export default async function VenuesPage({ params, searchParams }: Props) {
       </nav>
 
       {venues.items.length === 0 ? (
-        <div
-          className="mt-8 rounded-card border border-dashed border-line-strong p-10 text-center text-ink-muted"
-          data-testid="venues-empty"
-        >
-          {sport && !sportHasVenues ? (
-            <>
-              <p>{t('emptySport')}</p>
-              <Link
-                href="/manage/register"
-                className={buttonClass({ size: 'sm', className: 'mt-4' })}
-              >
+        <EmptyState
+          className="mt-8"
+          testId="venues-empty"
+          art={sport && !sportHasVenues ? 'venues' : 'search'}
+          title={sport && !sportHasVenues ? t('emptySport') : date ? t('emptySearch') : t('empty')}
+          action={
+            sport && !sportHasVenues ? (
+              <Link href="/manage/register" className={buttonClass({ size: 'sm' })}>
                 {t('emptySportCta')}
               </Link>
-            </>
-          ) : date ? (
-            t('emptySearch')
-          ) : (
-            t('empty')
-          )}
-        </div>
+            ) : null
+          }
+        />
       ) : (
-        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="reveal-stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {venues.items.map((v) => (
-            <li key={v.id} className="animate-rise">
+            <li key={v.id}>
               <VenueCard venue={v} locale={locale} date={date} />
             </li>
           ))}

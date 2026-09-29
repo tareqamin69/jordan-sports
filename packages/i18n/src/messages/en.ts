@@ -6,6 +6,17 @@ import { BRAND_NAME } from '@jordan-sports/brand';
 
 export const en = {
   common: {
+    toast: {
+      saved: 'Saved.',
+      added: 'Added.',
+      removed: 'Removed.',
+      updated: 'Updated.',
+      sent: 'Sent.',
+      done: 'Done.',
+      uploaded: 'Photo uploaded.',
+      archived: 'Archived.',
+      cancelled: 'Booking cancelled.',
+    },
     appName: BRAND_NAME.en,
     allSports: 'All sports',
     languageSwitcher: {
@@ -206,7 +217,7 @@ export const en = {
       phoneHint: 'We will send you a 6-digit code by text message.',
       sendCode: 'Send code',
       codeTitle: 'Enter the code',
-      codeSentTo: 'We sent a code to {phone}.',
+      codeSentTo: 'We sent a code to <phone>{number}</phone>.',
       codeLabel: '6-digit code',
       verify: 'Verify',
       changeNumber: 'Change number',
@@ -248,7 +259,7 @@ export const en = {
     },
     sports: {
       title: 'All sports',
-      description: 'Every sport with an approved venue on the platform, Jordan-wide.',
+      description: 'Every sport you can play in Jordan. Pick one to see its venues.',
     },
     availability: {
       title: 'Available times',
@@ -702,6 +713,7 @@ export const en = {
       you: 'You',
       reply: 'Your reply',
       sendReply: 'Send',
+      replySent: 'Your reply was sent.',
       statuses: { new: 'New', in_progress: 'In progress', resolved: 'Resolved' },
       categories: {
         booking: 'A booking',

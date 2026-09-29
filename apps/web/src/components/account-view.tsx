@@ -1,7 +1,15 @@
 'use client';
 
 import { signOut } from '@jordan-sports/contracts';
-import { Alert, Button, Card, Ltr, PageHeader, Spinner, buttonClass } from '@jordan-sports/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  DetailSkeleton,
+  Ltr,
+  PageHeader,
+  buttonClass,
+} from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
@@ -27,7 +35,7 @@ export function AccountView() {
     if (me.data === null && !signingOut.current) router.replace('/sign-in');
   }, [me.data, router]);
 
-  if (me.isPending || me.data === null) return <Spinner label={tc('loading')} />;
+  if (me.isPending || me.data === null) return <DetailSkeleton label={tc('loading')} />;
   if (me.isError) return <Alert tone="error">{errorMessage(me.error)}</Alert>;
 
   const user = me.data;
@@ -44,7 +52,7 @@ export function AccountView() {
   };
 
   return (
-    <div className="flex animate-rise flex-col gap-4">
+    <div className="reveal-stagger flex animate-rise flex-col gap-4">
       <PageHeader
         title={t('title')}
         actions={
@@ -69,7 +77,7 @@ export function AccountView() {
       </Card>
       <Link
         href="/bookings"
-        className="group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 font-semibold transition-colors hover:border-line-strong"
+        className="lift group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 font-semibold hover:border-line-strong"
       >
         <span className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
@@ -77,12 +85,15 @@ export function AccountView() {
           </span>
           {t('bookingsLink')}
         </span>
-        <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
+        <Icon
+          name="chevron"
+          className="size-5 text-ink-muted transition-transform duration-base ease-soft group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+        />
       </Link>
       <Link
         href="/support"
         data-testid="support-link"
-        className="group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 font-semibold transition-colors hover:border-line-strong"
+        className="lift group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 font-semibold hover:border-line-strong"
       >
         <span className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
@@ -90,12 +101,15 @@ export function AccountView() {
           </span>
           {t('supportLink')}
         </span>
-        <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
+        <Icon
+          name="chevron"
+          className="size-5 text-ink-muted transition-transform duration-base ease-soft group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+        />
       </Link>
       <Link
         href="/manage"
         data-testid="switch-mode-link"
-        className="group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 transition-colors hover:border-line-strong"
+        className="lift group flex min-h-16 items-center justify-between gap-3 rounded-card border border-line bg-surface px-6 py-4 hover:border-line-strong"
       >
         <span className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
@@ -106,7 +120,10 @@ export function AccountView() {
             <span className="text-sm text-ink-muted">{t('switchToVenueHint')}</span>
           </span>
         </span>
-        <Icon name="chevron" className="size-5 text-ink-muted rtl:rotate-180" />
+        <Icon
+          name="chevron"
+          className="size-5 text-ink-muted transition-transform duration-base ease-soft group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+        />
       </Link>
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">

@@ -13,12 +13,15 @@ import {
   Badge,
   Button,
   Card,
+  EmptyState,
+  FormSkeleton,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextAreaField,
   cx,
+  useToast,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useTranslations } from 'next-intl';
@@ -58,6 +61,7 @@ export function ReportForm({
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
+  const toast = useToast();
   const categories = asVenue ? VENUE_CATEGORIES : PLAYER_CATEGORIES;
   const [category, setCategory] = useState<ComplaintCategory>(
     bookingId ? 'booking' : categories[0]!,
@@ -72,8 +76,9 @@ export function ReportForm({
             body: { ...payload, ...(venueId && !bookingId ? { venueId } : {}) },
           });
     },
-    onSuccess: () => {
+    onSuccess: (sent) => {
       setBody('');
+      toast(t('sent', { reference: sent.reference }));
       void queryClient.invalidateQueries({ queryKey: ['my-complaints'] });
     },
   });
@@ -93,9 +98,6 @@ export function ReportForm({
           </p>
         ) : null}
         {send.isError ? <Alert tone="error">{errorMessage(send.error)}</Alert> : null}
-        {send.isSuccess ? (
-          <Alert tone="success">{t('sent', { reference: send.data.reference })}</Alert>
-        ) : null}
         <SelectField
           label={t('category')}
           value={category}
@@ -138,6 +140,7 @@ function Thread({ complaint }: { complaint: Complaint }) {
   const send = useMutation({
     mutationFn: () =>
       api(replyToMyComplaint, { params: { complaintId: complaint.id }, body: { body: reply } }),
+    meta: { toast: t('replySent') },
     onSuccess: () => {
       setReply('');
       void queryClient.invalidateQueries({ queryKey: ['my-complaints'] });
@@ -207,7 +210,7 @@ export function MyComplaints({ venueId }: { venueId?: string }) {
   const tc = useTranslations('common');
   const errorMessage = useErrorMessage();
   const mine = useMyComplaints();
-  if (mine.isPending) return <Spinner label={tc('loading')} />;
+  if (mine.isPending) return <ListSkeleton label={tc('loading')} rows={2} thumb={false} />;
   if (mine.isError) return <Alert tone="error">{errorMessage(mine.error)}</Alert>;
   const items = mine.data.items.filter((c) =>
     venueId ? c.reporterKind === 'venue' && c.venue?.id === venueId : c.reporterKind === 'player',
@@ -216,7 +219,7 @@ export function MyComplaints({ venueId }: { venueId?: string }) {
     <Card>
       <h2 className="font-display text-2xl">{t('mine')}</h2>
       {items.length === 0 ? (
-        <p className="mt-2 text-ink-muted">{t('none')}</p>
+        <EmptyState art="inbox" title={t('none')} className="mt-4 border-0 bg-transparent py-6" />
       ) : (
         <ul className="divide-y divide-line">
           {items.map((c) => (
@@ -245,9 +248,9 @@ export function SupportCenter({
   useEffect(() => {
     if (me.data === null) router.replace('/sign-in');
   }, [me.data, router]);
-  if (me.isPending || me.data === null) return <Spinner label={tc('loading')} />;
+  if (me.isPending || me.data === null) return <FormSkeleton label={tc('loading')} fields={2} />;
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex animate-rise flex-col gap-4">
       <PageHeader title={t('title')} description={t('description')} />
       <ReportForm venueId={venueId} bookingId={bookingId} bookingReference={bookingReference} />
       <MyComplaints />

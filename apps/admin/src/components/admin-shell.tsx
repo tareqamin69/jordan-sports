@@ -1,13 +1,14 @@
 'use client';
 
 import { adminSignOut, type PlatformPermission } from '@jordan-sports/contracts';
-import { Alert, Button, Spinner, cx } from '@jordan-sports/ui';
+import { Alert, Button, DetailSkeleton, cx } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useEffect, type ReactNode } from 'react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAdminMe } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
+import { useActiveInView } from '@/lib/use-active-in-view';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { ReauthDialog } from './reauth-dialog';
 
@@ -40,6 +41,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
+  const navList = useActiveInView<HTMLUListElement>(`${pathname}:${Boolean(me.data)}`);
 
   useEffect(() => {
     if (me.data === null) router.replace('/sign-in');
@@ -55,7 +57,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (me.isPending || me.data === null) {
     return (
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 sm:px-8">
-        <Spinner label={tc('loading')} />
+        <DetailSkeleton label={tc('loading')} />
       </main>
     );
   }
@@ -70,7 +72,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-5 py-8 sm:px-8 md:flex-row">
       <nav aria-label={t('label')} className="md:w-56 md:shrink-0">
-        <ul className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto px-5 md:sticky md:top-24 md:mx-0 md:flex-col md:px-0">
+        <ul
+          ref={navList}
+          className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto px-5 md:sticky md:top-24 md:mx-0 md:flex-col md:px-0"
+        >
           {sections
             .filter((s) => s.permission === null || permissions.includes(s.permission))
             .map((s) => {

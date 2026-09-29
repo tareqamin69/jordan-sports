@@ -6,10 +6,10 @@ import {
   verifyOtp,
   type PreferredMode,
 } from '@jordan-sports/contracts';
-import { Alert, Button, Card, CheckboxField, Ltr, TextField } from '@jordan-sports/ui';
+import { Alert, Button, Card, CheckboxField, Ltr, TextField, cx } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -114,6 +114,18 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
       <div className="relative h-32 bg-night">
         <HeroArt className="absolute inset-0" />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-night/0 to-night/70" />
+        <ol aria-hidden className="absolute bottom-4 start-6 flex gap-1.5 sm:start-8">
+          {STEPS.map((s, i) => (
+            <li
+              key={s}
+              className={cx(
+                'h-1.5 rounded-full bg-canvas transition-all duration-slow ease-soft',
+                i === STEPS.indexOf(step.name) ? 'w-6' : 'w-1.5',
+                i > STEPS.indexOf(step.name) && 'opacity-40',
+              )}
+            />
+          ))}
+        </ol>
       </div>
       <div className="p-6 sm:p-8">
         {devNotice ? (
@@ -122,13 +134,13 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
           </Alert>
         ) : null}
         {error ? (
-          <Alert tone="error" className="mb-5">
+          <Alert key={error} tone="error" className="mb-5 animate-pop">
             {error}
           </Alert>
         ) : null}
 
         {step.name === 'phone' ? (
-          <form onSubmit={sendCode} className="flex flex-col gap-5">
+          <form onSubmit={sendCode} className="flex animate-rise flex-col gap-5">
             <h1 className="font-display text-[2rem] leading-[1.2]">{t('title')}</h1>
             <TextField
               label={t('phoneLabel')}
@@ -149,10 +161,13 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
         ) : null}
 
         {step.name === 'code' ? (
-          <form onSubmit={verify} className="flex flex-col gap-5">
+          <form onSubmit={verify} className="flex animate-rise flex-col gap-5">
             <h1 className="font-display text-[2rem] leading-[1.2]">{t('codeTitle')}</h1>
             <p className="text-ink-muted">
-              {t.rich('codeSentTo', { phone: () => <Ltr>{step.phone}</Ltr> })}
+              {t.rich('codeSentTo', {
+                number: step.phone,
+                phone: (chunks) => <Ltr>{chunks}</Ltr>,
+              })}
             </p>
             {testCode ? (
               <Alert tone="info">
@@ -166,18 +181,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
                 </span>
               </Alert>
             ) : null}
-            <TextField
-              label={t('codeLabel')}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              dir="ltr"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              name="code"
-            />
+            <CodeInput label={t('codeLabel')} value={code} onChange={setCode} />
             <Button type="submit" busy={busy}>
               {t('verify')}
             </Button>
@@ -193,7 +197,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
         ) : null}
 
         {step.name === 'profile' ? (
-          <form onSubmit={continueToMode} className="flex flex-col gap-5">
+          <form onSubmit={continueToMode} className="flex animate-rise flex-col gap-5">
             <h1 className="font-display text-[2rem] leading-[1.2]">{t('profileTitle')}</h1>
             <TextField
               label={t('nameLabel')}
@@ -221,7 +225,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
         ) : null}
 
         {step.name === 'mode' ? (
-          <div className="flex flex-col gap-5">
+          <div className="flex animate-rise flex-col gap-5">
             <h1 className="font-display text-[2rem] leading-[1.2]">{t('modeTitle')}</h1>
             <div className="flex flex-col gap-3">
               <button
@@ -229,7 +233,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
                 data-testid="mode-player"
                 disabled={busy}
                 onClick={() => void chooseMode('player')}
-                className="flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start transition-colors hover:border-primary hover:bg-brand-50 disabled:opacity-60"
+                className="lift flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start hover:border-primary hover:bg-brand-50 disabled:opacity-60"
               >
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
                   <Icon name="calendar" className="size-5" />
@@ -244,7 +248,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
                 data-testid="mode-venue"
                 disabled={busy}
                 onClick={() => void chooseMode('venue')}
-                className="flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start transition-colors hover:border-primary hover:bg-brand-50 disabled:opacity-60"
+                className="lift flex items-start gap-4 rounded-tile border border-line bg-surface p-4 text-start hover:border-primary hover:bg-brand-50 disabled:opacity-60"
               >
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
                   <Icon name="grid" className="size-5" />
@@ -267,5 +271,63 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
         ) : null}
       </div>
     </Card>
+  );
+}
+
+const STEPS = ['phone', 'code', 'profile', 'mode'] as const;
+
+/**
+ * The 6-digit code as six boxes. One real input (transparent, over the boxes) keeps paste,
+ * autofill (`one-time-code`) and screen readers working as for a plain field.
+ */
+function CodeInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (code: string) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-sm font-medium text-ink">
+        {label}
+      </label>
+      <div className="group relative" dir="ltr">
+        <input
+          id={id}
+          name="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          required
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          className="absolute inset-0 z-10 w-full cursor-text opacity-0"
+        />
+        <div aria-hidden className="grid grid-cols-6 gap-2">
+          {Array.from({ length: 6 }, (_, i) => {
+            const digit = value[i];
+            const current = i === Math.min(value.length, 5);
+            return (
+              <span
+                key={i}
+                className={cx(
+                  'grid h-14 place-items-center rounded-2xl border bg-surface text-2xl font-bold tabular-nums transition-[border-color,box-shadow,transform] duration-fast ease-soft',
+                  digit ? 'border-primary' : 'border-line-strong',
+                  current &&
+                    'group-focus-within:border-primary group-focus-within:ring-4 group-focus-within:ring-primary/15',
+                )}
+              >
+                {digit ? <span className="animate-pop">{digit}</span> : null}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

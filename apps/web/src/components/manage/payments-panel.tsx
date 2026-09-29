@@ -9,7 +9,7 @@ import {
   type VenueSchedule,
 } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Button, Card, Ltr, Spinner, TextField } from '@jordan-sports/ui';
+import { Alert, Button, Card, ListSkeleton, Ltr, TextField, useToast } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -93,7 +93,7 @@ export function PaymentsPanel({ schedule }: { schedule: VenueSchedule }) {
   const editable = can(schedule, 'payments.manage');
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
+  const toast = useToast();
   // Page-visit time is precise enough to flag refunds past 48 hours.
   const [now] = useState(() => Date.now());
 
@@ -105,7 +105,7 @@ export function PaymentsPanel({ schedule }: { schedule: VenueSchedule }) {
   });
 
   const done = (message: string) => {
-    setNotice(message);
+    toast(message);
     setRejecting(null);
     setReason('');
     void queryClient.invalidateQueries({ queryKey: ['venue-payments', venueId] });
@@ -128,14 +128,13 @@ export function PaymentsPanel({ schedule }: { schedule: VenueSchedule }) {
   });
   const failure = confirm.error ?? reject.error ?? refunded.error;
 
-  if (payments.isPending) return <Spinner label={tc('loading')} />;
+  if (payments.isPending) return <ListSkeleton label={tc('loading')} rows={2} thumb={false} />;
   if (payments.isError) return <Alert tone="error">{errorMessage(payments.error)}</Alert>;
   const { toConfirm, refundsDue } = payments.data;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-rise flex-col gap-6">
       <p className="text-ink-muted">{t('intro')}</p>
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
       {failure ? <Alert tone="error">{errorMessage(failure)}</Alert> : null}
 
       <Card className="p-5">

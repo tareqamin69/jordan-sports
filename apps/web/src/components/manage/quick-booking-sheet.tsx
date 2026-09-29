@@ -60,6 +60,12 @@ export function QuickBookingSheet({
           repeatWeeks: weeks,
         },
       }),
+    meta: {
+      toast: (data) => {
+        const n = (data as { created: unknown[] }).created.length;
+        return t('bookings.added', { count: n, n: String(n) });
+      },
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['calendar', schedule.venue.id] });
       await queryClient.invalidateQueries({ queryKey: ['venue-bookings', schedule.venue.id] });
@@ -72,7 +78,7 @@ export function QuickBookingSheet({
       ref={dialog}
       onClose={onClose}
       aria-labelledby="quick-booking-title"
-      className="m-0 mt-auto w-full max-w-none rounded-t-card bg-surface p-0 text-ink shadow-float backdrop:bg-night/50 sm:m-auto sm:max-w-md sm:rounded-card"
+      className="m-0 mt-auto w-full max-w-none animate-sheet rounded-t-card bg-surface p-0 text-ink shadow-float backdrop:bg-night/50 sm:m-auto sm:max-w-md sm:animate-pop sm:rounded-card"
     >
       <form
         className="flex flex-col gap-4 p-6"

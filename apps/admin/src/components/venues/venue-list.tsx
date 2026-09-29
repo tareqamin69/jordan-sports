@@ -1,7 +1,7 @@
 'use client';
 
 import { adminCreateVenue, adminListVenues } from '@jordan-sports/contracts';
-import { Alert, Badge, Button, Card, SelectField, TextField } from '@jordan-sports/ui';
+import { Alert, Badge, Button, Card, EmptyState, SelectField, TextField } from '@jordan-sports/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
@@ -31,7 +31,7 @@ export function VenueList({ organizationId }: { organizationId: string }) {
       </div>
       {creating ? <CreateVenueForm organizationId={organizationId} /> : null}
       {venues.data && venues.data.items.length === 0 ? (
-        <p className="mt-3 text-ink-muted">{t('empty')}</p>
+        <EmptyState art="venues" title={t('empty')} className="mt-3" />
       ) : null}
       <ul className="mt-3 divide-y divide-line">
         {venues.data?.items.map((v) => (
@@ -55,6 +55,7 @@ export function VenueList({ organizationId }: { organizationId: string }) {
 
 function CreateVenueForm({ organizationId }: { organizationId: string }) {
   const t = useTranslations('admin');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common.actions');
   const locale = useLocale();
   const api = useApi();
@@ -75,6 +76,7 @@ function CreateVenueForm({ organizationId }: { organizationId: string }) {
   const areas = governorates.find((g) => g.id === governorateId)?.areas ?? [];
 
   const create = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateVenue, {
         params: { organizationId },

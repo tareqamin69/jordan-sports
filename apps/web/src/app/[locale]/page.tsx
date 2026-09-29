@@ -1,6 +1,6 @@
 import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
-import { SectionHeading, buttonClass, cx, tileClass } from '@jordan-sports/ui';
+import { SectionHeading, buttonClass, cx } from '@jordan-sports/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import { HeroArt } from '@/components/court-art';
@@ -8,9 +8,9 @@ import { GovernorateChips } from '@/components/governorate-chips';
 import { Icon } from '@/components/icons';
 import { Photo } from '@/components/photo';
 import { SearchBar } from '@/components/search-bar';
+import { SportTile } from '@/components/sport-tile';
 import { VenuePicks } from '@/components/venue-picks';
 import { Link } from '@/i18n/navigation';
-import { pick } from '@/lib/localized';
 import { serverApi } from '@/lib/server-api';
 
 export const dynamic = 'force-dynamic';
@@ -98,7 +98,7 @@ export default async function HomePage({ params }: Props) {
             action={
               <Link
                 href="/sports"
-                className="flex items-center gap-1 text-primary hover:text-primary-hover"
+                className="flex min-h-11 items-center gap-1 text-primary hover:text-primary-hover"
               >
                 {tc('allSports')}
                 <Icon name="arrow" className="size-4 rtl:rotate-180" />
@@ -106,51 +106,11 @@ export default async function HomePage({ params }: Props) {
             }
           />
           <ul className="reveal-stagger mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6 sm:gap-3">
-            {tiles.map((sport) => {
-              const photo = sport.photos[0];
-              return (
-                <li key={sport.id}>
-                  {photo ? (
-                    <Link
-                      href={{ pathname: '/venues', query: { sport: sport.key } }}
-                      className="lift group relative flex h-28 flex-col justify-end overflow-hidden rounded-tile bg-night p-3 text-canvas"
-                    >
-                      <Photo
-                        photo={photo}
-                        alt=""
-                        sizes="(min-width: 640px) 170px, 33vw"
-                        className="zoom-media !absolute inset-0"
-                      />
-                      <span
-                        aria-hidden
-                        className="absolute inset-0 bg-gradient-to-t from-night/85 via-night/25 to-transparent"
-                      />
-                      <Icon name={sport.icon} className="relative size-5" strokeWidth={1.8} />
-                      <span className="relative mt-1 truncate text-sm font-semibold">
-                        {pick(sport.name, locale)}
-                      </span>
-                    </Link>
-                  ) : (
-                    <Link
-                      href={{ pathname: '/venues', query: { sport: sport.key } }}
-                      className={tileClass(
-                        false,
-                        'group h-28 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:text-on-primary hover:shadow-lift',
-                      )}
-                    >
-                      <Icon
-                        name={sport.icon}
-                        className="size-7 transition-transform duration-base ease-spring group-hover:-rotate-6 group-hover:scale-110"
-                        strokeWidth={1.5}
-                      />
-                      <span className="truncate text-sm font-semibold">
-                        {pick(sport.name, locale)}
-                      </span>
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
+            {tiles.map((sport) => (
+              <li key={sport.id}>
+                <SportTile sport={sport} locale={locale} />
+              </li>
+            ))}
           </ul>
         </section>
 

@@ -9,7 +9,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5 sm:px-8">
         <Link
           href="/"
-          className="font-display text-[1.625rem] leading-none text-primary"
+          className="flex min-h-11 items-center font-display text-[1.625rem] leading-none text-primary"
           data-testid="brand"
         >
           {t('admin.metadata.title')}

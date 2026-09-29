@@ -10,10 +10,10 @@ import {
   Button,
   Card,
   CheckboxField,
+  FormSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextAreaField,
   TextField,
 } from '@jordan-sports/ui';
@@ -59,6 +59,7 @@ export function SettingsPage() {
   const current = form ?? (settings.data ? toForm(settings.data) : null);
   const editable = can('settings.manage');
   const save = useMutation({
+    meta: { toast: t('saved') },
     mutationFn: (f: Form) =>
       api(adminUpdateSettings, {
         body: {
@@ -79,7 +80,7 @@ export function SettingsPage() {
   });
 
   if (settings.isError) return <Alert tone="error">{errorMessage(settings.error)}</Alert>;
-  if (!current || !settings.data) return <Spinner label={tc('loading')} />;
+  if (!current || !settings.data) return <FormSkeleton label={tc('loading')} fields={5} />;
   const set = (patch: Partial<Form>) => setForm({ ...current, ...patch });
   const percent = Number(current.commissionPercent);
   const percentValid = current.commissionPercent.trim() !== '' && percent >= 0 && percent <= 50;
@@ -90,11 +91,6 @@ export function SettingsPage() {
       {save.isError ? (
         <Alert tone="error" className="mb-4">
           {errorMessage(save.error)}
-        </Alert>
-      ) : null}
-      {save.isSuccess ? (
-        <Alert tone="success" className="mb-4">
-          {t('saved')}
         </Alert>
       ) : null}
       {!editable ? (

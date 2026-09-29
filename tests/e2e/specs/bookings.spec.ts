@@ -34,6 +34,8 @@ test.describe('bookings', () => {
     const phone = randomPhone();
     await page.locator('input[name="phone"]').fill(phone);
     await page.locator('form button[type="submit"]').click();
+    // The code screen says which number the code went to.
+    await expect(page.getByText(/We sent a code to \+962\d{9}\./)).toBeVisible();
     await page.locator('input[name="code"]').fill(await latestOtp(phone));
     await page.locator('form button[type="submit"]').click();
     await page.locator('input[name="displayName"]').fill('Lina');

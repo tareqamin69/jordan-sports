@@ -13,9 +13,9 @@ import {
   Button,
   Card,
   CheckboxField,
+  ListSkeleton,
   Ltr,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -49,6 +49,7 @@ export function TeamPanel({ venueId }: { venueId: string }) {
   const [form, setForm] = useState(empty);
   const add = useMutation({
     mutationFn: () => api(addVenueTeamMember, { params: { venueId }, body: form }),
+    meta: { toast: tc('toast.added') },
     onSuccess: (data) => {
       queryClient.setQueryData(key, data);
       setForm(empty);
@@ -60,15 +61,17 @@ export function TeamPanel({ venueId }: { venueId: string }) {
         params: { memberId: v.memberId },
         body: { role: v.role, confirmOwner: v.role === 'owner' },
       }),
+    meta: { toast: tc('toast.updated') },
     onSuccess: (data) => queryClient.setQueryData(key, data),
   });
   const remove = useMutation({
     mutationFn: (memberId: string) => api(removeVenueTeamMember, { params: { memberId } }),
+    meta: { toast: tc('toast.removed') },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
   });
   const error = add.error ?? change.error ?? remove.error;
 
-  if (team.isPending) return <Spinner label={tc('loading')} />;
+  if (team.isPending) return <ListSkeleton label={tc('loading')} rows={2} />;
   if (team.isError) return <Alert tone="error">{errorMessage(team.error)}</Alert>;
 
   return (

@@ -15,9 +15,9 @@ import {
   Button,
   Card,
   CheckboxField,
+  ListSkeleton,
   SectionHeading,
   SelectField,
-  Spinner,
   TextAreaField,
   TextField,
 } from '@jordan-sports/ui';
@@ -78,7 +78,7 @@ export function VenueStatsPanel({ venue }: { venue: AdminVenue }) {
         </SelectField>
       </div>
       {stats.isPending ? (
-        <Spinner label={tc('loading')} />
+        <ListSkeleton label={tc('loading')} rows={3} thumb={false} />
       ) : (
         <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tiles.map(([label, value]) => (
@@ -96,6 +96,7 @@ export function VenueStatsPanel({ venue }: { venue: AdminVenue }) {
 /** Owner only: private score, tags and notes, with history. Never shown to anyone else. */
 export function VenueRatingPanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin.oversight');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common');
   const format = useFormatter();
   const api = useApi();
@@ -110,6 +111,7 @@ export function VenueRatingPanel({ venue }: { venue: AdminVenue }) {
   const [tags, setTags] = useState<VenueRatingTag[]>([]);
   const [note, setNote] = useState('');
   const save = useMutation({
+    meta: { toast: tt('saved') },
     mutationFn: () =>
       api(adminRateVenue, {
         params: { venueId: venue.id },
@@ -140,7 +142,7 @@ export function VenueRatingPanel({ venue }: { venue: AdminVenue }) {
           {rating.data.current.tags.map((tag) => t(`rating.tags.${tag}`)).join('، ')}
         </p>
       ) : rating.isPending ? (
-        <Spinner label={tc('loading')} />
+        <ListSkeleton label={tc('loading')} rows={3} thumb={false} />
       ) : (
         <p className="mb-4 text-sm text-ink-muted">{t('rating.none')}</p>
       )}
@@ -212,12 +214,14 @@ export function VenueRatingPanel({ venue }: { venue: AdminVenue }) {
 /** Owner only: the venue's own commission rate, or back to the platform default. */
 export function VenueCommissionPanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin.oversight');
+  const tt = useTranslations('common.toast');
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [percent, setPercent] = useState(String(venue.commissionBps / 100));
   const [reason, setReason] = useState('');
   const save = useMutation({
+    meta: { toast: tt('saved') },
     mutationFn: (commissionBps: number | null) =>
       api(adminSetVenueCommission, {
         params: { venueId: venue.id },
@@ -279,6 +283,7 @@ export function VenueCommissionPanel({ venue }: { venue: AdminVenue }) {
 /** Owner only: soft delete, confirmed by typing the venue's name. */
 export function VenueArchivePanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin.oversight');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const router = useRouter();
@@ -287,6 +292,7 @@ export function VenueArchivePanel({ venue }: { venue: AdminVenue }) {
   const [typed, setTyped] = useState('');
   const [reason, setReason] = useState('');
   const archive = useMutation({
+    meta: { toast: tt('archived') },
     mutationFn: () =>
       api(adminArchiveVenue, {
         params: { venueId: venue.id },

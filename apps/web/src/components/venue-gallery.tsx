@@ -76,7 +76,7 @@ export function VenueGallery({
       ) : stock ? (
         <>
           <Photo photo={stock} alt="" sizes="100vw" eager />
-          <StockLabel className="bottom-auto top-20 sm:top-24" />
+          <StockLabel linked className="bottom-auto top-20 sm:top-24" />
         </>
       ) : (
         // The illustration only fills the area above the title block, so its court lines never
@@ -109,7 +109,7 @@ export function VenueGallery({
         <div className="pointer-events-auto mx-auto flex max-w-6xl animate-rise flex-col gap-2 px-6 text-canvas sm:px-8">
           {children}
           {media.length > 0 ? (
-            <div className="-ms-2 mt-1 flex items-center justify-between gap-3">
+            <div className="-ms-3 mt-1 flex items-center justify-between gap-3">
               <div className="flex">
                 {media.length > 1
                   ? media.map((m, i) => (
@@ -119,7 +119,7 @@ export function VenueGallery({
                         onClick={() => show(i)}
                         aria-label={t('showPhoto', { n: String(i + 1) })}
                         aria-current={i === index}
-                        className="grid size-6 place-items-center rounded-full focus-visible:outline-canvas"
+                        className="grid size-8 place-items-center rounded-full focus-visible:outline-canvas"
                       >
                         <span
                           className={cx(

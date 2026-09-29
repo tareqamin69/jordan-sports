@@ -2,10 +2,18 @@
 
 import { adminReportsOverview, type ReportPeriod } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Card, PageHeader, Spinner, TextField, chipClass } from '@jordan-sports/ui';
+import {
+  Alert,
+  Card,
+  CountUp,
+  PageHeader,
+  StatsSkeleton,
+  TextField,
+  chipClass,
+} from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useAdminMe, useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
@@ -51,15 +59,23 @@ export function Dashboard() {
       timeZone: 'UTC',
     });
 
-  const tiles: Array<{ key: TileKey; value: string; href?: string }> = o
+  const tiles: Array<{ key: TileKey; value: ReactNode; href?: string }> = o
     ? [
-        { key: 'online', value: count(o.totals.online) },
-        { key: 'cancellations', value: count(o.totals.cancellations) },
-        { key: 'noShows', value: count(o.totals.noShows) },
-        { key: 'newUsers', value: count(o.totals.newUsers) },
-        { key: 'newVenues', value: count(o.totals.newVenues) },
-        { key: 'pendingVenues', value: count(o.totals.pendingVenues), href: '/venues' },
-        { key: 'openComplaints', value: count(o.totals.openComplaints), href: '/complaints' },
+        { key: 'online', value: <CountUp value={o.totals.online} /> },
+        { key: 'cancellations', value: <CountUp value={o.totals.cancellations} /> },
+        { key: 'noShows', value: <CountUp value={o.totals.noShows} /> },
+        { key: 'newUsers', value: <CountUp value={o.totals.newUsers} /> },
+        { key: 'newVenues', value: <CountUp value={o.totals.newVenues} /> },
+        {
+          key: 'pendingVenues',
+          value: <CountUp value={o.totals.pendingVenues} />,
+          href: '/venues',
+        },
+        {
+          key: 'openComplaints',
+          value: <CountUp value={o.totals.openComplaints} />,
+          href: '/complaints',
+        },
         ...(o.revenue
           ? [
               { key: 'bookingValue' as const, value: formatMoney(o.revenue.bookingValue, locale) },
@@ -89,16 +105,18 @@ export function Dashboard() {
         ))}
       </div>
       {overview.isError ? <Alert tone="error">{errorMessage(overview.error)}</Alert> : null}
-      {overview.isPending && can('reports.read') ? <Spinner label={tc('loading')} /> : null}
+      {overview.isPending && can('reports.read') ? (
+        <StatsSkeleton label={tc('loading')} count={8} />
+      ) : null}
       {o ? (
-        <div className="flex flex-col gap-6" data-testid="dashboard">
+        <div key={period} className="flex animate-rise flex-col gap-6" data-testid="dashboard">
           <Card>
             <p className="text-sm text-ink-muted">{t('bookings')}</p>
             <p
               className="font-sans text-5xl font-semibold tabular-nums"
               data-testid="hero-bookings"
             >
-              {count(o.totals.bookings)}
+              <CountUp value={o.totals.bookings} />
             </p>
             <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {tiles.map((tile) => {
@@ -112,7 +130,7 @@ export function Dashboard() {
                   <Link
                     key={tile.key}
                     href={tile.href}
-                    className="rounded-lg bg-canvas p-3 hover:bg-canvas-deep"
+                    className="lift rounded-lg bg-canvas p-3 hover:bg-canvas-deep"
                   >
                     {body}
                   </Link>
@@ -203,7 +221,7 @@ function RankedList({
           <li key={item.key}>
             <div className="flex justify-between gap-3 text-sm">
               {item.href ? (
-                <Link href={item.href} className="truncate hover:underline">
+                <Link href={item.href} className="-my-2 truncate py-2 hover:underline">
                   {item.label}
                 </Link>
               ) : (

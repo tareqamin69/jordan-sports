@@ -57,7 +57,7 @@ export function SiteHeader() {
         <Link
           href="/"
           className={cx(
-            'font-display text-[1.75rem] leading-none whitespace-nowrap sm:text-[2rem]',
+            'flex min-h-11 items-center font-display text-[1.75rem] leading-none whitespace-nowrap sm:text-[2rem]',
             overlay ? 'text-canvas [text-shadow:0_1px_8px_rgb(0_0_0_/_0.45)]' : 'text-primary',
           )}
           data-testid="brand"

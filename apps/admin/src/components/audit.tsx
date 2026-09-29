@@ -5,8 +5,8 @@ import {
   Alert,
   Button,
   Card,
+  ListSkeleton,
   PageHeader,
-  Spinner,
   TextField,
   buttonClass,
 } from '@jordan-sports/ui';
@@ -113,7 +113,7 @@ export function AuditPage() {
           </div>
         </form>
       </Card>
-      {logs.isPending ? <Spinner label={tc('loading')} /> : null}
+      {logs.isPending ? <ListSkeleton label={tc('loading')} rows={6} thumb={false} /> : null}
       {logs.isError ? <Alert tone="error">{errorMessage(logs.error)}</Alert> : null}
       {logs.data ? (
         <Card className="overflow-x-auto p-0">

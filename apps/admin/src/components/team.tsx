@@ -14,11 +14,11 @@ import {
   Badge,
   Button,
   Card,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SectionHeading,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,6 +33,7 @@ const STAFF_ROLES: StaffRole[] = ['admin', 'support', 'finance'];
 /** Owner only: platform staff, their roles, and invitations by one-time link. */
 export function TeamPage() {
   const t = useTranslations('admin.team');
+  const tt = useTranslations('common.toast');
   const tr = useTranslations('admin.roles');
   const tc = useTranslations('common');
   const format = useFormatter();
@@ -51,6 +52,7 @@ export function TeamPage() {
   });
   const [link, setLink] = useState<string | null>(null);
   const create = useMutation({
+    meta: { toast: tt('sent') },
     mutationFn: () =>
       api(adminInviteStaff, {
         body: {
@@ -66,22 +68,25 @@ export function TeamPage() {
     },
   });
   const revoke = useMutation({
+    meta: { toast: tt('removed') },
     mutationFn: (invitationId: string) => api(adminRevokeInvitation, { params: { invitationId } }),
     onSuccess: refresh,
   });
   const changeRole = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (v: { userId: string; role: StaffRole }) =>
       api(adminChangeStaffRole, { params: { userId: v.userId }, body: { role: v.role } }),
     onSuccess: refresh,
   });
   const remove = useMutation({
+    meta: { toast: tt('removed') },
     mutationFn: (userId: string) => api(adminRemoveStaff, { params: { userId } }),
     onSuccess: refresh,
   });
   const error = create.error ?? revoke.error ?? changeRole.error ?? remove.error;
 
   if (team.isError) return <Alert tone="error">{errorMessage(team.error)}</Alert>;
-  if (!team.data) return <Spinner label={tc('loading')} />;
+  if (!team.data) return <ListSkeleton label={tc('loading')} rows={3} />;
 
   const editable = (m: TeamMember) => m.platformRole !== 'owner' && m.id !== me.data?.id;
 

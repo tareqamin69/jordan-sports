@@ -7,7 +7,7 @@ import {
   type VenueBooking,
   type VenueSchedule,
 } from '@jordan-sports/contracts';
-import { Alert, Badge, Button, Card, Ltr, Spinner } from '@jordan-sports/ui';
+import { Alert, Badge, Button, Card, EmptyState, ListSkeleton, Ltr } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useApi } from '@/lib/api';
@@ -38,6 +38,7 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
   const mark = useMutation({
     mutationFn: (v: { id: string; arrived: boolean }) =>
       api(v.arrived ? checkInBooking : markNoShow, { params: { bookingId: v.id } }),
+    meta: { toast: tc('toast.updated') },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['venue-bookings', venueId] }),
   });
   const canMark = can(schedule, 'booking.checkin');
@@ -46,14 +47,14 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
     (b) => b.status === 'CONFIRMED' || b.status === 'COMPLETED' || b.status === 'NO_SHOW',
   );
 
-  if (bookings.isPending) return <Spinner label={tc('loading')} />;
+  if (bookings.isPending) return <ListSkeleton label={tc('loading')} rows={3} thumb={false} />;
   if (bookings.isError) return <Alert tone="error">{errorMessage(bookings.error)}</Alert>;
 
   return (
     <div className="flex flex-col gap-3" data-testid="today-panel">
       <p className="text-ink-muted">{t('intro')}</p>
       {mark.isError ? <Alert tone="error">{errorMessage(mark.error)}</Alert> : null}
-      {items.length === 0 ? <p className="text-ink-muted">{t('empty')}</p> : null}
+      {items.length === 0 ? <EmptyState art="bookings" title={t('empty')} /> : null}
       {items.map((b: VenueBooking) => {
         const start = new Date(b.start).getTime();
         const end = new Date(b.end).getTime();
@@ -63,7 +64,7 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
         return (
           <Card
             key={b.id}
-            className="flex flex-wrap items-center justify-between gap-3"
+            className="flex animate-rise flex-wrap items-center justify-between gap-3"
             data-testid="today-booking"
           >
             <div className="min-w-0">

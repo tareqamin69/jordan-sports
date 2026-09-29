@@ -1,6 +1,7 @@
 import type { VenueSummary } from '@jordan-sports/contracts';
 import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { CourtArt } from './court-art';
 import { Photo } from './photo';
 
@@ -35,16 +36,25 @@ export function VenuePhoto({
   );
 }
 
-export function StockLabel({ className }: { className?: string }) {
+/** "Illustrative photo" tag on a stock photo; `linked` makes it a link to the photo credits. */
+export function StockLabel({
+  className,
+  linked = false,
+}: {
+  className?: string;
+  linked?: boolean;
+}) {
   const t = useTranslations('web.home');
-  return (
-    <span
-      className={cx(
-        'pointer-events-none absolute bottom-3 start-3 z-10 rounded-full bg-night/60 px-2.5 py-1 text-[11px] font-medium text-canvas backdrop-blur-sm',
-        className,
-      )}
-    >
+  const style = cx(
+    'absolute bottom-3 start-3 z-10 rounded-full bg-night/60 px-2.5 py-1 text-[11px] font-medium text-canvas backdrop-blur-sm',
+    linked ? 'hover:bg-night/80' : 'pointer-events-none',
+    className,
+  );
+  return linked ? (
+    <Link href="/credits" className={style}>
       {t('stockPhoto')}
-    </span>
+    </Link>
+  ) : (
+    <span className={style}>{t('stockPhoto')}</span>
   );
 }

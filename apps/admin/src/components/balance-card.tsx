@@ -9,7 +9,7 @@ import {
   Card,
   Ltr,
   SelectField,
-  Spinner,
+  StatsSkeleton,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -40,6 +40,7 @@ export function BalanceCard({ organizationId }: { organizationId: string }) {
     queryFn: () => api(adminGetBalance, { params: { organizationId } }),
   });
   const adjust = useMutation({
+    meta: { toast: t('adjusted') },
     mutationFn: (fils: number) =>
       api(adminAdjustBalance, {
         params: { organizationId },
@@ -52,7 +53,8 @@ export function BalanceCard({ organizationId }: { organizationId: string }) {
     },
   });
 
-  if (balance.isPending) return <Spinner label={tc('loading')} />;
+  if (balance.isPending)
+    return <StatsSkeleton label={tc('loading')} count={2} className="lg:grid-cols-2" />;
   if (balance.isError) return <Alert tone="error">{errorMessage(balance.error)}</Alert>;
   const b = balance.data;
 
@@ -88,7 +90,6 @@ export function BalanceCard({ organizationId }: { organizationId: string }) {
       >
         <h3 className="font-semibold">{t('adjust')}</h3>
         {adjust.isError ? <Alert tone="error">{errorMessage(adjust.error)}</Alert> : null}
-        {adjust.isSuccess ? <Alert tone="success">{t('adjusted')}</Alert> : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectField
             label={t('direction')}

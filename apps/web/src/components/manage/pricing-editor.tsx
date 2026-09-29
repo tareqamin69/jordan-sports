@@ -16,8 +16,8 @@ import {
   Button,
   Card,
   CheckboxField,
+  ListSkeleton,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,6 +53,7 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
   });
   const remove = useMutation({
     mutationFn: (ruleId: string) => api(archivePriceRule, { params: { ruleId } }),
+    meta: { toast: tc('toast.removed') },
     onSuccess: (data) => queryClient.setQueryData(['pricing', venueId], data),
   });
   const editable = can(schedule, 'pricing.manage');
@@ -88,7 +89,7 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
     return `${joinList(days, locale)} · ${band}${dates}`;
   };
 
-  if (pricing.isPending) return <Spinner label={tc('loading')} />;
+  if (pricing.isPending) return <ListSkeleton label={tc('loading')} rows={3} thumb={false} />;
   if (pricing.isError) return <Alert tone="error">{errorMessage(pricing.error)}</Alert>;
 
   return (
@@ -199,7 +200,7 @@ function BandForm({
   onDone: () => void;
 }) {
   const t = useTranslations('web.manage');
-  const tc = useTranslations('common.actions');
+  const tc = useTranslations('common');
   const locale = useLocale();
   const format = useFormatter();
   const api = useApi();
@@ -265,6 +266,7 @@ function BandForm({
       }
       return latest!;
     },
+    meta: { toast: editing ? tc('toast.saved') : t('pricing.added') },
     onSuccess: (data) => {
       queryClient.setQueryData(['pricing', schedule.venue.id], data);
       setPrices({});
@@ -304,11 +306,6 @@ function BandForm({
         {invalid ? (
           <Alert tone="error" className="sm:col-span-2">
             {t('pricing.invalidPrice')}
-          </Alert>
-        ) : null}
-        {add.isSuccess ? (
-          <Alert tone="success" className="sm:col-span-2">
-            {t('pricing.added')}
           </Alert>
         ) : null}
         <fieldset className="sm:col-span-2">
@@ -441,11 +438,11 @@ function BandForm({
             busy={add.isPending}
             disabled={resourceIds.length === 0 || days.length === 0}
           >
-            {editing ? tc('save') : t('pricing.add')}
+            {editing ? tc('actions.save') : t('pricing.add')}
           </Button>
           {editing ? (
             <Button variant="ghost" className="ms-2" onClick={onDone}>
-              {tc('cancel')}
+              {tc('actions.cancel')}
             </Button>
           ) : null}
         </div>

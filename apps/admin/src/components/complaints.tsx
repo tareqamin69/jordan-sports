@@ -14,10 +14,11 @@ import {
   Button,
   Card,
   CheckboxField,
+  DetailSkeleton,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextAreaField,
   TextField,
   cx,
@@ -97,7 +98,7 @@ export function ComplaintsPage() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <Card>
           {list.isPending ? (
-            <Spinner label={tc('loading')} />
+            <ListSkeleton label={tc('loading')} rows={4} thumb={false} />
           ) : list.data?.items.length ? (
             <ul className="divide-y divide-line" data-testid="complaints-list">
               {list.data.items.map((c) => (
@@ -145,6 +146,7 @@ export function ComplaintsPage() {
 
 function ComplaintDetail({ id }: { id: string }) {
   const t = useTranslations('admin.complaints');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common');
   const locale = useLocale();
   const format = useFormatter();
@@ -165,6 +167,7 @@ function ComplaintDetail({ id }: { id: string }) {
   const [body, setBody] = useState('');
   const [internal, setInternal] = useState(false);
   const reply = useMutation({
+    meta: { toast: tt('sent') },
     mutationFn: () =>
       api(adminReplyToComplaint, { params: { complaintId: id }, body: { body, internal } }),
     onSuccess: (data) => {
@@ -174,6 +177,7 @@ function ComplaintDetail({ id }: { id: string }) {
     },
   });
   const update = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (patch: { status?: ComplaintStatus; assigneeId?: string | null }) =>
       api(adminUpdateComplaint, { params: { complaintId: id }, body: patch }),
     onSuccess: done,
@@ -181,7 +185,7 @@ function ComplaintDetail({ id }: { id: string }) {
   const handle = can('complaints.handle');
 
   if (complaint.isError) return <Alert tone="error">{errorMessage(complaint.error)}</Alert>;
-  if (!complaint.data) return <Spinner label={tc('loading')} />;
+  if (!complaint.data) return <DetailSkeleton label={tc('loading')} />;
   const c = complaint.data;
 
   return (

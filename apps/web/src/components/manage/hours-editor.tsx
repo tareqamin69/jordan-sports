@@ -69,6 +69,7 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
       }
       return latest;
     },
+    meta: { toast: t('hours.saved') },
     onSuccess: setSchedule,
   });
 
@@ -108,11 +109,6 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
       {save.isError ? (
         <Alert tone="error" className="mb-4">
           {errorMessage(save.error)}
-        </Alert>
-      ) : null}
-      {save.isSuccess ? (
-        <Alert tone="success" className="mb-4">
-          {t('hours.saved')}
         </Alert>
       ) : null}
       <ul className="divide-y divide-line">

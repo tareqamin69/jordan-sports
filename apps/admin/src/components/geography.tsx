@@ -14,10 +14,11 @@ import {
   Alert,
   Button,
   Card,
+  ListSkeleton,
   PageHeader,
   SelectField,
-  Spinner,
   TextField,
+  cx,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
@@ -39,7 +40,7 @@ export function GeographyPage() {
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
-      {catalog.isPending ? <Spinner label={tc('loading')} /> : null}
+      {catalog.isPending ? <ListSkeleton label={tc('loading')} rows={4} thumb={false} /> : null}
       {catalog.data ? (
         <div className="flex flex-col gap-8">
           <GovernoratesSection catalog={catalog.data} />
@@ -53,6 +54,7 @@ export function GeographyPage() {
 
 function GovernoratesSection({ catalog }: { catalog: Catalog }) {
   const t = useTranslations('admin.geography');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -62,6 +64,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
     null,
   );
   const create = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateGovernorate, {
         body: { key: form.key.trim(), name: { ar: form.nameAr.trim(), en: form.nameEn.trim() } },
@@ -72,6 +75,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
     },
   });
   const rename = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (input: { id: string; name: { ar: string; en: string } }) =>
       api(adminUpdateGovernorate, {
         params: { governorateId: input.id },
@@ -122,7 +126,10 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
                 </Button>
               </li>
             ) : (
-              <li key={g.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <li
+                key={g.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
+              >
                 <span>{pick(g.name, locale)}</span>
                 <span className="flex items-center gap-3">
                   <span className="text-sm text-ink-muted">
@@ -190,6 +197,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
 
 function AreasSection({ catalog }: { catalog: Catalog }) {
   const t = useTranslations('admin.geography');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -202,6 +210,7 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
   const governorate = catalog.governorates.find((g) => g.id === governorateId);
 
   const create = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateArea, {
         params: { governorateId },
@@ -213,6 +222,7 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
     },
   });
   const rename = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (input: { id: string; name: { ar: string; en: string } }) =>
       api(adminUpdateArea, { params: { areaId: input.id }, body: { name: input.name } }),
     onSuccess: (data) => {
@@ -273,7 +283,10 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
                 </Button>
               </li>
             ) : (
-              <li key={a.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <li
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
+              >
                 <span>{pick(a.name, locale)}</span>
                 <Button
                   size="sm"
@@ -355,6 +368,7 @@ const defaultSportForm = {
 
 function SportsSection() {
   const t = useTranslations('admin.geography');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -364,6 +378,7 @@ function SportsSection() {
   const sports = useQuery({ queryKey: ['admin-sports'], queryFn: () => api(adminListSports) });
   const refreshSports = () => queryClient.invalidateQueries({ queryKey: ['admin-sports'] });
   const toggle = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (input: { id: string; active: boolean }) =>
       api(adminUpdateSport, { params: { sportId: input.id }, body: { active: input.active } }),
     onSuccess: async (data) => {
@@ -379,6 +394,7 @@ function SportsSection() {
   } | null>(null);
 
   const create = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateSport, {
         body: {
@@ -405,6 +421,7 @@ function SportsSection() {
     },
   });
   const rename = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: (input: { id: string; name: { ar: string; en: string }; icon: string }) =>
       api(adminUpdateSport, {
         params: { sportId: input.id },
@@ -464,8 +481,11 @@ function SportsSection() {
                 </Button>
               </li>
             ) : (
-              <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                <span className={s.active ? '' : 'text-ink-muted'}>
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-3"
+              >
+                <span className={cx('min-w-0', !s.active && 'text-ink-muted')}>
                   {pick(s.name, locale)}
                   <span className="ms-2 text-sm text-ink-muted" dir="ltr">
                     ({s.icon})
@@ -475,7 +495,7 @@ function SportsSection() {
                     {s.active ? '' : ` · ${t('sportHidden')}`}
                   </span>
                 </span>
-                <span className="flex items-center gap-2">
+                <span className="ms-auto flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="secondary"

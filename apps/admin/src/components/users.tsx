@@ -11,10 +11,11 @@ import {
   Badge,
   Button,
   Card,
+  DetailSkeleton,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -61,7 +62,7 @@ export function UsersPage() {
           {tc('actions.search')}
         </Button>
       </form>
-      {users.isPending ? <Spinner label={tc('loading')} /> : null}
+      {users.isPending ? <ListSkeleton label={tc('loading')} rows={5} /> : null}
       {users.isError ? <Alert tone="error">{errorMessage(users.error)}</Alert> : null}
       {users.data ? (
         <Card className="p-0">
@@ -81,6 +82,7 @@ export function UsersPage() {
 
 function UserRow({ user }: { user: AdminUser }) {
   const t = useTranslations('admin.users');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common.actions');
   const api = useApi();
   const can = useCan();
@@ -92,6 +94,7 @@ function UserRow({ user }: { user: AdminUser }) {
     user.status === 'active' ? 'suspended' : 'active',
   );
   const change = useMutation({
+    meta: { toast: tt('updated') },
     mutationFn: () =>
       api(adminSetUserStatus, { params: { userId: user.id }, body: { status: next, reason } }),
     onSuccess: async () => {
@@ -195,7 +198,7 @@ function UserDetails({ userId }: { userId: string }) {
     queryFn: () => api(adminGetUser, { params: { userId } }),
   });
   if (user.isError) return <Alert tone="error">{errorMessage(user.error)}</Alert>;
-  if (!user.data) return <Spinner label={tc('loading')} />;
+  if (!user.data) return <DetailSkeleton label={tc('loading')} />;
   const r = user.data.reliability;
   const tiles: Array<[string, string | number]> = [
     [t('reliability.bookings'), r.bookings],

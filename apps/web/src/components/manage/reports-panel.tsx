@@ -2,9 +2,17 @@
 
 import { archiveOwnVenue, getVenueStats, type VenueSchedule } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Button, Card, SelectField, Spinner, TextField } from '@jordan-sports/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CountUp,
+  SelectField,
+  StatsSkeleton,
+  TextField,
+} from '@jordan-sports/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
@@ -16,7 +24,6 @@ export function ReportsPanel({ venueId }: { venueId: string }) {
   const t = useTranslations('web.manage.reports');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const [days, setDays] = useState(30);
@@ -25,15 +32,16 @@ export function ReportsPanel({ venueId }: { venueId: string }) {
     queryFn: () => api(getVenueStats, { params: { venueId }, query: { days } }),
   });
   const b = stats.data?.bookings;
-  const tiles: Array<[string, string]> = b
+  // Counts count up (CSS); the money value is shown as is.
+  const tiles: Array<[string, number | string]> = b
     ? [
-        [t('total'), format.number(b.total)],
-        [t('kept'), format.number(b.completed + b.confirmed)],
-        [t('cancelled'), format.number(b.cancelled)],
-        [t('late'), format.number(b.lateCancellations)],
-        [t('noShows'), format.number(b.noShows)],
-        [t('online'), format.number(b.online)],
-        [t('byVenue'), format.number(b.byVenue)],
+        [t('total'), b.total],
+        [t('kept'), b.completed + b.confirmed],
+        [t('cancelled'), b.cancelled],
+        [t('late'), b.lateCancellations],
+        [t('noShows'), b.noShows],
+        [t('online'), b.online],
+        [t('byVenue'), b.byVenue],
         ...(stats.data?.revenue
           ? ([[t('value'), formatMoney(stats.data.revenue, locale)]] as Array<[string, string]>)
           : []),
@@ -57,13 +65,15 @@ export function ReportsPanel({ venueId }: { venueId: string }) {
       </div>
       {stats.isError ? <Alert tone="error">{errorMessage(stats.error)}</Alert> : null}
       {stats.isPending ? (
-        <Spinner label={tc('loading')} />
+        <StatsSkeleton label={tc('loading')} count={8} className="sm:grid-cols-4" />
       ) : (
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl key={days} className="reveal-stagger grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tiles.map(([label, value]) => (
-            <Card key={label} className="p-4">
+            <Card key={label} className="lift p-4">
               <dt className="text-xs text-ink-muted">{label}</dt>
-              <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+              <dd className="text-2xl font-semibold tabular-nums">
+                {typeof value === 'number' ? <CountUp value={value} /> : value}
+              </dd>
             </Card>
           ))}
         </dl>
@@ -75,6 +85,7 @@ export function ReportsPanel({ venueId }: { venueId: string }) {
 /** Venue owner: archive the venue (soft delete) by typing its name. */
 export function VenueSettingsPanel({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage.venueSettings');
+  const tc = useTranslations('common');
   const locale = useLocale();
   const api = useApi();
   const router = useRouter();
@@ -88,6 +99,7 @@ export function VenueSettingsPanel({ schedule }: { schedule: VenueSchedule }) {
         params: { venueId: schedule.venue.id },
         body: { confirmName: typed, reason },
       }),
+    meta: { toast: tc('toast.archived') },
     onSuccess: () => router.replace('/manage'),
   });
   return (

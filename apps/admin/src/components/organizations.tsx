@@ -12,10 +12,11 @@ import {
   Badge,
   Button,
   Card,
+  DetailSkeleton,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -54,7 +55,7 @@ export function OrganizationsPage() {
         }
       />
       {showCreate ? <CreateOrganizationForm onDone={() => setShowCreate(false)} /> : null}
-      {list.isPending ? <Spinner label={tc('loading')} /> : null}
+      {list.isPending ? <ListSkeleton label={tc('loading')} rows={4} /> : null}
       {list.isError ? <Alert tone="error">{errorMessage(list.error)}</Alert> : null}
       {list.data ? (
         list.data.items.length === 0 ? (
@@ -91,6 +92,7 @@ export function OrganizationsPage() {
 
 function CreateOrganizationForm({ onDone }: { onDone: () => void }) {
   const t = useTranslations('admin.organizations');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common.actions');
   const api = useApi();
   const queryClient = useQueryClient();
@@ -106,6 +108,7 @@ function CreateOrganizationForm({ onDone }: { onDone: () => void }) {
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const create = useMutation({
+    meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateOrganization, {
         body: {
@@ -215,6 +218,7 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
     role: 'staff',
   });
   const add = useMutation({
+    meta: { toast: t('memberAdded') },
     mutationFn: () => api(adminAddMember, { params: { organizationId }, body: member }),
     onSuccess: (data) => {
       queryClient.setQueryData(['organization', organizationId], data);
@@ -222,7 +226,7 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
     },
   });
 
-  if (org.isPending) return <Spinner label={tc('loading')} />;
+  if (org.isPending) return <DetailSkeleton label={tc('loading')} />;
   if (org.isError) return <Alert tone="error">{errorMessage(org.error)}</Alert>;
 
   return (
@@ -257,7 +261,6 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
           >
             <h2 className="font-display text-2xl leading-tight">{t('addMember')}</h2>
             {add.isError ? <Alert tone="error">{errorMessage(add.error)}</Alert> : null}
-            {add.isSuccess ? <Alert tone="success">{t('memberAdded')}</Alert> : null}
             <TextField
               label={t('memberName')}
               value={member.displayName}

@@ -19,9 +19,9 @@ import {
   Button,
   Card,
   CheckboxField,
+  FormSkeleton,
   PageHeader,
   SelectField,
-  Spinner,
   TextAreaField,
   TextField,
 } from '@jordan-sports/ui';
@@ -60,10 +60,15 @@ function localized(ar: string, en: string): Localized | undefined {
 
 const hourLabel = (hour: number) => `${String(hour).padStart(2, '0')}:00`;
 
-function useVenueMutation<T>(venueId: string, fn: (input: T) => Promise<AdminVenue>) {
+function useVenueMutation<T>(
+  venueId: string,
+  fn: (input: T) => Promise<AdminVenue>,
+  toast?: string,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: fn,
+    meta: { toast },
     onSuccess: (venue) => queryClient.setQueryData(['venue', venueId], venue),
   });
 }
@@ -81,7 +86,8 @@ export function VenueEditor({ venueId }: { venueId: string }) {
     queryFn: () => api(adminGetVenue, { params: { venueId } }),
   });
 
-  if (venue.isPending || catalog.isPending) return <Spinner label={tc('loading')} />;
+  if (venue.isPending || catalog.isPending)
+    return <FormSkeleton label={tc('loading')} fields={6} />;
   if (venue.isError) return <Alert tone="error">{errorMessage(venue.error)}</Alert>;
   if (catalog.isError) return <Alert tone="error">{errorMessage(catalog.error)}</Alert>;
 
@@ -115,11 +121,15 @@ export function VenueEditor({ venueId }: { venueId: string }) {
 
 function StatusPanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin.venues');
+  const tt = useTranslations('common.toast');
   const api = useApi();
   const errorMessage = useErrorMessage();
   const [reason, setReason] = useState('');
-  const change = useVenueMutation(venue.id, (status: VenueStatus) =>
-    api(adminSetVenueStatus, { params: { venueId: venue.id }, body: { status, reason } }),
+  const change = useVenueMutation(
+    venue.id,
+    (status: VenueStatus) =>
+      api(adminSetVenueStatus, { params: { venueId: venue.id }, body: { status, reason } }),
+    tt('updated'),
   );
   // Sticky: the approve/reject buttons stay reachable while the reviewer scrolls the long form.
   return (
@@ -181,31 +191,35 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
     setF((s) => ({ ...s, [key]: e.target.value }));
   const areas = catalog.governorates.find((g) => g.id === venue.governorateId)?.areas ?? [];
 
-  const save = useVenueMutation(venue.id, () => {
-    const name = localized(f.nameAr, f.nameEn);
-    const lat = Number(f.lat);
-    const lng = Number(f.lng);
-    return api(adminUpdateVenue, {
-      params: { venueId: venue.id },
-      body: {
-        ...(name ? { name } : {}),
-        ...(localized(f.descriptionAr, f.descriptionEn)
-          ? { description: localized(f.descriptionAr, f.descriptionEn) }
-          : {}),
-        ...(localized(f.addressAr, f.addressEn)
-          ? { address: localized(f.addressAr, f.addressEn) }
-          : {}),
-        areaId: f.areaId || null,
-        contactPhone: f.contactPhone.trim() || null,
-        location:
-          f.lat.trim() && f.lng.trim() && Number.isFinite(lat) && Number.isFinite(lng)
-            ? { lat, lng }
-            : null,
-        businessDayStartMinute: Number(f.businessDayStartHour) * 60,
-        amenityIds: f.amenityIds,
-      },
-    });
-  });
+  const save = useVenueMutation(
+    venue.id,
+    () => {
+      const name = localized(f.nameAr, f.nameEn);
+      const lat = Number(f.lat);
+      const lng = Number(f.lng);
+      return api(adminUpdateVenue, {
+        params: { venueId: venue.id },
+        body: {
+          ...(name ? { name } : {}),
+          ...(localized(f.descriptionAr, f.descriptionEn)
+            ? { description: localized(f.descriptionAr, f.descriptionEn) }
+            : {}),
+          ...(localized(f.addressAr, f.addressEn)
+            ? { address: localized(f.addressAr, f.addressEn) }
+            : {}),
+          areaId: f.areaId || null,
+          contactPhone: f.contactPhone.trim() || null,
+          location:
+            f.lat.trim() && f.lng.trim() && Number.isFinite(lat) && Number.isFinite(lng)
+              ? { lat, lng }
+              : null,
+          businessDayStartMinute: Number(f.businessDayStartHour) * 60,
+          amenityIds: f.amenityIds,
+        },
+      });
+    },
+    t('venues.saved'),
+  );
 
   return (
     <Card>
@@ -220,11 +234,6 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
         {save.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
-          </Alert>
-        ) : null}
-        {save.isSuccess ? (
-          <Alert tone="success" className="sm:col-span-2">
-            {t('venues.saved')}
           </Alert>
         ) : null}
         <TextField
@@ -343,6 +352,7 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
 
 function ResourcesPanel({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }) {
   const t = useTranslations('admin.venues');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
@@ -354,6 +364,7 @@ function ResourcesPanel({ venue, catalog }: { venue: AdminVenue; catalog: Catalo
         params: { resourceId: input.resourceId },
         body: { status: input.status },
       }),
+    tt('updated'),
   );
   const nameOf = (id: string) => pick(venue.resources.find((r) => r.id === id)?.name, locale);
 
@@ -435,6 +446,7 @@ function AddResourceForm({
   onDone: () => void;
 }) {
   const t = useTranslations('admin.venues');
+  const tt = useTranslations('common.toast');
   const tc = useTranslations('common.actions');
   const locale = useLocale();
   const api = useApi();
@@ -453,18 +465,21 @@ function AddResourceForm({
       .map((fm) => ({ ...fm, sport: s })),
   );
 
-  const create = useVenueMutation(venue.id, () =>
-    api(adminCreateResource, {
-      params: { venueId: venue.id },
-      body: {
-        name: localized(nameAr, nameEn) ?? {},
-        resourceTypeId: typeId,
-        facilityId: facilityId || null,
-        sportFormatIds: formatIds,
-        attributes,
-        ...(combines.length > 0 ? { combinesResourceIds: combines } : {}),
-      },
-    }),
+  const create = useVenueMutation(
+    venue.id,
+    () =>
+      api(adminCreateResource, {
+        params: { venueId: venue.id },
+        body: {
+          name: localized(nameAr, nameEn) ?? {},
+          resourceTypeId: typeId,
+          facilityId: facilityId || null,
+          sportFormatIds: formatIds,
+          attributes,
+          ...(combines.length > 0 ? { combinesResourceIds: combines } : {}),
+        },
+      }),
+    tt('added'),
   );
 
   return (
@@ -609,16 +624,20 @@ function AddResourceForm({
 
 function FacilitiesPanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const [nameAr, setNameAr] = useState('');
   const [nameEn, setNameEn] = useState('');
-  const add = useVenueMutation(venue.id, () =>
-    api(adminCreateFacility, {
-      params: { venueId: venue.id },
-      body: { name: localized(nameAr, nameEn) ?? {} },
-    }),
+  const add = useVenueMutation(
+    venue.id,
+    () =>
+      api(adminCreateFacility, {
+        params: { venueId: venue.id },
+        body: { name: localized(nameAr, nameEn) ?? {} },
+      }),
+    tt('added'),
   );
   return (
     <Card>
@@ -671,14 +690,19 @@ function FacilitiesPanel({ venue }: { venue: AdminVenue }) {
 
 function PhotosPanel({ venue }: { venue: AdminVenue }) {
   const t = useTranslations('admin.venues');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
-  const upload = useVenueMutation(venue.id, (file: File) =>
-    api(adminUploadVenueMedia, { params: { venueId: venue.id }, file }),
+  const upload = useVenueMutation(
+    venue.id,
+    (file: File) => api(adminUploadVenueMedia, { params: { venueId: venue.id }, file }),
+    tt('uploaded'),
   );
-  const remove = useVenueMutation(venue.id, (mediaId: string) =>
-    api(adminDeleteVenueMedia, { params: { mediaId } }),
+  const remove = useVenueMutation(
+    venue.id,
+    (mediaId: string) => api(adminDeleteVenueMedia, { params: { mediaId } }),
+    tt('removed'),
   );
   const error = upload.error ?? remove.error;
 

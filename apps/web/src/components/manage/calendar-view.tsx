@@ -11,11 +11,11 @@ import {
 import {
   Alert,
   Button,
-  buttonClass,
   Card,
+  GridSkeleton,
   SelectField,
-  Spinner,
   TextField,
+  buttonClass,
   cx,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -59,6 +59,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
   });
   const remove = useMutation({
     mutationFn: (blockId: string) => api(cancelBlock, { params: { blockId } }),
+    meta: { toast: tc('toast.removed') },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar', venueId] }),
   });
   const canBlock = can(schedule, 'schedule.block');
@@ -127,7 +128,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
         </h2>
       </div>
 
-      {calendar.isPending ? <Spinner label={tc('loading')} /> : null}
+      {calendar.isPending ? <GridSkeleton label={tc('loading')} columns={4} rows={6} /> : null}
       {calendar.isError ? <Alert tone="error">{errorMessage(calendar.error)}</Alert> : null}
       {remove.isError ? <Alert tone="error">{errorMessage(remove.error)}</Alert> : null}
 
@@ -319,6 +320,7 @@ function BlockForm({ schedule, date }: { schedule: VenueSchedule; date: string }
         },
       });
     },
+    meta: { toast: t('calendar.blocked') },
     onSuccess: async () => {
       setNote('');
       await queryClient.invalidateQueries({ queryKey: ['calendar', schedule.venue.id] });
@@ -341,11 +343,6 @@ function BlockForm({ schedule, date }: { schedule: VenueSchedule; date: string }
         {create.isError ? (
           <Alert tone="error" className="sm:col-span-2 lg:col-span-3">
             {errorMessage(create.error)}
-          </Alert>
-        ) : null}
-        {create.isSuccess ? (
-          <Alert tone="success" className="sm:col-span-2 lg:col-span-3">
-            {t('calendar.blocked')}
           </Alert>
         ) : null}
         <SelectField

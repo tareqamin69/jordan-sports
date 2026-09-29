@@ -7,10 +7,12 @@ import {
   Badge,
   Button,
   Card,
+  DetailSkeleton,
+  EmptyState,
+  ListSkeleton,
   Ltr,
   PageHeader,
   SelectField,
-  Spinner,
   TextField,
 } from '@jordan-sports/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -115,9 +117,11 @@ export function BookingsPage() {
         </form>
       </Card>
       {selected ? <BookingDetail id={selected} onClose={() => setSelected(null)} /> : null}
-      {bookings.isPending ? <Spinner label={tc('loading')} /> : null}
+      {bookings.isPending ? <ListSkeleton label={tc('loading')} rows={5} thumb={false} /> : null}
       {bookings.isError ? <Alert tone="error">{errorMessage(bookings.error)}</Alert> : null}
-      {bookings.data && items.length === 0 ? <p className="text-ink-muted">{t('empty')}</p> : null}
+      {bookings.data && items.length === 0 ? (
+        <EmptyState art="bookings" title={t('empty')} />
+      ) : null}
       {items.length > 0 ? (
         <Card className="overflow-x-auto p-0">
           <table className="w-full text-start text-sm">
@@ -192,6 +196,7 @@ export function BookingsPage() {
 
 function BookingDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const t = useTranslations('admin.bookings');
+  const tt = useTranslations('common.toast');
   const tb = useTranslations('web.booking.statuses');
   const tc = useTranslations('common');
   const format = useFormatter();
@@ -205,6 +210,7 @@ function BookingDetail({ id, onClose }: { id: string; onClose: () => void }) {
   });
   const [reason, setReason] = useState('');
   const cancel = useMutation({
+    meta: { toast: tt('cancelled') },
     mutationFn: () => api(adminCancelBooking, { params: { bookingId: id }, body: { reason } }),
     onSuccess: (data) => {
       queryClient.setQueryData(['admin-booking', id], data);
@@ -213,7 +219,7 @@ function BookingDetail({ id, onClose }: { id: string; onClose: () => void }) {
     },
   });
   if (detail.isError) return <Alert tone="error">{errorMessage(detail.error)}</Alert>;
-  if (!detail.data) return <Spinner label={tc('loading')} />;
+  if (!detail.data) return <DetailSkeleton label={tc('loading')} />;
   const b = detail.data;
   const cancellable = b.status === 'HELD' || b.status === 'CONFIRMED';
   return (

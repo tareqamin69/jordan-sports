@@ -2,7 +2,7 @@
 
 import { getVenueBalance, type Balance } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Card, Ltr, Spinner, cx } from '@jordan-sports/ui';
+import { Alert, Card, EmptyState, Ltr, StatsSkeleton, cx } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useApi } from '@/lib/api';
@@ -53,12 +53,13 @@ export function BalancePanel({ venueId, timezone }: { venueId: string; timezone:
   const locale = useLocale();
   const errorMessage = useErrorMessage();
   const balance = useVenueBalance(venueId);
-  if (balance.isPending) return <Spinner label={tc('loading')} />;
+  if (balance.isPending)
+    return <StatsSkeleton label={tc('loading')} count={2} className="lg:grid-cols-2" />;
   if (balance.isError) return <Alert tone="error">{errorMessage(balance.error)}</Alert>;
   const b = balance.data;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-rise flex-col gap-6">
       <p className="text-ink-muted">{t('intro')}</p>
       <Card className="flex flex-col gap-2 p-5">
         <p className="text-sm text-ink-muted">{t('current')}</p>
@@ -81,7 +82,7 @@ export function BalancePanel({ venueId, timezone }: { venueId: string; timezone:
       <Card className="p-5">
         <h2 className="mb-2 text-lg font-semibold">{t('history')}</h2>
         {b.entries.length === 0 ? (
-          <p className="text-sm text-ink-muted">{t('noEntries')}</p>
+          <EmptyState art="inbox" title={t('noEntries')} className="border-0 bg-transparent py-6" />
         ) : (
           <ul className="divide-y divide-line">
             {b.entries.map((e) => {

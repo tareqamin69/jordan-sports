@@ -32,7 +32,8 @@ To run it by hand: `cd /opt/jordan-sports/app/infra/staging && sudo docker compo
 
 ## Reviewing and replacing a photo
 
-- Every photo is listed with its photographer and source at `/ar/credits` on the site and as JSON at
+- Every photo is listed with its photographer and source at `/ar/credits` (linked from the
+  "صورة توضيحية" label on a venue page; 404 while there are no stock photos) and as JSON at
   `/api/v1/stock/credits`.
 - To drop one: add its id (e.g. `pexels-1234567`) to `exclude` in `infra/stock-photos/sports.json`,
   push, then run `node dist/cli/stock-photos.js --refresh` on the server. Excluded files are deleted.

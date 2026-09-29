@@ -4,6 +4,7 @@ import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { useMe } from '@/lib/session';
+import { useHydrated } from '@/lib/use-hydrated';
 import { Icon } from './icons';
 
 /**
@@ -16,9 +17,12 @@ export function MainNav({ overlay }: { overlay: boolean }) {
   const tc = useTranslations('common');
   const pathname = usePathname();
   const me = useMe();
-  const signedOut = me.data === null;
-  const accountLabel = me.data
-    ? (me.data.displayName ?? t('account'))
+  // The header hydrates late (Suspense): by then "me" may already be known, so it keeps the
+  // server's neutral label until hydrated (otherwise a hydration mismatch).
+  const user = useHydrated() ? me.data : undefined;
+  const signedOut = user === null;
+  const accountLabel = user
+    ? (user.displayName ?? t('account'))
     : signedOut
       ? t('signIn')
       : t('account');
@@ -81,8 +85,10 @@ export function MainNav({ overlay }: { overlay: boolean }) {
         >
           <span
             className={cx(
-              'flex h-11 items-center gap-2 rounded-full px-4 text-[13px] font-semibold transition-colors duration-200 md:h-10 md:text-sm md:font-medium',
-              item.active ? 'bg-canvas text-ink' : 'text-ink-soft group-hover:text-canvas',
+              'flex h-11 items-center gap-2 rounded-full px-4 text-[13px] font-semibold transition-[background-color,color,transform] duration-fast ease-soft group-active:scale-95 md:h-10 md:text-sm md:font-medium',
+              item.active
+                ? 'animate-pop bg-canvas text-ink md:animate-none'
+                : 'text-ink-soft group-hover:text-canvas',
               // Desktop colours depend on what the header sits on.
               overlay
                 ? item.active

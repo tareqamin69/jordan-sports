@@ -22,6 +22,7 @@ const HALF_HOURS = Array.from({ length: 48 }, (_, i) => i * 30);
 
 export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage');
+  const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
   const setSchedule = useSetSchedule(schedule.venue.id);
@@ -54,10 +55,12 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
           ...(form.note.trim() ? { note: form.note.trim() } : {}),
         },
       }),
+    meta: { toast: tt('added') },
     onSuccess: setSchedule,
   });
   const remove = useMutation({
     mutationFn: (overrideId: string) => api(deleteOverride, { params: { overrideId } }),
+    meta: { toast: tt('removed') },
     onSuccess: setSchedule,
   });
   const holidays = useMutation({
@@ -66,6 +69,7 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
         params: { venueId: schedule.venue.id },
         body: { closedOnPublicHolidays },
       }),
+    meta: { toast: tt('saved') },
     onSuccess: setSchedule,
   });
   const error = add.error ?? remove.error ?? holidays.error;

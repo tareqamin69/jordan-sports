@@ -7,6 +7,17 @@ import { BRAND_NAME } from '@jordan-sports/brand';
  */
 export const ar = {
   common: {
+    toast: {
+      saved: 'انحفظ.',
+      added: 'انضاف.',
+      removed: 'انشال.',
+      updated: 'تحدّث.',
+      sent: 'انبعت.',
+      done: 'تمام، خلصت.',
+      uploaded: 'انرفعت الصورة.',
+      archived: 'انأرشف.',
+      cancelled: 'انلغى الحجز.',
+    },
     appName: BRAND_NAME.ar,
     allSports: 'كل الرياضات',
     languageSwitcher: {
@@ -202,7 +213,7 @@ export const ar = {
       phoneHint: 'رح نبعتلك كود من 6 أرقام برسالة.',
       sendCode: 'ابعتلي الكود',
       codeTitle: 'اكتب الكود',
-      codeSentTo: 'بعتنا كود على {phone}.',
+      codeSentTo: 'بعتنا كود على <phone>{number}</phone>.',
       codeLabel: 'الكود (6 أرقام)',
       verify: 'تأكيد',
       changeNumber: 'غيّر الرقم',
@@ -245,7 +256,7 @@ export const ar = {
     },
     sports: {
       title: 'كل الرياضات',
-      description: 'كل رياضة إلها ملعب معتمد على المنصة، بكل الأردن.',
+      description: 'كل الرياضات اللي بتقدر تلعبها بالأردن. اختار رياضة وشوف ملاعبها.',
     },
     availability: {
       title: 'الأوقات الفاضية',
@@ -696,6 +707,7 @@ export const ar = {
       you: 'إنت',
       reply: 'ردّك',
       sendReply: 'ابعت',
+      replySent: 'انبعت ردّك.',
       statuses: { new: 'جديد', in_progress: 'قيد المتابعة', resolved: 'محلول' },
       categories: {
         booking: 'مشكلة بحجز',
