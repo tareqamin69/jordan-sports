@@ -359,7 +359,7 @@ export const en = {
         courtFormats: 'Available formats',
         noCourts: 'You have not added any courts yet.',
         paymentIntro:
-          'Players pay the full amount by card when they book. Jorena keeps its commission and transfers the rest to this account every week. Fill it in now or later from settings.',
+          'Players pay the full amount by card when they book. Jorena keeps its commission and transfers the rest to this account every week. Fill it in now or later from the Earnings tab.',
         contactIntro: 'A WhatsApp number helps players and the Jorena team reach you.',
         whatsapp: 'WhatsApp number',
         whatsappHint: 'e.g. 0791234567. Optional.',
@@ -504,7 +504,8 @@ export const en = {
         payoutLine:
           '{count, plural, one {# booking} other {# bookings}} · transfer {reference} · to the account ending {last4}',
         account: 'Payout account: {iban}',
-        noAccount: 'No bank account yet. The venue owner adds it under "Venue settings".',
+        noAccount:
+          'No payout bank account yet. The venue owner adds it under “Payout account” below.',
       },
       payoutAccount: {
         title: 'Payout account (IBAN)',
@@ -1031,7 +1032,8 @@ export const en = {
       commission: 'Commission',
       net: 'To transfer',
       account: 'Transfer to:',
-      noAccount: 'No bank account yet — the venue owner adds it from settings',
+      noAccount:
+        'No bank account yet — the venue owner adds it from the Earnings tab of the venue dashboard',
       markPaid: 'Record transfer',
       minus: '−{amount}',
       reference: 'Bank transfer reference',
