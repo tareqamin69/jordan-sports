@@ -103,7 +103,7 @@ export class OutboxDispatcher {
       case 'refund.due':
       case 'balance.low':
       case 'balance.empty':
-        // In-app only until an SMS/WhatsApp provider is connected (plan §4 "Venue notification").
+        // Retired CliQ events (ADR-0020); old rows in the outbox are simply acknowledged.
         return;
       case 'staff.signed_in':
         return this.staffSignedIn(tx, eventId, event);
@@ -140,6 +140,12 @@ export class OutboxDispatcher {
       ])
       .where('b.id', '=', event.payload.bookingId)
       .executeTakeFirstOrThrow();
+    const refund = await tx
+      .selectFrom('payment.transactions')
+      .select(['amount', 'currency'])
+      .where('booking_id', '=', event.payload.bookingId)
+      .where('kind', '=', 'refund')
+      .executeTakeFirst();
 
     const facts: BookingMessageFacts = {
       reference: b.reference,
@@ -151,6 +157,7 @@ export class OutboxDispatcher {
       customerName: b.user_name,
       customerPhone: b.user_phone,
       reason: b.cancel_reason,
+      refund: refund ? { amount: Number(refund.amount), currency: refund.currency } : null,
     };
     const player = b.user_phone
       ? { recipient: b.user_phone, locale: asLocale(b.user_locale) }
@@ -220,10 +227,10 @@ export class OutboxDispatcher {
     if (already) return;
     const when = new Date(event.payload.at).toLocaleString('en-GB', { timeZone: 'Asia/Amman' });
     const subject = event.payload.newDevice
-      ? 'Jorena admin: sign-in from a new device / تسجيل دخول من جهاز جديد'
-      : 'Jorena admin: new sign-in / تسجيل دخول جديد';
+      ? 'Jorena admin: sign-in from a new device / دخول من جهاز جديد'
+      : 'Jorena admin: new sign-in / دخول جديد';
     const text = [
-      'تم تسجيل الدخول إلى لوحة إدارة Jorena بحسابك.',
+      'حدا دخل هلأ على لوحة إدارة Jorena بحسابك.',
       'A sign-in to your Jorena admin account just happened.',
       '',
       `Time (Amman): ${when}`,

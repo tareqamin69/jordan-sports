@@ -3,12 +3,8 @@ import {
   cancelVenueBooking,
   checkInBooking,
   markNoShow,
-  confirmVenuePayment,
   createManualBooking,
   listVenueBookings,
-  listVenuePayments,
-  markPaymentRefunded,
-  rejectVenuePayment,
   type VenueBooking,
 } from '@jordan-sports/contracts';
 import type { FastifyRequest } from 'fastify';
@@ -18,15 +14,11 @@ import { Errors } from '../../../platform/http/errors.js';
 import { requestMeta } from '../../../platform/http/request-context.js';
 import { parseInput } from '../../../platform/http/validation.js';
 import { VenueBookingsService } from '../application/venue-bookings.service.js';
-import { VenuePaymentsService } from '../application/venue-payments.service.js';
 
 @Controller()
 @UserAuth()
 export class ManageBookingsController {
-  constructor(
-    private readonly bookings: VenueBookingsService,
-    private readonly payments: VenuePaymentsService,
-  ) {}
+  constructor(private readonly bookings: VenueBookingsService) {}
 
   @Post(checkInBooking.path)
   @HttpCode(200)
@@ -91,54 +83,6 @@ export class ManageBookingsController {
       { userId: actor.userId, meta: requestMeta(request) },
       bookingId,
       reason,
-    );
-  }
-
-  @Get(listVenuePayments.path)
-  listPayments(@Param() params: unknown, @CurrentActor() actor: Actor) {
-    const { venueId } = parseInput(listVenuePayments.params, params);
-    return this.payments.list(actor.userId, venueId);
-  }
-
-  @Post(confirmVenuePayment.path)
-  @HttpCode(200)
-  confirmPayment(
-    @Param() params: unknown,
-    @CurrentActor() actor: Actor,
-    @Req() request: FastifyRequest,
-  ): Promise<VenueBooking> {
-    const { paymentId } = parseInput(confirmVenuePayment.params, params);
-    return this.payments.confirm({ userId: actor.userId, meta: requestMeta(request) }, paymentId);
-  }
-
-  @Post(rejectVenuePayment.path)
-  @HttpCode(200)
-  rejectPayment(
-    @Param() params: unknown,
-    @Body() body: unknown,
-    @CurrentActor() actor: Actor,
-    @Req() request: FastifyRequest,
-  ): Promise<VenueBooking> {
-    const { paymentId } = parseInput(rejectVenuePayment.params, params);
-    const { reason } = parseInput(rejectVenuePayment.body, body);
-    return this.payments.reject(
-      { userId: actor.userId, meta: requestMeta(request) },
-      paymentId,
-      reason,
-    );
-  }
-
-  @Post(markPaymentRefunded.path)
-  @HttpCode(200)
-  markRefunded(
-    @Param() params: unknown,
-    @CurrentActor() actor: Actor,
-    @Req() request: FastifyRequest,
-  ): Promise<VenueBooking> {
-    const { paymentId } = parseInput(markPaymentRefunded.params, params);
-    return this.payments.markRefunded(
-      { userId: actor.userId, meta: requestMeta(request) },
-      paymentId,
     );
   }
 }

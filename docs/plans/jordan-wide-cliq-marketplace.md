@@ -1,6 +1,10 @@
 # Plan: Jordan-wide marketplace, two interfaces, venue self-registration, CliQ payments, prepaid commission
 
 - **Status:** Approved (2026-09-27). All §8 decisions resolved as recommended, with the owner's D2 addition (48-hour refund escalation). Implementation in progress, phase by phase (§7); P4/P5 core loop shipped 2026-09-28 — see `docs/milestones/p1-p6-jordan-wide-cliq.md` and ADR-0018.
+- **Payments superseded (2026-09-30):** §4–§5 (CliQ to the venue, prepaid commission balance) are
+  replaced by card-only payments collected by Jorena with weekly payouts — see ADR-0020 and
+  `docs/milestones/p7-card-payments.md`. The rest of the plan (geography, two interfaces,
+  self-registration) stands.
 - **Replaces:** the original M6 scope ("real provider adapter, webhooks, payouts"). The platform never
   holds player money. Players pay the venue directly by CliQ. The platform earns a commission that is
   taken from a balance the venue pays in advance.

@@ -27,6 +27,7 @@ import {
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
@@ -40,6 +41,11 @@ import {
   VenueRatingPanel,
   VenueStatsPanel,
 } from './venue-oversight';
+
+// The map library is large: load it only when a venue is opened for editing.
+const LocationPicker = dynamic(() => import('./location-picker').then((m) => m.LocationPicker), {
+  ssr: false,
+});
 
 const transitions: Record<VenueStatus, VenueStatus[]> = {
   draft: ['approved', 'submitted', 'rejected'],
@@ -308,6 +314,20 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
           inputMode="decimal"
           dir="ltr"
         />
+        <div className="sm:col-span-2">
+          <LocationPicker
+            location={
+              f.lat.trim() &&
+              f.lng.trim() &&
+              Number.isFinite(Number(f.lat)) &&
+              Number.isFinite(Number(f.lng))
+                ? { lat: Number(f.lat), lng: Number(f.lng) }
+                : null
+            }
+            onChange={({ lat, lng }) => setF((s) => ({ ...s, lat: String(lat), lng: String(lng) }))}
+            label={t('venues.summary.location')}
+          />
+        </div>
         <SelectField
           label={t('venues.businessDayStart')}
           hint={t('venues.businessDayHint')}

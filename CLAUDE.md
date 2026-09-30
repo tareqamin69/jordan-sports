@@ -34,7 +34,9 @@ specific task.
 - Multi-tenancy / authorization: organization membership via `VenueAccessService`/
   `MembershipsService`, never inferred from UI mode. See ADR-0008.
 - Current active plan: `docs/plans/jordan-wide-cliq-marketplace.md` (Jordan-wide geography, two
-  interfaces, venue self-registration, CliQ payments, prepaid commission ledger). Work through its
-  phases (P1–P6) in order; update it (or the relevant milestone doc) as phases land.
+  interfaces, venue self-registration). Work through its phases in order; update it (or the
+  relevant milestone doc) as phases land.
+- Payments follow ADR-0020 (card only, Jorena collects, weekly payouts); the plan's CliQ/prepaid
+  balance parts are superseded. See `docs/milestones/p7-card-payments.md`.
 - Do not start real payment-gateway integration (Visa/cards) beyond the abstraction — that's
   explicitly deferred (see the plan's §6).

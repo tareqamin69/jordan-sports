@@ -8,6 +8,7 @@ import { bypassTenant, setTenant } from '../../../platform/database/tenant.js';
 import { transaction } from '../../../platform/database/transaction.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
 import type { RequestMeta } from '../../../platform/http/request-context.js';
+import { PaymentsService } from '../../payments/index.js';
 import { AuditService } from '../../audit/index.js';
 import { normalizePhone } from '../../identity/index.js';
 import { enqueue } from '../../notifications/index.js';
@@ -25,7 +26,7 @@ import {
 } from '../../scheduling/index.js';
 import { VenueAccessService, type VenueRow } from '../../venues/index.js';
 import { canTransition, newReference, type BookingStatus } from '../domain/booking-rules.js';
-import { recordStatus, refundDeposit, releaseOccupancies } from './booking-store.js';
+import { recordStatus, releaseOccupancies } from './booking-store.js';
 import { bookingQuery, forVenueRole, toVenueBooking } from './booking-views.js';
 
 export interface StaffActor {
@@ -64,6 +65,7 @@ export class VenueBookingsService {
     private readonly occupancy: OccupancyService,
     private readonly pricing: PricingService,
     private readonly audit: AuditService,
+    private readonly payments: PaymentsService,
   ) {}
 
   private async loadForVenue(tx: Tx, organizationId: string, ids: readonly string[]) {
@@ -180,8 +182,9 @@ export class VenueBookingsService {
               venue_customer_id: customerId,
               series_id: seriesId,
               status: 'CONFIRMED',
-              payment_status: 'UNPAID',
-              payment_method: 'PAY_AT_VENUE',
+              // Taken by the venue itself (phone, walk-in): settled between the venue and the customer.
+              payment_status: 'NOT_REQUIRED',
+              payment_method: null,
               during: range,
               business_date: date,
               time_zone: venue.timezone,
@@ -312,10 +315,10 @@ export class VenueBookingsService {
     if (!found) throw Errors.notFound();
     const { venue } = await this.access.require(actor.userId, found.venue_id, 'booking.cancel');
 
-    return transaction(this.db, async (tx) => {
+    const result = await transaction(this.db, async (tx) => {
       const booking = await tx
         .selectFrom('booking.bookings')
-        .select(['status', sql<Date>`upper(during)`.as('end')])
+        .select(['status', 'total', sql<Date>`upper(during)`.as('end')])
         .where('id', '=', bookingId)
         .forUpdate()
         .executeTakeFirstOrThrow();
@@ -338,9 +341,12 @@ export class VenueBookingsService {
           .where('id', '=', bookingId)
           .execute();
         await releaseOccupancies(tx, [bookingId]);
-        // The venue cancelled: it owes the player's deposit back, and the commission returns (D2, D3).
-        await setTenant(tx, venue.organizationId);
-        await refundDeposit(tx, bookingId, now);
+        // The venue cancelled: the player gets everything back.
+        await this.payments.requestRefund(tx, {
+          bookingId,
+          reason: 'venue',
+          amount: Number(booking.total ?? 0),
+        });
         await recordStatus(tx, [
           {
             bookingId,
@@ -369,6 +375,9 @@ export class VenueBookingsService {
       const [view] = await this.loadForVenue(tx, venue.organizationId, [bookingId]);
       return view!;
     });
+    // After commit: the gateway is never called inside a database transaction.
+    await this.payments.processRefunds({ bookingId });
+    return result;
   }
 
   /** Check-in window opens an hour before the start; a no-show can be recorded up to 2 days after. */
@@ -539,8 +548,8 @@ export class VenueBookingsService {
   }
 
   /**
-   * Platform staff cancel a held or confirmed booking (e.g. after a complaint). Treated like a
-   * venue-side cancellation for money: any deposit is owed back to the player.
+   * Platform staff cancel a held or confirmed booking (e.g. after a complaint). A paid booking is
+   * refunded in full.
    */
   async adminCancel(
     actor: StaffActor,
@@ -548,11 +557,11 @@ export class VenueBookingsService {
     reason: string,
     now = new Date(),
   ): Promise<AdminBookingDetail> {
-    return transaction(this.db, async (tx) => {
+    const result = await transaction(this.db, async (tx) => {
       await bypassTenant(tx);
       const booking = await tx
         .selectFrom('booking.bookings')
-        .select(['status', 'organization_id', sql<Date>`upper(during)`.as('end')])
+        .select(['status', 'organization_id', 'total', sql<Date>`upper(during)`.as('end')])
         .where('id', '=', bookingId)
         .forUpdate()
         .executeTakeFirst();
@@ -573,8 +582,13 @@ export class VenueBookingsService {
         .where('id', '=', bookingId)
         .execute();
       await releaseOccupancies(tx, [bookingId]);
-      await setTenant(tx, booking.organization_id);
-      await refundDeposit(tx, bookingId, now);
+      if (status === 'CONFIRMED') {
+        await this.payments.requestRefund(tx, {
+          bookingId,
+          reason: 'admin',
+          amount: Number(booking.total ?? 0),
+        });
+      }
       await recordStatus(tx, [
         {
           bookingId,
@@ -605,5 +619,8 @@ export class VenueBookingsService {
       await bypassTenant(tx);
       return this.adminDetail(tx, bookingId);
     });
+    // After commit: the gateway is never called inside a database transaction.
+    await this.payments.processRefunds({ bookingId });
+    return result;
   }
 }

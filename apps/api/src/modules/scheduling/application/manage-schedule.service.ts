@@ -144,6 +144,7 @@ export class ManageScheduleService {
         businessDayStartMinute: venue.businessDayStartMinute,
         closedOnPublicHolidays,
         cancellationCutoffHours: venue.cancellationCutoffHours,
+        lateRefundPercent: venue.lateRefundPercent,
       },
       role,
       permissions: [...orgRolePermissions[role]],
@@ -245,11 +246,19 @@ export class ManageScheduleService {
   async updateSettings(
     actor: StaffActor,
     venueId: string,
-    settings: { closedOnPublicHolidays?: boolean; cancellationCutoffHours?: number },
+    settings: {
+      closedOnPublicHolidays?: boolean | undefined;
+      cancellationCutoffHours?: number | undefined;
+      lateRefundPercent?: 0 | 50 | 100 | undefined;
+    },
   ): Promise<VenueSchedule> {
     const { venue } = await this.access.require(actor.userId, venueId, 'schedule.rules');
-    const { closedOnPublicHolidays, cancellationCutoffHours } = settings;
-    if (closedOnPublicHolidays === undefined && cancellationCutoffHours === undefined) {
+    const { closedOnPublicHolidays, cancellationCutoffHours, lateRefundPercent } = settings;
+    if (
+      closedOnPublicHolidays === undefined &&
+      cancellationCutoffHours === undefined &&
+      lateRefundPercent === undefined
+    ) {
       return this.schedule(actor.userId, venueId);
     }
     await this.db.transaction().execute(async (tx) => {
@@ -262,6 +271,7 @@ export class ManageScheduleService {
           ...(cancellationCutoffHours !== undefined
             ? { cancellation_cutoff_hours: cancellationCutoffHours }
             : {}),
+          ...(lateRefundPercent !== undefined ? { late_refund_percent: lateRefundPercent } : {}),
         })
         .where('id', '=', venueId)
         .execute();
@@ -273,7 +283,7 @@ export class ManageScheduleService {
           targetType: 'venue',
           targetId: venueId,
           organizationId: venue.organizationId,
-          details: { closedOnPublicHolidays, cancellationCutoffHours },
+          details: { closedOnPublicHolidays, cancellationCutoffHours, lateRefundPercent },
           meta: actor.meta,
         },
         tx,

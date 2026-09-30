@@ -41,13 +41,14 @@ export const errorCodes = [
   'REQUEST_IN_PROGRESS',
   'IDEMPOTENCY_KEY_REQUIRED',
   'CANCELLATION_NOT_ALLOWED',
-  // payments / balance
+  // card payments / refunds / payouts (ADR-0020)
   'PAYMENT_REQUIRED',
-  'PAYMENT_REFERENCE_USED',
-  'PAYMENT_NOT_PENDING',
-  'PAYMENT_AWAITING_VENUE',
-  'REFUND_NOT_DUE',
-  'VENUE_NOT_ACCEPTING_BOOKINGS',
+  'PAYMENT_GATEWAY_UNAVAILABLE',
+  'REFUND_NOT_RETRYABLE',
+  'INVALID_IBAN',
+  'PAYOUT_ACCOUNT_MISSING',
+  'PAYOUT_AMOUNT_CHANGED',
+  'NOTHING_TO_PAY_OUT',
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];
 

@@ -43,3 +43,9 @@ export {
 export { CountUp } from './components/count-up.js';
 export { EmptyState, type EmptyArt } from './components/empty-state.js';
 export { ToastProvider, notify, useToast, type ToastTone } from './components/toast.js';
+export {
+  DEFAULT_SPORT_ICON,
+  SPORT_ICON_KEYS,
+  SportIcon,
+  sportIconPaths,
+} from './components/sport-icons.js';

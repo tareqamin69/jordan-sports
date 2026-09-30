@@ -11,8 +11,12 @@ import {
   type TestApp,
 } from '../support/app.js';
 
-const productionConfig = (t: TestApp, extra: Record<string, string> = {}): AppConfig =>
-  parseConfig({
+// No real card gateway exists yet (ADR-0020), so a launch configuration cannot be parsed: build
+// it as staging and switch staging off afterwards. The gateway check is then the one that fails.
+const GATEWAY = 'a real card payment gateway is configured (not the test-card mock)';
+const productionConfig = (t: TestApp, extra: Record<string, string> = {}): AppConfig => {
+  const staging = extra.STAGING === 'true';
+  const config = parseConfig({
     NODE_ENV: 'production',
     DATABASE_URL: t.config.databaseUrl,
     REDIS_URL: t.config.redisUrl,
@@ -22,7 +26,10 @@ const productionConfig = (t: TestApp, extra: Record<string, string> = {}): AppCo
     OTP_CHANNEL: 'releans',
     RELEANS_API_KEY: 'key-12345678',
     ...extra,
+    STAGING: 'true',
   });
+  return { ...config, staging };
+};
 
 const failing = async (t: TestApp, config: AppConfig) =>
   (await preflightChecks(config, t.ownerPool)).filter((c) => !c.ok).map((c) => c.name);
@@ -51,13 +58,14 @@ describe('go-live preflight', () => {
     await dirty?.close();
   });
 
-  it('passes when configured for production with real staff and no demo data', async () => {
-    expect(await failing(clean, productionConfig(clean))).toEqual([]);
+  it('passes when configured for production with real staff and no demo data — except the gateway', async () => {
+    // Everything else is ready; Jorena launches only once the card gateway is live.
+    expect(await failing(clean, productionConfig(clean))).toEqual([GATEWAY]);
   });
 
   it('fails on demo venues and test staff accounts', async () => {
     const failed = await failing(dirty, productionConfig(dirty));
-    expect(failed).toEqual(['no demo venues', 'no test staff accounts']);
+    expect(failed).toEqual([GATEWAY, 'no demo venues', 'no test staff accounts']);
   });
 
   it('fails when the server is still in staging or test mode', async () => {
@@ -70,6 +78,7 @@ describe('go-live preflight', () => {
     expect(await failing(clean, staging)).toEqual([
       'staging mode is off (no on-screen sign-in codes)',
       'sign-in codes go out by SMS (OTP_CHANNEL=releans)',
+      GATEWAY,
       'origins are https on a real domain',
     ]);
     const development = parseConfig({
@@ -85,6 +94,7 @@ describe('go-live preflight', () => {
     const empty = await createTestApp();
     try {
       expect(await failing(empty, productionConfig(empty))).toEqual([
+        GATEWAY,
         'at least one staff account with an authenticator',
       ]);
     } finally {

@@ -34,13 +34,17 @@ test('owner registers, admin rejects with a reason, owner resubmits, admin appro
   await expect(page.getByText('Court A')).toBeVisible();
   await page.getByRole('button', { name: 'Next' }).click();
 
-  // CliQ payments are switched off: the step is contact-only.
+  // Contact + optional payout account (IBAN): a local 079… number is accepted.
   await expect(page.locator('input[name="whatsapp"]')).toBeVisible();
-  await expect(page.locator('input[name="cliqAlias"]')).toHaveCount(0);
+  await expect(page.locator('input[name="iban"]')).toBeVisible();
   await page.locator('input[name="whatsapp"]').fill('0791234567');
   await page.getByRole('button', { name: 'Next' }).click();
 
   await expect(page.getByText('Review your details')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'venue owner terms' })).toHaveAttribute(
+    'href',
+    '/venue-terms',
+  );
   await page.getByRole('button', { name: 'Submit for review' }).click();
   await expect(page.getByText('Your registration was submitted!')).toBeVisible();
 

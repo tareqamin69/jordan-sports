@@ -25,7 +25,7 @@ const CACHE_MS = 60_000;
 const KEY_PATTERN = /^[a-z0-9_]+$/;
 
 /** The cached part of the catalog (settings have their own cache). */
-type Reference = Omit<Catalog, 'features' | 'support'>;
+type Reference = Omit<Catalog, 'support'>;
 
 @Injectable()
 export class CatalogService {
@@ -39,12 +39,12 @@ export class CatalogService {
   /** Reference data changes rarely; cached briefly in memory. */
   async get(): Promise<Catalog> {
     // Owner settings have their own short cache, so a switched flag shows up within seconds.
-    const [base, cliqPayments, whatsapp] = await Promise.all([
+    const [base, whatsapp, email] = await Promise.all([
       this.reference(),
-      this.settings.cliqPayments(),
       this.settings.supportWhatsapp(),
+      this.settings.supportEmail(),
     ]);
-    return { ...base, features: { cliqPayments }, support: { whatsapp } };
+    return { ...base, support: { whatsapp, email } };
   }
 
   private async reference(): Promise<Reference> {

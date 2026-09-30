@@ -16,7 +16,10 @@ import {
   Card,
   ListSkeleton,
   PageHeader,
+  DEFAULT_SPORT_ICON,
+  SPORT_ICON_KEYS,
   SelectField,
+  SportIcon,
   TextField,
   cx,
 } from '@jordan-sports/ui';
@@ -27,6 +30,15 @@ import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+
+/** Catalog keys are generated from the English name ("Irbid City" → irbid_city) unless edited. */
+function slugKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40);
+}
 
 function setCatalog(queryClient: ReturnType<typeof useQueryClient>, data: Catalog) {
   queryClient.setQueryData(['catalog'], data);
@@ -59,7 +71,11 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
   const api = useApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
-  const [form, setForm] = useState({ key: '', nameAr: '', nameEn: '' });
+  const [form, setForm] = useState<{ key: string | null; nameAr: string; nameEn: string }>({
+    key: null,
+    nameAr: '',
+    nameEn: '',
+  });
   const [renaming, setRenaming] = useState<{ id: string; nameAr: string; nameEn: string } | null>(
     null,
   );
@@ -67,11 +83,14 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
     meta: { toast: tt('added') },
     mutationFn: () =>
       api(adminCreateGovernorate, {
-        body: { key: form.key.trim(), name: { ar: form.nameAr.trim(), en: form.nameEn.trim() } },
+        body: {
+          key: (form.key ?? slugKey(form.nameEn)).trim(),
+          name: { ar: form.nameAr.trim(), en: form.nameEn.trim() },
+        },
       }),
     onSuccess: (data) => {
       setCatalog(queryClient, data);
-      setForm({ key: '', nameAr: '', nameEn: '' });
+      setForm({ key: null, nameAr: '', nameEn: '' });
     },
   });
   const rename = useMutation({
@@ -166,7 +185,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
           <TextField
             label={t('key')}
             hint={t('keyHint')}
-            value={form.key}
+            value={form.key ?? slugKey(form.nameEn)}
             onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
             dir="ltr"
             required
@@ -203,7 +222,11 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [governorateId, setGovernorateId] = useState(catalog.governorates[0]?.id ?? '');
-  const [form, setForm] = useState({ key: '', nameAr: '', nameEn: '' });
+  const [form, setForm] = useState<{ key: string | null; nameAr: string; nameEn: string }>({
+    key: null,
+    nameAr: '',
+    nameEn: '',
+  });
   const [renaming, setRenaming] = useState<{ id: string; nameAr: string; nameEn: string } | null>(
     null,
   );
@@ -214,11 +237,14 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
     mutationFn: () =>
       api(adminCreateArea, {
         params: { governorateId },
-        body: { key: form.key.trim(), name: { ar: form.nameAr.trim(), en: form.nameEn.trim() } },
+        body: {
+          key: (form.key ?? slugKey(form.nameEn)).trim(),
+          name: { ar: form.nameAr.trim(), en: form.nameEn.trim() },
+        },
       }),
     onSuccess: (data) => {
       setCatalog(queryClient, data);
-      setForm({ key: '', nameAr: '', nameEn: '' });
+      setForm({ key: null, nameAr: '', nameEn: '' });
     },
   });
   const rename = useMutation({
@@ -321,7 +347,7 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
           <TextField
             label={t('key')}
             hint={t('keyHint')}
-            value={form.key}
+            value={form.key ?? slugKey(form.nameEn)}
             onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
             dir="ltr"
             required
@@ -351,17 +377,17 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
 }
 
 const defaultSportForm = {
-  key: '',
+  key: null as string | null,
   nameAr: '',
   nameEn: '',
-  icon: 'ball-generic',
-  formatKey: '',
+  icon: DEFAULT_SPORT_ICON,
+  formatKey: null as string | null,
   formatNameAr: '',
   formatNameEn: '',
   minPlayers: '2',
   maxPlayers: '10',
   duration: '60',
-  typeKey: '',
+  typeKey: null as string | null,
   typeNameAr: '',
   typeNameEn: '',
 };
@@ -398,18 +424,18 @@ function SportsSection() {
     mutationFn: () =>
       api(adminCreateSport, {
         body: {
-          key: form.key.trim(),
+          key: (form.key ?? slugKey(form.nameEn)).trim(),
           name: { ar: form.nameAr.trim(), en: form.nameEn.trim() },
-          icon: form.icon.trim(),
+          icon: form.icon,
           format: {
-            key: form.formatKey.trim(),
+            key: (form.formatKey ?? slugKey(form.formatNameEn)).trim(),
             name: { ar: form.formatNameAr.trim(), en: form.formatNameEn.trim() },
             minPlayers: Number(form.minPlayers),
             maxPlayers: Number(form.maxPlayers),
             defaultDurationMinutes: Number(form.duration),
           },
           resourceType: {
-            key: form.typeKey.trim(),
+            key: (form.typeKey ?? slugKey(form.typeNameEn)).trim(),
             name: { ar: form.typeNameAr.trim(), en: form.typeNameEn.trim() },
           },
         },
@@ -457,12 +483,12 @@ function SportsSection() {
                   dir="ltr"
                   lang="en"
                 />
-                <TextField
-                  label={t('icon')}
-                  value={renaming.icon}
-                  onChange={(e) => setRenaming((r) => r && { ...r, icon: e.target.value })}
-                  dir="ltr"
-                />
+                <div className="w-full">
+                  <IconPicker
+                    value={renaming.icon}
+                    onChange={(icon) => setRenaming((r) => r && { ...r, icon })}
+                  />
+                </div>
                 <Button
                   size="sm"
                   busy={rename.isPending}
@@ -485,11 +511,11 @@ function SportsSection() {
                 key={s.id}
                 className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-3"
               >
-                <span className={cx('min-w-0', !s.active && 'text-ink-muted')}>
+                <span
+                  className={cx('flex min-w-0 items-center gap-2', !s.active && 'text-ink-muted')}
+                >
+                  <SportIcon name={s.icon} className="size-5 shrink-0 text-primary" />
                   {pick(s.name, locale)}
-                  <span className="ms-2 text-sm text-ink-muted" dir="ltr">
-                    ({s.icon})
-                  </span>
                   <span className="ms-2 text-sm text-ink-muted">
                     {t('sportVenues', { count: s.venueCount })}
                     {s.active ? '' : ` · ${t('sportHidden')}`}
@@ -542,7 +568,7 @@ function SportsSection() {
           <TextField
             label={t('key')}
             hint={t('keyHint')}
-            value={form.key}
+            value={form.key ?? slugKey(form.nameEn)}
             onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
             dir="ltr"
             required
@@ -562,20 +588,17 @@ function SportsSection() {
             dir="ltr"
             lang="en"
           />
-          <TextField
-            label={t('icon')}
-            hint={t('iconHint')}
-            value={form.icon}
-            onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
-            dir="ltr"
-            required
-          />
-          <div />
-          <div />
+          <div className="sm:col-span-3">
+            <IconPicker
+              value={form.icon}
+              onChange={(icon) => setForm((f) => ({ ...f, icon }))}
+              hint={t('iconHint')}
+            />
+          </div>
           <h3 className="font-bold sm:col-span-3">{t('firstFormat')}</h3>
           <TextField
             label={t('key')}
-            value={form.formatKey}
+            value={form.formatKey ?? slugKey(form.formatNameEn)}
             onChange={(e) => setForm((f) => ({ ...f, formatKey: e.target.value }))}
             dir="ltr"
             required
@@ -626,7 +649,7 @@ function SportsSection() {
           <h3 className="font-bold sm:col-span-3">{t('resourceType')}</h3>
           <TextField
             label={t('key')}
-            value={form.typeKey}
+            value={form.typeKey ?? slugKey(form.typeNameEn)}
             onChange={(e) => setForm((f) => ({ ...f, typeKey: e.target.value }))}
             dir="ltr"
             required
@@ -652,5 +675,51 @@ function SportsSection() {
         </form>
       </Card>
     </section>
+  );
+}
+
+/** Pick a sport's icon from the set players see (no icon keys to type). */
+function IconPicker({
+  value,
+  onChange,
+  hint,
+}: {
+  value: string;
+  onChange: (icon: string) => void;
+  hint?: string;
+}) {
+  const t = useTranslations('admin.geography');
+  const names = useTranslations('admin.geography.iconNames');
+  return (
+    <fieldset>
+      <legend className="mb-1 text-sm font-medium text-ink">{t('icon')}</legend>
+      {hint ? <p className="mb-2 text-xs text-ink-muted">{hint}</p> : null}
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('icon')}>
+        {SPORT_ICON_KEYS.map((key) => {
+          const label = names.has(key as never) ? names(key as never) : key;
+          const selected = key === value;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={label}
+              title={label}
+              data-testid={`icon-${key}`}
+              onClick={() => onChange(key)}
+              className={cx(
+                'grid size-11 place-items-center rounded-tile border transition-colors',
+                selected
+                  ? 'border-primary bg-brand-50 text-primary'
+                  : 'border-line bg-surface text-ink hover:border-line-strong',
+              )}
+            >
+              <SportIcon name={key} className="size-6" />
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

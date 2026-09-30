@@ -8,8 +8,10 @@ const venueMode = /^\/manage(\/|$)/;
 
 const links = [
   { href: '/about', key: 'about' },
+  { href: '/how-it-works', key: 'howItWorks' },
   { href: '/contact', key: 'contact' },
   { href: '/terms', key: 'terms' },
+  { href: '/venue-terms', key: 'venueTerms' },
   { href: '/privacy', key: 'privacy' },
 ] as const;
 

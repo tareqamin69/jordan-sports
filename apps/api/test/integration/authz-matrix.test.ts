@@ -333,18 +333,13 @@ describe('authorization matrix', () => {
     for (const url of [`/v1/bookings/${ids.bookingId}`]) {
       expect((await call(t.app, { method: 'GET', url, cookie: other })).statusCode).toBe(404);
     }
-    for (const action of ['cancel', 'confirm', 'payment-proof']) {
+    for (const action of ['cancel', 'checkout', 'checkout/verify']) {
       const r = await call(t.app, {
         method: 'POST',
         url: `/v1/bookings/${ids.bookingId}/${action}`,
         cookie: other,
         headers: { 'idempotency-key': randomUUID() },
-        body:
-          action === 'payment-proof'
-            ? { reference: 'ABCD1234' }
-            : action === 'confirm'
-              ? { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true }
-              : {},
+        body: action === 'checkout' ? { locale: 'en', acceptCancellationPolicy: true } : {},
       });
       expect(r.statusCode, `${action}: ${r.body}`).toBe(404);
     }

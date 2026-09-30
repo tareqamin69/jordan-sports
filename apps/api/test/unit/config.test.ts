@@ -33,7 +33,8 @@ describe('parseConfig', () => {
       rateLimitScale: 1,
       staging: false,
       trustProxy: ['127.0.0.1', '::1'],
-      features: { cliqPayments: false },
+      paymentGateway: 'mock',
+      webBaseUrl: 'http://localhost:3000',
       email: { smtpUrl: null, from: 'Jorena <no-reply@jorena.app>' },
     });
   });
@@ -96,17 +97,28 @@ describe('production safety', () => {
     expect(() =>
       parseConfig({ ...releans, ADMIN_ORIGINS: 'https://admin.1-2-3-4.sslip.io' }),
     ).toThrow(/test address/);
-    expect(parseConfig({ ...releans, WEB_ORIGINS: 'https://jorena.app' })).toBeTruthy();
+    // A real domain passes the origin check (the mock payment gateway still stops a real launch).
+    expect(() => parseConfig({ ...releans, WEB_ORIGINS: 'https://jorena.app' })).not.toThrow(
+      /test address/,
+    );
     expect(
       parseConfig({ ...production, STAGING: 'true', WEB_ORIGINS: 'https://1-2-3-4.sslip.io' })
         .staging,
     ).toBe(true);
   });
 
+  it('launches only with a real card gateway: the mock (test cards) is for staging', () => {
+    const releans = { ...production, OTP_CHANNEL: 'releans', RELEANS_API_KEY: 'key-12345678' };
+    expect(() => parseConfig({ ...releans, WEB_ORIGINS: 'https://jorena.app' })).toThrow(
+      /PAYMENT_GATEWAY=mock/,
+    );
+    expect(parseConfig({ ...releans, STAGING: 'true' }).paymentGateway).toBe('mock');
+  });
+
   it('accepts Releans in production and requires its key', () => {
     const releans = { ...production, OTP_CHANNEL: 'releans' };
     expect(() => parseConfig(releans)).toThrow(/RELEANS_API_KEY/);
-    const config = parseConfig({ ...releans, RELEANS_API_KEY: 'key-12345678' });
+    const config = parseConfig({ ...releans, RELEANS_API_KEY: 'key-12345678', STAGING: 'true' });
     expect(config.releans).toEqual({
       apiKey: 'key-12345678',
       senderId: 'Jorena',

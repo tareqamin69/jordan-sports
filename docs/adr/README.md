@@ -26,5 +26,6 @@ To add a decision, copy [`template.md`](./template.md) to `NNNN-short-title.md` 
 | [0015](./0015-manual-payouts.md) | Manual payouts in the MVP | Accepted |
 | [0016](./0016-custom-resource-calendar.md) | Custom day/week resource calendar | Accepted |
 | [0017](./0017-in-house-authentication.md) | In-house authentication module instead of Better Auth | Accepted |
-| [0018](./0018-cliq-direct-payments-and-prepaid-commission.md) | CliQ straight to the venue, commission from a prepaid balance | Accepted |
+| [0018](./0018-cliq-direct-payments-and-prepaid-commission.md) | CliQ straight to the venue, commission from a prepaid balance | Superseded by 0020 |
 | [0019](./0019-releans-sms-provider.md) | Releans as the SMS provider | Accepted |
+| [0020](./0020-card-only-payments-merchant-of-record.md) | Card-only payments, Jorena as merchant of record, weekly payouts | Accepted |

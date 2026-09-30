@@ -21,6 +21,8 @@ export interface BookingMessageFacts {
   readonly customerName?: string | null;
   readonly customerPhone?: string | null;
   readonly reason?: string | null;
+  /** Going back to the player's card after a cancellation. */
+  readonly refund?: { amount: number; currency: string } | null;
 }
 
 function pick(text: { ar?: string; en?: string }, locale: Locale): string {
@@ -45,6 +47,8 @@ export function renderBookingMessage(
     customer: facts.customerName ?? '-',
     phone: facts.customerPhone ?? '-',
     reason: facts.reason ?? '-',
+    refundStatus: facts.refund && facts.refund.amount > 0 ? 'some' : 'none',
+    refund: facts.refund ? formatMoney(facts.refund, locale) : '',
     appName: BRAND_NAME[locale],
   });
 }

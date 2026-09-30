@@ -1,6 +1,12 @@
 'use client';
 
-import { cancelBooking, confirmBooking, getBooking, type Booking } from '@jordan-sports/contracts';
+import {
+  cancelBooking,
+  getBooking,
+  startCheckout,
+  verifyCheckout,
+  type Booking,
+} from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,
@@ -16,7 +22,7 @@ import {
 } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { isApiError, useApi } from '@/lib/api';
 import {
@@ -33,7 +39,6 @@ import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { BookingSuccess } from './booking-success';
-import { CliqCheckout, CliqPaymentSummary } from './cliq-checkout';
 import { CourtArt } from './court-art';
 import { HoldCountdown } from './hold-countdown';
 import { Icon } from './icons';
@@ -67,14 +72,18 @@ const actionClass =
   'flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-center text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-canvas';
 
 /**
+ * A player's booking: pay by card while held (ADR-0020), then details, cancel and refund.
  * `justConfirmed` (from `?confirmed=1`) shows the success banner; later visits do not (QA #5).
+ * `returning` (from `?payment=return`): back from the payment page, so the outcome is checked.
  */
 export function BookingView({
   bookingId,
   justConfirmed = false,
+  returning = false,
 }: {
   bookingId: string;
   justConfirmed?: boolean;
+  returning?: boolean;
 }) {
   const t = useTranslations('web.booking');
   const tc = useTranslations('common');
@@ -85,25 +94,46 @@ export function BookingView({
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [accepted, setAccepted] = useState(false);
-  const [busy, setBusy] = useState<'confirm' | 'cancel' | null>(null);
+  const [busy, setBusy] = useState<'pay' | 'cancel' | null>(null);
+  const [verifying, setVerifying] = useState(returning);
   const [asking, setAsking] = useState(false);
   const [showConfirmed, setShowConfirmed] = useState(justConfirmed);
   const toast = useToast();
   const [calendarOpen, setCalendarOpen] = useState(false);
-  // One key per page visit: a retried confirmation is recognized by the server.
-  const confirmKey = useMemo(() => crypto.randomUUID(), []);
 
   const booking = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => api(getBooking, { params: { bookingId } }),
-    // While the venue checks a CliQ transfer, pick up its answer without a reload.
-    refetchInterval: (q) =>
-      q.state.data?.status === 'HELD' && q.state.data.payment?.status === 'SUBMITTED'
-        ? 10_000
-        : false,
+    // Back from the payment page, the verify call below returns the booking: fetching it in
+    // parallel could land after it and overwrite the outcome with the pre-payment state.
+    enabled: !verifying,
   });
   const data = booking.data;
   const now = useNow(data?.status === 'HELD');
+
+  // Back from the payment page: ask for the outcome once, then drop ?payment=return from the URL.
+  useEffect(() => {
+    if (!returning) return;
+    let live = true;
+    api(verifyCheckout, { params: { bookingId } })
+      .then((checked) => {
+        if (!live) return;
+        queryClient.setQueryData(['booking', bookingId], checked);
+        void queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
+        const paid = checked.status === 'CONFIRMED';
+        if (paid) setShowConfirmed(true);
+        window.history.replaceState(
+          null,
+          '',
+          `${window.location.pathname}${paid ? '?confirmed=1' : ''}`,
+        );
+      })
+      .catch(() => undefined)
+      .finally(() => live && setVerifying(false));
+    return () => {
+      live = false;
+    };
+  }, [returning, api, bookingId, queryClient]);
 
   useEffect(() => {
     if (isApiError(booking.error, 'UNAUTHENTICATED')) {
@@ -111,7 +141,9 @@ export function BookingView({
     }
   }, [booking.error, router, bookingId]);
 
-  if (booking.isPending) return <BookingSkeleton label={tc('loading')} />;
+  if (booking.isPending || verifying) {
+    return <BookingSkeleton label={verifying ? t('verifying') : tc('loading')} />;
+  }
   if (booking.isError) return <Alert tone="error">{errorMessage(booking.error)}</Alert>;
   const b = data!;
 
@@ -136,7 +168,7 @@ export function BookingView({
     void queryClient.invalidateQueries({ queryKey: ['availability', b.venue.slug] });
   };
 
-  async function run(kind: 'confirm' | 'cancel', action: () => Promise<Booking>, done?: string) {
+  async function run(kind: 'cancel', action: () => Promise<Booking>, done?: string) {
     setBusy(kind);
     try {
       update(await action());
@@ -150,20 +182,39 @@ export function BookingView({
     }
   }
 
-  const confirm = async () => {
-    await run('confirm', async () => {
-      const confirmed = await api(confirmBooking, {
+  // To the gateway's payment page; it sends the player back here with ?payment=return.
+  const pay = async () => {
+    setBusy('pay');
+    try {
+      const { redirectUrl } = await api(startCheckout, {
         params: { bookingId },
-        body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
-        idempotencyKey: confirmKey,
+        body: { locale: locale as 'ar' | 'en', acceptCancellationPolicy: true },
       });
-      // The banner belongs to this moment only: it is tied to the URL, so a reload right after
-      // confirming keeps it and a later visit from "My bookings" does not.
-      setShowConfirmed(true);
-      window.history.replaceState(null, '', `${window.location.pathname}?confirmed=1`);
-      return confirmed;
-    });
+      window.location.assign(redirectUrl);
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+      if (isApiError(e, 'HOLD_EXPIRED')) await booking.refetch();
+      setBusy(null);
+    }
   };
+  const failure = (code: string) =>
+    t(
+      `failures.${(['card_declined', 'insufficient_funds', 'expired_card', 'cancelled', 'abandoned'] as const).find((c) => c === code) ?? 'other'}`,
+    );
+  const pct = b.cancellation.lateRefundPercent;
+  const refundPreview = b.price
+    ? t('refundPreview', {
+        kind: !late || pct === 100 ? 'full' : pct === 50 ? 'half' : 'none',
+        amount: formatMoney(
+          {
+            ...b.price,
+            amount:
+              !late || pct === 100 ? b.price.amount : Math.round((b.price.amount * pct) / 100),
+          },
+          locale,
+        ),
+      })
+    : null;
   const cancel = (done?: string) =>
     run('cancel', () => api(cancelBooking, { params: { bookingId }, body: {} }), done);
 
@@ -197,7 +248,7 @@ export function BookingView({
   const cell = 'flex min-w-0 flex-col gap-0.5 px-4 py-3';
 
   return (
-    <div className={cx('flex flex-col gap-4', holding && !b.payment && 'pb-44 md:pb-0')}>
+    <div className={cx('flex flex-col gap-4', holding && 'pb-44 md:pb-0')}>
       <button
         type="button"
         onClick={() => router.back()}
@@ -220,9 +271,7 @@ export function BookingView({
             statusTone[status],
           )}
         >
-          {holding && b.payment?.status === 'SUBMITTED'
-            ? t('awaitingVenue')
-            : t(`statuses.${status}`)}
+          {t(`statuses.${status}`)}
         </span>
       </div>
 
@@ -233,7 +282,28 @@ export function BookingView({
       {b.status === 'CANCELLED' && b.cancelledBy === 'venue' ? (
         <Alert tone="warning">{t('cancelledByVenue', { reason: b.cancelReason ?? '' })}</Alert>
       ) : null}
-      <CliqPaymentSummary booking={b} />
+      {b.payment?.status === 'paid' && b.payment.card && !b.refund ? (
+        <p className="flex items-center gap-2 text-sm text-ink-muted" data-testid="booking-paid">
+          <Icon name="check" className="size-4 text-primary" />
+          {t('paid', {
+            amount: formatMoney(b.payment.amount, locale),
+            brand: b.payment.card.brand === 'visa' ? 'Visa' : 'Mastercard',
+            last4: b.payment.card.last4,
+          })}
+        </p>
+      ) : null}
+      {b.refund ? (
+        <Alert
+          tone={b.refund.status === 'failed' ? 'warning' : 'info'}
+          data-testid="booking-refund"
+        >
+          {t('refund', {
+            status: b.refund.status,
+            amount: formatMoney(b.refund.amount, locale),
+          })}{' '}
+          {b.refund.status !== 'failed' ? t('refundTiming') : null}
+        </Alert>
+      ) : null}
 
       <article className="overflow-hidden rounded-card border border-line bg-surface">
         <div className="relative h-28 bg-night">
@@ -287,27 +357,15 @@ export function BookingView({
         </p>
       </article>
 
-      {holding && b.payment ? (
-        <CliqCheckout
-          booking={b}
-          payment={b.payment}
-          holdLeft={holdLeft}
-          freeUntilText={freeUntilText}
-          late={late}
-          onUpdate={update}
-          onRelease={() => void cancel(t('released'))}
-          releasing={busy === 'cancel'}
-        />
-      ) : null}
-
-      {holding && !b.payment ? (
-        <Card className="flex flex-col gap-4 p-5">
+      {holding ? (
+        <Card className="flex flex-col gap-4 p-5" data-testid="card-checkout">
           <div className="flex items-start gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-primary">
-              <Icon name="pin" className="size-5" />
+              <Icon name="card" className="size-5" />
             </span>
-            <p className="flex flex-col text-sm">
-              <span className="font-semibold text-ink">{t('payAtVenue')}</span>
+            <p className="flex flex-col gap-0.5 text-sm">
+              <span className="font-semibold text-ink">{t('payCard')}</span>
+              <span className="text-ink-muted">{t('paySecure')}</span>
               <span className={cx('text-ink-muted', late && 'text-danger')}>
                 {late ? t('freeCancellationUnavailable') : t('freeUntil', { date: freeUntilText })}
               </span>
@@ -321,8 +379,22 @@ export function BookingView({
                 className="size-4 rotate-90 transition-transform group-open:-rotate-90"
               />
             </summary>
-            <p className="mt-2 leading-7">{t('lateNote')}</p>
+            <p className="mt-2 leading-7">
+              {late ? null : `${t('freeUntil', { date: freeUntilText })} `}
+              {t('lateNote', { percent: String(pct) })} {t('refundTiming')}
+            </p>
+            <Link
+              href={{ pathname: '/terms', hash: 'cancellation' }}
+              className="mt-2 inline-block font-medium text-primary hover:underline"
+            >
+              {t('fullTerms')}
+            </Link>
           </details>
+          {b.payment?.lastFailure ? (
+            <Alert tone="error" data-testid="payment-failed">
+              {t('paymentFailed', { reason: failure(b.payment.lastFailure) })}
+            </Alert>
+          ) : null}
           <CheckboxField
             label={t('accept')}
             checked={accepted}
@@ -347,11 +419,12 @@ export function BookingView({
               <Button
                 size="lg"
                 className="flex-1 md:flex-none md:px-10"
-                onClick={confirm}
+                onClick={() => void pay()}
                 disabled={!accepted}
-                busy={busy === 'confirm'}
+                busy={busy === 'pay'}
+                data-testid="pay-button"
               >
-                {t('confirm')}
+                {busy === 'pay' ? t('paying') : t('pay', { amount: formatMoney(b.price!, locale) })}
               </Button>
             </div>
           </div>
@@ -435,6 +508,11 @@ export function BookingView({
           {asking ? (
             <Card className="flex animate-pop flex-col gap-4 p-5">
               <p className="font-medium">{late ? t('lateQuestion') : t('cancelQuestion')}</p>
+              {b.payment?.status === 'paid' && refundPreview ? (
+                <p className="text-sm text-ink-muted" data-testid="refund-preview">
+                  {refundPreview} {pct > 0 || !late ? t('refundTiming') : null}
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="danger"

@@ -397,3 +397,30 @@ export async function manualBooking(
   const created = (r.json() as { created: Array<{ id: string; reference: string }> }).created[0]!;
   return created;
 }
+
+/**
+ * Pays a held booking the way a player does (ADR-0020): open the checkout, pay on the mock
+ * gateway's test page with a test card, come back and verify. Returns the verify response.
+ */
+export async function payBooking(
+  app: NestFastifyApplication,
+  cookie: string,
+  bookingId: string,
+  card = '4242424242424242',
+) {
+  const start = await call(app, {
+    method: 'POST',
+    url: `/v1/bookings/${bookingId}/checkout`,
+    cookie,
+    body: { locale: 'en', acceptCancellationPolicy: true },
+  });
+  if (start.statusCode !== 200) return start;
+  const { redirectUrl } = start.json() as { redirectUrl: string };
+  const sessionId = redirectUrl.split('/').pop()!;
+  await call(app, {
+    method: 'POST',
+    url: `/v1/mock-gateway/sessions/${sessionId}/pay`,
+    body: { number: card, expiry: '12/40', cvc: '123' },
+  });
+  return call(app, { method: 'POST', url: `/v1/bookings/${bookingId}/checkout/verify`, cookie });
+}

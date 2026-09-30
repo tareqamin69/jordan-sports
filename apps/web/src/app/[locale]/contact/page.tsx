@@ -4,11 +4,10 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getCatalog } from '@jordan-sports/contracts';
 import { Icon } from '@/components/icons';
+import { Link } from '@/i18n/navigation';
 import { serverApi } from '@/lib/server-api';
 
 type Props = { params: Promise<{ locale: Locale }> };
-
-const SUPPORT_EMAIL = 'support@jorena.app';
 
 // Absolute URLs (metadataBase, share links) use WEB_BASE_URL, which is only known at runtime: the
 // deployment image is built without it, so these must not be pre-rendered at build time.
@@ -31,10 +30,10 @@ export default async function ContactPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('web.contact');
-  // The number comes only from the owner's admin Settings ("Support WhatsApp"); no number, no block.
-  const whatsapp = await serverApi(getCatalog).then(
-    (c) => c.support.whatsapp,
-    () => null,
+  // The number and the email come only from the owner's admin Settings; unset means not shown.
+  const { whatsapp, email } = await serverApi(getCatalog).then(
+    (c) => c.support,
+    () => ({ whatsapp: null, email: null }),
   );
   const waDigits = whatsapp?.replace(/[^0-9]/g, '') ?? '';
 
@@ -63,11 +62,19 @@ export default async function ContactPage({ params }: Props) {
             </a>
           </>
         ) : null}
-        <div className={whatsapp ? 'border-t border-line pt-5' : ''}>
-          <p className="text-sm text-ink-muted">{t('email')}</p>
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-primary hover:underline">
-            <Ltr>{SUPPORT_EMAIL}</Ltr>
-          </a>
+        {email ? (
+          <div className={whatsapp ? 'border-t border-line pt-5' : ''}>
+            <p className="text-sm text-ink-muted">{t('email')}</p>
+            <a href={`mailto:${email}`} className="font-medium text-primary hover:underline">
+              <Ltr>{email}</Ltr>
+            </a>
+          </div>
+        ) : null}
+        <div className={whatsapp || email ? 'border-t border-line pt-5' : ''}>
+          <p className="text-sm text-ink-muted">{t('report')}</p>
+          <Link href="/support" className="font-medium text-primary hover:underline">
+            {t('reportLink')}
+          </Link>
         </div>
       </Card>
     </main>

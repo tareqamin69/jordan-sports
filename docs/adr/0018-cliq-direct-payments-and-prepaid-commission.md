@@ -1,7 +1,7 @@
 # 0018. CliQ straight to the venue, commission from a prepaid balance
 
-- **Status:** Accepted, **switched off** (2026-09-28): the owner chose a card gateway (MEPS)
-  instead. Kept behind `FEATURE_CLIQ_PAYMENTS` (default `false`); see "Switched off" below.
+- **Status:** Superseded by [0020](./0020-card-only-payments-merchant-of-record.md) (2026-09-30):
+  card-only payments; the CliQ flow, the prepaid balance and `FEATURE_CLIQ_PAYMENTS` were removed.
 - **Date:** 2026-09-28
 - **Related:** [plan §4–§5](../plans/jordan-wide-cliq-marketplace.md), [0005](./0005-booking-state-model.md),
   [0006](./0006-money-and-ledger.md), [0008](./0008-tenancy-and-row-level-security.md),

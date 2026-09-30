@@ -13,7 +13,6 @@ import {
   FormSkeleton,
   Ltr,
   PageHeader,
-  SelectField,
   TextAreaField,
   TextField,
 } from '@jordan-sports/ui';
@@ -24,14 +23,10 @@ import { useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 
-type Flag = 'default' | 'on' | 'off';
-const toFlag = (v: boolean | null): Flag => (v === null ? 'default' : v ? 'on' : 'off');
-const fromFlag = (f: Flag): boolean | null => (f === 'default' ? null : f === 'on');
-
 interface Form {
   commissionPercent: string;
   supportWhatsapp: string;
-  cliqPayments: Flag;
+  supportEmail: string;
   venueEdits: boolean;
   allowlist: string;
 }
@@ -40,7 +35,7 @@ function toForm(s: PlatformSettings): Form {
   return {
     commissionPercent: String(s.commissionBps / 100),
     supportWhatsapp: s.supportWhatsapp ?? '',
-    cliqPayments: toFlag(s.features.cliqPayments),
+    supportEmail: s.supportEmail ?? '',
     venueEdits: s.venueEditsNeedReview,
     allowlist: s.adminIpAllowlist.join('\n'),
   };
@@ -65,8 +60,8 @@ export function SettingsPage() {
         body: {
           commissionBps: Math.round(Number(f.commissionPercent) * 100),
           supportWhatsapp: f.supportWhatsapp.trim() || null,
+          supportEmail: f.supportEmail.trim() || null,
           venueEditsNeedReview: f.venueEdits,
-          features: { cliqPayments: fromFlag(f.cliqPayments) },
           adminIpAllowlist: f.allowlist
             .split(/[\s,]+/)
             .map((x) => x.trim())
@@ -129,20 +124,16 @@ export function SettingsPage() {
             onChange={(e) => set({ supportWhatsapp: e.target.value })}
             name="supportWhatsapp"
           />
-          <SelectField
-            label={t('cliqPayments')}
-            hint={t('flagHint', {
-              value: settings.data.effectiveFeatures.cliqPayments ? t('on') : t('off'),
-            })}
+          <TextField
+            label={t('supportEmail')}
+            hint={t('supportEmailHint')}
+            type="email"
+            dir="ltr"
             disabled={!editable}
-            value={current.cliqPayments}
-            onChange={(e) => set({ cliqPayments: e.target.value as Flag })}
-            name="cliqPayments"
-          >
-            <option value="default">{t('flagDefault')}</option>
-            <option value="on">{t('on')}</option>
-            <option value="off">{t('off')}</option>
-          </SelectField>
+            value={current.supportEmail}
+            onChange={(e) => set({ supportEmail: e.target.value })}
+            name="supportEmail"
+          />
           <CheckboxField
             label={`${t('venueEdits')} — ${t('venueEditsHint')}`}
             disabled={!editable}

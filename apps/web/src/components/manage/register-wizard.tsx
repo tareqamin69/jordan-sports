@@ -11,6 +11,8 @@ import {
   uploadMyVenueMedia,
   type AdminVenue,
   type Catalog,
+  getPayoutAccount,
+  setPayoutAccount,
 } from '@jordan-sports/contracts';
 import {
   Alert,
@@ -53,7 +55,7 @@ function localized(ar: string, en: string): Localized | undefined {
 const steps = wizardSteps;
 type Step = WizardStep;
 
-function Stepper({ current, cliqEnabled }: { current: Step; cliqEnabled: boolean }) {
+function Stepper({ current }: { current: Step }) {
   const t = useTranslations('web.manage.register');
   const index = steps.indexOf(current);
   return (
@@ -87,7 +89,7 @@ function Stepper({ current, cliqEnabled }: { current: Step; cliqEnabled: boolean
             >
               {i < index ? <Icon name="check" className="size-3.5" strokeWidth={2.6} /> : i + 1}
             </span>
-            {s === 'payment' && !cliqEnabled ? t('steps.contact') : t(`steps.${s}`)}
+            {s === 'payment' ? t('steps.contact') : t(`steps.${s}`)}
           </li>
         ))}
       </ol>
@@ -165,7 +167,7 @@ export function RegisterWizard({
         title={t('title')}
         description={t('stepOf', { step: steps.indexOf(step) + 1, total: steps.length })}
       />
-      <Stepper current={step} cliqEnabled={catalog.data.features.cliqPayments} />
+      <Stepper current={step} />
       {/* Keyed by step so each step eases in. */}
       <div key={step} className="animate-rise">
         {step === 'info' ? (
@@ -213,7 +215,6 @@ export function RegisterWizard({
         {step === 'payment' && venue ? (
           <PaymentStep
             venue={venue}
-            cliqEnabled={catalog.data.features.cliqPayments}
             onBack={() => setStep('courts')}
             onNext={(v) => {
               setVenue(v);
@@ -224,7 +225,6 @@ export function RegisterWizard({
         {step === 'review' && venue ? (
           <ReviewStep
             venue={venue}
-            cliqEnabled={catalog.data.features.cliqPayments}
             catalog={catalog.data}
             onBack={() => setStep('payment')}
             onSubmitted={() => {
@@ -893,56 +893,58 @@ function EditCourtForm({
 }
 
 /**
- * Contact and (when CliQ payments are switched on) payment details. With CliQ off the CliQ fields
- * are hidden and not sent, so values saved earlier are kept for when it returns (ADR-0018).
+ * Contact (WhatsApp) and, optionally, the bank account the weekly payouts go to (ADR-0020). The
+ * step keeps its `payment` key so existing deep links still work.
  */
 function PaymentStep({
   venue,
-  cliqEnabled,
   onBack,
   onNext,
 }: {
   venue: AdminVenue;
-  cliqEnabled: boolean;
   onBack: () => void;
   onNext: (venue: AdminVenue) => void;
 }) {
   const t = useTranslations('web.manage.register');
+  const tp = useTranslations('web.manage.payoutAccount');
   const api = useApi();
   const errorMessage = useErrorMessage();
-  const [f, setF] = useState({
-    whatsapp: venue.whatsapp ?? '',
-    cliqAlias: venue.cliqAlias ?? '',
-    cliqAliasHolderName: venue.cliqAliasHolderName ?? '',
-    depositPercentage: venue.depositPercentage !== null ? String(venue.depositPercentage) : '',
+  const account = useQuery({
+    queryKey: ['payout-account', venue.id],
+    queryFn: () => api(getPayoutAccount, { params: { venueId: venue.id } }),
   });
+  const [f, setF] = useState<{
+    whatsapp: string;
+    iban: string | null;
+    holderName: string | null;
+    bankName: string | null;
+  }>({ whatsapp: venue.whatsapp ?? '', iban: null, holderName: null, bankName: null });
+  const saved = account.data?.account;
+  const iban = f.iban ?? saved?.iban ?? '';
+  const holderName = f.holderName ?? saved?.holderName ?? '';
+  const bankName = f.bankName ?? saved?.bankName ?? '';
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
 
   const save = useMutation({
-    mutationFn: () =>
-      api(updateMyVenue, {
+    mutationFn: async () => {
+      const updated = await api(updateMyVenue, {
         params: { venueId: venue.id },
-        body: {
-          whatsapp: f.whatsapp.trim() || null,
-          ...(cliqEnabled
-            ? {
-                cliqAlias: f.cliqAlias.trim() || null,
-                cliqAliasHolderName: f.cliqAliasHolderName.trim() || null,
-                depositPercentage: f.depositPercentage.trim() ? Number(f.depositPercentage) : null,
-              }
-            : {}),
-        },
-      }),
+        body: { whatsapp: f.whatsapp.trim() || null },
+      });
+      // The bank account is optional here (it can be added later from the venue settings).
+      if (iban.trim() && (f.iban !== null || f.holderName !== null || f.bankName !== null)) {
+        await api(setPayoutAccount, {
+          params: { venueId: venue.id },
+          body: { iban, holderName, bankName: bankName.trim() ? bankName : null },
+        });
+      }
+      return updated;
+    },
     onSuccess: onNext,
   });
   const fieldError = fieldErrors(save.error);
-  const knownFields = [
-    'whatsapp',
-    'cliqAlias',
-    'cliqAliasHolderName',
-    'depositPercentage',
-  ] as const;
+  const knownFields = ['whatsapp', 'iban', 'holderName'] as const;
 
   return (
     <Card>
@@ -953,9 +955,7 @@ function PaymentStep({
           save.mutate();
         }}
       >
-        <p className="text-ink-muted sm:col-span-2">
-          {cliqEnabled ? t('paymentIntro') : t('contactIntro')}
-        </p>
+        <p className="text-ink-muted sm:col-span-2">{t('contactIntro')}</p>
         {save.isError && !allIssuesMatched(save.error, knownFields) ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
@@ -971,37 +971,32 @@ function PaymentStep({
           name="whatsapp"
           error={fieldError('whatsapp')}
         />
-        {cliqEnabled ? (
-          <>
-            <TextField
-              label={t('cliqAlias')}
-              hint={t('cliqAliasHint')}
-              value={f.cliqAlias}
-              onChange={set('cliqAlias')}
-              type="text"
-              dir="ltr"
-              name="cliqAlias"
-              error={fieldError('cliqAlias')}
-            />
-            <TextField
-              label={t('cliqHolder')}
-              value={f.cliqAliasHolderName}
-              onChange={set('cliqAliasHolderName')}
-              name="cliqAliasHolderName"
-              error={fieldError('cliqAliasHolderName')}
-            />
-            <TextField
-              label={t('depositPercentage')}
-              hint={t('depositHint')}
-              value={f.depositPercentage}
-              onChange={set('depositPercentage')}
-              inputMode="numeric"
-              dir="ltr"
-              name="depositPercentage"
-              error={fieldError('depositPercentage')}
-            />
-          </>
-        ) : null}
+        <div className="hidden sm:block" />
+        <div className="sm:col-span-2">
+          <p className="font-semibold">{tp('title')}</p>
+          <p className="text-sm text-ink-muted">{t('paymentIntro')}</p>
+        </div>
+        <div className="sm:col-span-2">
+          <TextField
+            label={tp('iban')}
+            hint={tp('ibanHint')}
+            name="iban"
+            dir="ltr"
+            autoComplete="off"
+            value={iban}
+            onChange={set('iban')}
+            error={fieldError('iban')}
+          />
+        </div>
+        <TextField
+          label={tp('holder')}
+          name="holderName"
+          value={holderName}
+          onChange={set('holderName')}
+          required={Boolean(iban.trim())}
+          error={fieldError('holderName')}
+        />
+        <TextField label={tp('bank')} name="bankName" value={bankName} onChange={set('bankName')} />
         <StepActions onBack={onBack} busy={save.isPending} nextLabel={t('next')} />
       </form>
     </Card>
@@ -1010,13 +1005,11 @@ function PaymentStep({
 
 function ReviewStep({
   venue,
-  cliqEnabled,
   catalog,
   onBack,
   onSubmitted,
 }: {
   venue: AdminVenue;
-  cliqEnabled: boolean;
   catalog: Catalog;
   onBack: () => void;
   onSubmitted: () => void;
@@ -1066,23 +1059,6 @@ function ReviewStep({
             {venue.whatsapp || '—'}
           </dd>
         </div>
-        {cliqEnabled ? (
-          <>
-            <div>
-              <dt className="text-sm text-ink-muted">{t('cliqAlias')}</dt>
-              <dd className="font-medium">
-                {venue.cliqAlias || '—'}
-                {venue.cliqAliasHolderName ? ` (${venue.cliqAliasHolderName})` : ''}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-ink-muted">{t('depositPercentage')}</dt>
-              <dd className="font-medium">
-                {venue.depositPercentage !== null ? `${venue.depositPercentage}%` : '—'}
-              </dd>
-            </div>
-          </>
-        ) : null}
       </dl>
 
       {venue.location ? (
@@ -1138,6 +1114,19 @@ function ReviewStep({
       >
         {t('editHoursPrices')}
       </a>
+      <p className="text-sm text-ink-muted">
+        {t.rich('termsNote', {
+          link: (chunks) => (
+            <a
+              href="/venue-terms"
+              target="_blank"
+              className="font-medium text-primary hover:underline"
+            >
+              {chunks}
+            </a>
+          ),
+        })}
+      </p>
       {submit.isError ? <Alert tone="error">{errorMessage(submit.error)}</Alert> : null}
       <div className="flex gap-2">
         <Button onClick={() => submit.mutate()} busy={submit.isPending}>

@@ -61,13 +61,8 @@ export const catalogSchema = z.object({
   offeredSportIds: z.array(uuidSchema),
   /** Live figures for the home page ("X ملعب · Y رياضة"). */
   counts: z.object({ venues: z.number().int(), sports: z.number().int() }),
-  /** Platform switches the apps need to know about (server configuration). */
-  features: z.object({
-    /** CliQ-to-venue payments and the commission balance (ADR-0018); off while a card gateway is planned. */
-    cliqPayments: z.boolean(),
-  }),
   /** Platform support contact (owner settings); null when not set. */
-  support: z.object({ whatsapp: z.string().nullable() }),
+  support: z.object({ whatsapp: z.string().nullable(), email: z.string().nullable() }),
 });
 export type Catalog = z.infer<typeof catalogSchema>;
 

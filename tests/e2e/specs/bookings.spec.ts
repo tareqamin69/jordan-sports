@@ -5,6 +5,7 @@ import {
   createAdmin,
   latestOtp,
   makeBookable,
+  payWithTestCard,
   randomPhone,
   signInAdmin,
   signInExisting,
@@ -19,7 +20,7 @@ function tomorrowInAmman(): string {
 }
 
 test.describe('bookings', () => {
-  test('a player books a time, confirms, sees it in My bookings and cancels it', async ({
+  test('a player books a time, pays by card, sees it in My bookings and cancels it for a refund', async ({
     page,
   }) => {
     const venue = await arrangeVenue(await adminApi(createAdmin()));
@@ -47,7 +48,7 @@ test.describe('bookings', () => {
       new RegExp(`/en/venues/${venue.slug}\\?date=\\d{4}-\\d{2}-\\d{2}&time=\\d{2}(%3A|:)\\d{2}$`),
     );
 
-    await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
+    await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(2).click();
     await page
       .getByRole('group', { name: 'Booking length' })
       .getByRole('button', { name: '60 min' })
@@ -66,11 +67,17 @@ test.describe('bookings', () => {
     await expect(page.getByTestId('booking-price')).toHaveText('JOD 20.000');
     await expectNoAccessibilityViolations(page);
 
-    const confirm = page.getByRole('button', { name: 'Confirm booking' });
-    await expect(confirm).toBeDisabled();
-    await page.getByLabel('I will pay at the venue and I accept the cancellation terms.').check();
-    await confirm.click();
-    await expect(page.getByText('Your booking is confirmed.')).toBeVisible();
+    await expect(page.getByTestId('pay-button')).toBeDisabled();
+    await expect(page.getByTestId('pay-button')).toContainText('Pay JOD 20.000');
+
+    // A declined test card: back on the booking, still held, with the reason.
+    await payWithTestCard(page, '4000 0000 0000 0002');
+    await expect(page.getByTestId('payment-failed')).toContainText('declined');
+    await expect(page.getByTestId('booking-status')).toHaveText('Awaiting payment');
+
+    await payWithTestCard(page);
+    await expect(page.getByText(/Your booking is confirmed and paid/)).toBeVisible();
+    await expect(page.getByTestId('booking-paid')).toContainText('•••• 4242');
     // The banner belongs to this moment (?confirmed=1), not to later visits.
     await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]{36}\?confirmed=1$/);
     await expect(page.getByTestId('booking-status')).toHaveText('Confirmed');
@@ -79,7 +86,7 @@ test.describe('bookings', () => {
 
     // The time is no longer offered to others.
     await page.goto(`${WEB}/en/venues/${venue.slug}`);
-    await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(1).click();
+    await page.getByRole('group', { name: 'Date' }).getByRole('button').nth(2).click();
     await page
       .getByRole('group', { name: 'Booking length' })
       .getByRole('button', { name: '60 min' })
@@ -93,12 +100,27 @@ test.describe('bookings', () => {
     await expect(page.getByTestId('my-booking')).toContainText('Confirmed');
     await page.getByTestId('my-booking').click();
     await expect(page.getByTestId('booking-status')).toHaveText('Confirmed');
-    await expect(page.getByText('Your booking is confirmed.')).toHaveCount(0);
+    await expect(page.getByText(/Your booking is confirmed and paid/)).toHaveCount(0);
     await page.getByRole('button', { name: 'Cancel booking' }).click();
+    // Two days ahead is inside the free-cancellation window: the full amount comes back.
+    await expect(page.getByTestId('refund-preview')).toContainText('JOD 20.000');
     await page.getByRole('button', { name: 'Yes, cancel' }).click();
     await expect(page.getByTestId('booking-status')).toHaveText('Cancelled');
+    await expect(page.getByTestId('booking-refund')).toContainText('JOD 20.000');
     // "Cancelled" appears once (the status badge), not again as a notice.
     await expect(page.getByText('Cancelled', { exact: true })).toHaveCount(1);
+
+    // Admin: the declined attempt, the payment and the refund are in the gateway transactions.
+    await signInAdmin(page, createAdmin());
+    await page.goto(`${ADMIN}/en/payments`);
+    await page.locator('input[name="transactionSearch"]').fill(reference!);
+    await expect(page.getByTestId('transaction')).toHaveCount(3);
+    await expect(page.getByTestId('transactions')).toContainText('Refund');
+    await expect(page.getByTestId('transactions')).toContainText('card_declined');
+    await expectNoAccessibilityViolations(page);
+    await page.goto(`${ADMIN}/en/payouts`);
+    await expect(page.getByRole('heading', { name: 'Venue payouts', level: 1 })).toBeVisible();
+    await expectNoAccessibilityViolations(page);
   });
 
   test('a player releases a held time in Arabic', async ({ page }) => {
@@ -119,8 +141,8 @@ test.describe('bookings', () => {
     await page.getByTestId('book-selected').click();
     await expect(page.getByRole('heading', { name: 'كمّل حجزك' })).toBeVisible();
     await expect(page.getByTestId('booking-price')).toHaveText('20.000 د.أ');
-    await page.getByRole('button', { name: 'إلغاء حجز الوقت' }).click();
-    await expect(page.getByText('انلغى حجز الوقت.')).toBeVisible();
+    await page.getByRole('button', { name: 'تراجع' }).click();
+    await expect(page.getByText('تراجعت، والوقت صار فاضي لغيرك.')).toBeVisible();
     await expect(page.getByTestId('booking-status')).toHaveText('ملغي');
   });
 

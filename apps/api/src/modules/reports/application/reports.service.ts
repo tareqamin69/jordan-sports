@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Overview, ReportPeriod } from '@jordan-sports/contracts';
 import { sql } from 'kysely';
+import { commissionAmount } from '../../payments/index.js';
 import { DateTime } from 'luxon';
 import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
@@ -70,15 +71,22 @@ export class ReportsService {
         .select((eb) => eb.fn.countAll<string>().as('n'))
         .where('status', '!=', 'resolved')
         .executeTakeFirstOrThrow();
+      // Commission on card payments taken in the period, net of refunds (ADR-0020).
       const commission = withRevenue
         ? await tx
-            .selectFrom('finance.balance_entries')
+            .selectFrom('payment.transactions as c')
+            .innerJoin('booking.bookings as b', 'b.id', 'c.booking_id')
+            .leftJoin('payment.transactions as rf', (join) =>
+              join.onRef('rf.booking_id', '=', 'c.booking_id').on('rf.kind', '=', 'refund'),
+            )
             .select(
-              sql<string>`coalesce(-sum(amount) FILTER (WHERE kind IN ('commission', 'commission_reversal')), 0)`.as(
+              sql<string>`coalesce(sum(round((c.amount - coalesce(rf.amount, 0)) * coalesce(b.commission_bps, 0) / 10000.0)), 0)`.as(
                 'n',
               ),
             )
-            .where(inPeriod('created_at'))
+            .where('c.kind', '=', 'charge')
+            .where('c.status', '=', 'succeeded')
+            .where(inPeriod('c.completed_at'))
             .executeTakeFirstOrThrow()
         : null;
 
@@ -178,7 +186,15 @@ export class ReportsService {
         .selectFrom('booking.bookings as b')
         .innerJoin('venue.venues as v', 'v.id', 'b.venue_id')
         .innerJoin('tenancy.organizations as o', 'o.id', 'b.organization_id')
-        .leftJoin('payment.payments as p', 'p.booking_id', 'b.id')
+        .leftJoin('payment.transactions as c', (join) =>
+          join
+            .onRef('c.booking_id', '=', 'b.id')
+            .on('c.kind', '=', 'charge')
+            .on('c.status', '=', 'succeeded'),
+        )
+        .leftJoin('payment.transactions as rf', (join) =>
+          join.onRef('rf.booking_id', '=', 'b.id').on('rf.kind', '=', 'refund'),
+        )
         .select([
           'b.reference',
           'b.business_date',
@@ -193,8 +209,9 @@ export class ReportsService {
           'b.created_at',
           'v.name as venue_name',
           'o.name as org_name',
-          'p.amount as deposit',
-          'p.status as deposit_status',
+          'c.amount as paid',
+          'rf.amount as refunded',
+          'b.commission_bps',
         ])
         .where('b.business_date', '>=', from)
         .where('b.business_date', '<=', to)
@@ -213,8 +230,9 @@ export class ReportsService {
           'payment_method',
           'total_fils',
           'currency',
-          'deposit_fils',
-          'deposit_status',
+          'paid_fils',
+          'refunded_fils',
+          'commission_fils',
           'venue',
           'organization',
           'late_cancellation',
@@ -230,8 +248,11 @@ export class ReportsService {
           r.payment_method,
           r.total === null ? null : Number(r.total),
           r.currency,
-          r.deposit === null ? null : Number(r.deposit),
-          r.deposit_status,
+          r.paid === null ? null : Number(r.paid),
+          r.refunded === null ? null : Number(r.refunded),
+          r.paid === null
+            ? null
+            : commissionAmount(Number(r.paid) - Number(r.refunded ?? 0), r.commission_bps ?? 0),
           (r.venue_name as Localized).ar ?? (r.venue_name as Localized).en,
           (r.org_name as Localized).ar ?? (r.org_name as Localized).en,
           r.late_cancellation,

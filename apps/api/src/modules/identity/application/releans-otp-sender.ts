@@ -12,7 +12,7 @@ export class ReleansOtpSender implements OtpSender {
   async send(phone: string, code: string, locale: 'ar' | 'en'): Promise<void> {
     const text =
       locale === 'ar'
-        ? `رمز الدخول إلى ${BRAND_NAME.ar}: ${code}\nلا تشاركه مع أي شخص.`
+        ? `كود الدخول لـ${BRAND_NAME.ar}: ${code}\nلا تعطيه لحدا.`
         : `Your ${BRAND_NAME.en} sign-in code: ${code}\nDo not share it with anyone.`;
     try {
       await this.client.send(phone, text);

@@ -24,41 +24,38 @@ export const paymentStatusSchema = z.enum([
 ]);
 
 /**
- * A CliQ payment straight to the venue (plan §4). AWAITING_PROOF: the player still has to send the
- * transfer reference; SUBMITTED: waiting for the venue to confirm it arrived.
+ * The card payment of a marketplace booking (ADR-0020). unpaid: not started, or the last attempt
+ * failed (it can be retried while the hold lasts); pending: the player is on the payment page.
  */
 export const bookingPaymentSchema = z.object({
-  id: uuidSchema,
-  provider: z.literal('CLIQ_MANUAL'),
-  status: z.enum(['AWAITING_PROOF', 'SUBMITTED', 'CONFIRMED', 'EXPIRED', 'CANCELLED']),
-  /** Due now by CliQ (the deposit). */
+  status: z.enum(['unpaid', 'pending', 'paid']),
   amount: moneySchema,
-  /** Paid at the venue (booking price minus the deposit). */
-  remainder: moneySchema,
-  payee: z.object({ alias: z.string(), holderName: z.string().nullable() }),
-  reference: z.string().nullable(),
-  submittedAt: z.string().nullable(),
-  /** The venue's last "not received" answer, until new proof is sent. */
-  rejectReason: z.string().nullable(),
-  /** The venue owes the deposit back (cancelled in the free window, or by the venue). */
-  refund: z
-    .object({
-      status: z.enum(['DUE', 'REFUNDED']),
-      dueSince: z.string(),
-      refundedAt: z.string().nullable(),
-    })
-    .nullable(),
+  card: z.object({ brand: z.enum(['visa', 'mastercard']), last4: z.string() }).nullable(),
+  paidAt: z.string().nullable(),
+  /** Why the last attempt failed (e.g. card_declined), until a new one starts. */
+  lastFailure: z.string().nullable(),
 });
 export type BookingPayment = z.infer<typeof bookingPaymentSchema>;
+
+/** Money going back to the card after a cancellation. */
+export const bookingRefundSchema = z.object({
+  amount: moneySchema,
+  status: z.enum(['pending', 'succeeded', 'failed']),
+  requestedAt: z.string(),
+  completedAt: z.string().nullable(),
+});
+export type BookingRefund = z.infer<typeof bookingRefundSchema>;
 
 export const bookingSchema = z.object({
   id: uuidSchema,
   reference: z.string(),
   status: bookingStatusSchema,
   paymentStatus: paymentStatusSchema,
-  paymentMethod: z.enum(['PAY_AT_VENUE', 'CLIQ']).nullable(),
-  /** Set for bookings at venues that take CliQ; null for pay-at-venue and manual bookings. */
+  /** CARD for online bookings; older values are history (the retired pay-at-venue and CliQ). */
+  paymentMethod: z.enum(['PAY_AT_VENUE', 'CLIQ', 'CARD']).nullable(),
+  /** Card payment of an online booking; null for bookings the venue added itself. */
   payment: bookingPaymentSchema.nullable(),
+  refund: bookingRefundSchema.nullable(),
   channel: z.enum(['MARKETPLACE', 'VENUE_MANUAL']),
   venue: z.object({
     id: uuidSchema,
@@ -86,8 +83,10 @@ export const bookingSchema = z.object({
   holdExpiresAt: z.string().nullable(),
   cancellation: z.object({
     cutoffHours: z.number().int(),
-    /** Cancelling after this instant is recorded as a late cancellation. */
+    /** Cancelling up to this instant refunds everything. */
     freeUntil: z.string(),
+    /** What a later cancellation refunds (the venue's rule when the slot was held). */
+    lateRefundPercent: z.union([z.literal(0), z.literal(50), z.literal(100)]),
     late: z.boolean().nullable(),
   }),
   cancelledAt: z.string().nullable(),
@@ -124,36 +123,35 @@ export const getBooking = endpoint({
   response: bookingSchema,
 });
 
-export const confirmBooking = endpoint({
+export const startCheckout = endpoint({
   method: 'POST',
-  path: '/v1/bookings/:bookingId/confirm',
-  summary: 'Confirm a held booking (payment at the venue until online payment exists)',
+  path: '/v1/bookings/:bookingId/checkout',
+  summary:
+    "Start paying a held booking by card: returns the gateway's payment page (card details are typed there, never sent to Jorena)",
   auth: 'user',
-  idempotent: true,
   params: bookingParams,
   body: z.object({
-    paymentMethod: z.literal('PAY_AT_VENUE'),
+    locale: z.enum(['ar', 'en']),
     acceptCancellationPolicy: z.literal(true),
   }),
-  response: bookingSchema,
+  response: z.object({ redirectUrl: z.string() }),
 });
 
-export const submitPaymentProof = endpoint({
+export const verifyCheckout = endpoint({
   method: 'POST',
-  path: '/v1/bookings/:bookingId/payment-proof',
+  path: '/v1/bookings/:bookingId/checkout/verify',
   summary:
-    'Send the CliQ transfer reference for a held booking; the venue then has the hold time again to confirm it',
+    'After the payment page: asks the gateway for the outcome and confirms the booking once paid',
   auth: 'user',
-  idempotent: true,
   params: bookingParams,
-  body: z.object({ reference: z.string().trim().min(4).max(40) }),
   response: bookingSchema,
 });
 
 export const cancelBooking = endpoint({
   method: 'POST',
   path: '/v1/bookings/:bookingId/cancel',
-  summary: 'Release a hold or cancel a confirmed booking before it starts',
+  summary:
+    'Release a hold, or cancel a confirmed booking before it starts (refunded to the card: in full inside the free window, else by the venue rule)',
   auth: 'user',
   params: bookingParams,
   body: z.object({ reason: z.string().trim().max(300).optional() }),
@@ -231,57 +229,12 @@ export const createManualBooking = endpoint({
 export const cancelVenueBooking = endpoint({
   method: 'POST',
   path: '/v1/manage/bookings/:bookingId/cancel',
-  summary: 'Cancel a booking as the venue (reason required; the player is notified)',
+  summary:
+    'Cancel a booking as the venue (reason required; the player is notified and refunded in full)',
   auth: 'user',
   orgPermission: 'booking.cancel',
   params: bookingParams,
   body: z.object({ reason: z.string().trim().min(3).max(300) }),
-  response: venueBookingSchema,
-});
-
-const paymentParams = z.object({ paymentId: uuidSchema });
-
-export const listVenuePayments = endpoint({
-  method: 'GET',
-  path: '/v1/manage/venues/:venueId/payments',
-  summary: 'CliQ payments waiting for the venue: transfers to confirm and deposits to refund',
-  auth: 'user',
-  orgPermission: 'payments.manage',
-  params: venueParams,
-  response: z.object({
-    toConfirm: z.array(venueBookingSchema),
-    refundsDue: z.array(venueBookingSchema),
-  }),
-});
-
-export const confirmVenuePayment = endpoint({
-  method: 'POST',
-  path: '/v1/manage/payments/:paymentId/confirm',
-  summary: '"وصلت الدفعة": the transfer arrived; confirms the booking and deducts the commission',
-  auth: 'user',
-  orgPermission: 'payments.manage',
-  params: paymentParams,
-  response: venueBookingSchema,
-});
-
-export const rejectVenuePayment = endpoint({
-  method: 'POST',
-  path: '/v1/manage/payments/:paymentId/reject',
-  summary: 'The transfer did not arrive: back to awaiting payment, with the reason for the player',
-  auth: 'user',
-  orgPermission: 'payments.manage',
-  params: paymentParams,
-  body: z.object({ reason: z.string().trim().min(3).max(300) }),
-  response: venueBookingSchema,
-});
-
-export const markPaymentRefunded = endpoint({
-  method: 'POST',
-  path: '/v1/manage/payments/:paymentId/refunded',
-  summary: 'The venue sent the deposit back to the player by CliQ',
-  auth: 'user',
-  orgPermission: 'payments.manage',
-  params: paymentParams,
   response: venueBookingSchema,
 });
 
@@ -335,7 +288,8 @@ export const adminGetBooking = endpoint({
 export const adminCancelBooking = endpoint({
   method: 'POST',
   path: '/v1/admin/bookings/:bookingId/cancel',
-  summary: 'Cancel a held or confirmed booking on behalf of the platform (reason required)',
+  summary:
+    'Cancel a held or confirmed booking on behalf of the platform (reason required; paid bookings are refunded in full)',
   auth: 'admin',
   permission: 'bookings.cancel',
   params: z.object({ bookingId: uuidSchema }),

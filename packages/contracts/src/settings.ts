@@ -3,11 +3,6 @@ import { uuidSchema } from './common.js';
 import { endpoint } from './endpoint.js';
 import { phoneInputSchema } from './identity.js';
 
-/** Feature flags the owner can switch; null means "use the server default". */
-export const featureFlagsSchema = z.object({
-  cliqPayments: z.boolean().nullable(),
-});
-
 /** An IPv4/IPv6 address or CIDR range, e.g. 203.0.113.7 or 203.0.113.0/24. */
 const ipOrCidrSchema = z
   .string()
@@ -19,11 +14,10 @@ export const platformSettingsSchema = z.object({
   /** Default commission on online bookings in basis points (800 = 8%). */
   commissionBps: z.number().int().min(0).max(5000),
   supportWhatsapp: z.string().nullable(),
+  /** Shown on the contact page; null hides it (until the domain's mailbox exists). */
+  supportEmail: z.string().nullable(),
   /** Owner edits of a published venue's name or photos send it back to review. */
   venueEditsNeedReview: z.boolean(),
-  features: featureFlagsSchema,
-  /** Server defaults and the values in effect after applying the owner's overrides. */
-  effectiveFeatures: z.object({ cliqPayments: z.boolean() }),
   adminIpAllowlist: z.array(z.string()),
   /** The address this request came from (to avoid locking yourself out). */
   yourIp: z.string().nullable(),
@@ -35,7 +29,7 @@ export type PlatformSettings = z.infer<typeof platformSettingsSchema>;
 export const adminGetSettings = endpoint({
   method: 'GET',
   path: '/v1/admin/settings',
-  summary: 'Platform settings (commission, support WhatsApp, feature flags, IP allowlist)',
+  summary: 'Platform settings (commission, support contacts, IP allowlist)',
   auth: 'admin',
   permission: 'settings.read',
   response: platformSettingsSchema,
@@ -52,8 +46,8 @@ export const adminUpdateSettings = endpoint({
       commissionBps: z.number().int().min(0).max(5000).optional(),
       /** Any Jordanian mobile format; stored in international form. */
       supportWhatsapp: phoneInputSchema.nullable().optional(),
+      supportEmail: z.string().trim().toLowerCase().email().max(120).nullable().optional(),
       venueEditsNeedReview: z.boolean().optional(),
-      features: featureFlagsSchema.partial().optional(),
       adminIpAllowlist: z.array(ipOrCidrSchema).max(50).optional(),
     })
     .strict(),

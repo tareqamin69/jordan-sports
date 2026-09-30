@@ -20,16 +20,14 @@ import { isApiError, useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { can, useManagedVenues, useVenueSchedule } from '@/lib/manage';
 import { tabPermission, tabs, type Tab } from '@/lib/manage-tabs';
-import { useCatalog } from '@/lib/catalog';
 import { useActiveInView } from '@/lib/use-active-in-view';
 import { useErrorMessage } from '@/lib/use-error-message';
-import { BalanceBanner, BalancePanel, useVenueBalance } from './balance-panel';
+import { EarningsPanel } from './earnings-panel';
 import { BookingsPanel } from './bookings-panel';
 import { CalendarView } from './calendar-view';
 import { ClosuresEditor } from './closures-editor';
 import { HoursEditor } from './hours-editor';
 import { OnboardingChecklist } from './onboarding-checklist';
-import { PaymentsPanel } from './payments-panel';
 import { PricingEditor } from './pricing-editor';
 import { RulesEditor } from './rules-editor';
 import { MyComplaints, ReportForm } from '../support-center';
@@ -115,20 +113,14 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
   const router = useRouter();
   const errorMessage = useErrorMessage();
   const schedule = useVenueSchedule(venueId);
-  // CliQ payments and the commission balance are built but switched off (ADR-0018).
-  const cliqEnabled = useCatalog().data?.features.cliqPayments ?? false;
-  const seesMoney = cliqEnabled && can(schedule.data, 'reports.read');
-  const balance = useVenueBalance(venueId, seesMoney);
   const tabList = useActiveInView<HTMLUListElement>(`${tab}:${Boolean(schedule.data)}`);
 
   useEffect(() => {
     if (isApiError(schedule.error, 'UNAUTHENTICATED')) router.replace('/sign-in');
   }, [schedule.error, router]);
 
-  // Each role sees only its tabs; CliQ tabs also need the feature switched on.
-  const visible = (key: Tab) =>
-    can(schedule.data, tabPermission[key]) &&
-    (key === 'payments' || key === 'balance' ? cliqEnabled : true);
+  // Each role sees only its tabs.
+  const visible = (key: Tab) => can(schedule.data, tabPermission[key]);
 
   if (schedule.isPending) {
     return (
@@ -157,9 +149,6 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
         actions={<VenueSwitcher venueId={venueId} tab={tab} />}
       />
       <VenueStatusBanner venueId={venueId} status={s.venue.status} />
-      {balance.data?.cliqEnabled ? (
-        <BalanceBanner venueId={venueId} balance={balance.data} />
-      ) : null}
       <OnboardingChecklist schedule={s} />
       <nav aria-label={t('tabs.label')} className="-mx-5 -mt-2 mb-8 sm:mx-0">
         <ul
@@ -200,10 +189,7 @@ export function VenueDashboard({ venueId, tab }: { venueId: string; tab: Tab }) 
           </div>
         ) : null}
         {shown === 'bookings' ? <BookingsPanel schedule={s} /> : null}
-        {shown === 'payments' ? <PaymentsPanel schedule={s} /> : null}
-        {shown === 'balance' ? (
-          <BalancePanel venueId={venueId} timezone={s.venue.timezone} />
-        ) : null}
+        {shown === 'earnings' ? <EarningsPanel schedule={s} /> : null}
         {shown === 'hours' ? <HoursEditor schedule={s} /> : null}
         {shown === 'rules' ? <RulesEditor schedule={s} /> : null}
         {shown === 'pricing' ? <PricingEditor schedule={s} /> : null}

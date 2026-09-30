@@ -31,12 +31,15 @@ import { businessToday, isoWeekdayDate, minutesToTime, weekdaysInDisplayOrder } 
 import { useErrorMessage } from '@/lib/use-error-message';
 import { DateSelect } from './date-select';
 
-const PRIORITIES = [
-  { key: 'low', value: -10 },
-  { key: 'normal', value: 0 },
-  { key: 'high', value: 10 },
-  { key: 'highest', value: 20 },
-] as const;
+/**
+ * Overlapping bands are resolved automatically (owners never pick a priority): a narrower band —
+ * fewer days, shorter hours — wins over a broader one, e.g. "Thursday 6–11pm" over "every day".
+ * Dated bands (special periods) always win first (see the API's quote precedence).
+ */
+function autoPriority(days: number, from: number, to: number): number {
+  const coverage = (days * Math.max(0, to - from)) / (7 * 1440);
+  return Math.max(0, Math.min(100, Math.round(100 * (1 - coverage))));
+}
 
 export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage');
@@ -221,7 +224,6 @@ function BandForm({
   const [special, setSpecial] = useState(Boolean(initial?.dateFrom));
   const [dateFrom, setDateFrom] = useState(initial?.dateFrom ?? today);
   const [dateTo, setDateTo] = useState(initial?.dateTo ?? today);
-  const [priority, setPriority] = useState(initial?.priority ?? 0);
   const [label, setLabel] = useState(initial?.label ?? '');
   const [prices, setPrices] = useState<Record<number, string>>(() =>
     Object.fromEntries(
@@ -249,7 +251,7 @@ function BandForm({
         endMinute: to,
         dateFrom: special ? dateFrom : null,
         dateTo: special ? dateTo : null,
-        priority,
+        priority: autoPriority(days.length, from, to),
         label: label.trim() || null,
         amounts,
       };
@@ -389,18 +391,6 @@ function BandForm({
             name={`price-${d}`}
           />
         ))}
-        <SelectField
-          label={t('pricing.priority')}
-          value={priority}
-          onChange={(e) => setPriority(Number(e.target.value))}
-          name="bandPriority"
-        >
-          {PRIORITIES.map((p) => (
-            <option key={p.key} value={p.value}>
-              {t(`pricing.priorities.${p.key}`)}
-            </option>
-          ))}
-        </SelectField>
         <TextField
           label={t('pricing.label')}
           value={label}

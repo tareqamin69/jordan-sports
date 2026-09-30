@@ -148,12 +148,7 @@ const venueProfileFields = z.object({
   contactPhone: phoneInputSchema.nullable().optional(),
   amenityIds: z.array(uuidSchema).max(50),
   businessDayStartMinute: z.number().int().min(0).max(720).optional(),
-  // Self-registration (plan §3, wizard step 8-9). Configuration only — no CliQ payment
-  // processing exists yet (P4).
   whatsapp: phoneInputSchema.nullable().optional(),
-  cliqAlias: z.string().trim().min(1).max(60).nullable().optional(),
-  cliqAliasHolderName: z.string().trim().min(1).max(120).nullable().optional(),
-  depositPercentage: z.number().int().min(0).max(100).nullable().optional(),
 });
 /** Creation: a venue starts with no amenities unless it lists some. */
 export const venueProfileInputSchema = venueProfileFields.extend({
@@ -195,9 +190,6 @@ export const adminVenueSchema = z.object({
   location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   contactPhone: z.string().nullable(),
   whatsapp: z.string().nullable(),
-  cliqAlias: z.string().nullable(),
-  cliqAliasHolderName: z.string().nullable(),
-  depositPercentage: z.number().int().nullable(),
   /** Commission in effect (basis points): the venue's own rate or the platform default. */
   commissionBps: z.number().int(),
   businessDayStartMinute: z.number().int(),

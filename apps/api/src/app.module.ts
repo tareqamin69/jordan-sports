@@ -6,6 +6,7 @@ import { BookingsModule } from './modules/bookings/index.js';
 import { CatalogModule } from './modules/catalog/index.js';
 import { DirectoryModule } from './modules/directory/index.js';
 import { FinanceModule } from './modules/finance/index.js';
+import { PaymentsModule } from './modules/payments/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { RequestAuditInterceptor } from './modules/audit/http/request-audit.interceptor.js';
 import { ComplaintsModule } from './modules/complaints/index.js';
@@ -56,6 +57,7 @@ export class AppModule {
         DirectoryModule,
         SchedulingModule,
         PricingModule,
+        PaymentsModule,
         FinanceModule,
         VenueAdminModule,
         VenueRegistrationModule,

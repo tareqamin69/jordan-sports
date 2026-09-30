@@ -14,9 +14,11 @@ export const MAX_ACTIVE_HOLDS = 2;
 
 export interface CancellationPolicy {
   readonly cutoffHours: number;
+  /** Refunded on a late cancellation (0/50/100); absent on bookings made before card payments. */
+  readonly lateRefundPercent?: number;
 }
 
-/** Cancelling after this instant is a late cancellation (recorded, no penalty in the MVP). */
+/** Cancelling after this instant is a late cancellation (refunded by the venue's percentage). */
 export function freeCancellationUntil(start: Date, policy: CancellationPolicy): Date {
   return new Date(start.getTime() - policy.cutoffHours * 3_600_000);
 }

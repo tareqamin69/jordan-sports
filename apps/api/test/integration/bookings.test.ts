@@ -10,6 +10,7 @@ import {
   createTestApp,
   createVenue,
   signInAdmin,
+  payBooking,
   signInPlayer,
   type TestApp,
 } from '../support/app.js';
@@ -132,14 +133,8 @@ describe('bookings', () => {
       body: { resourceId: court, start, durationMinutes },
     });
 
-  const confirm = (cookie: string, id: string, key = randomUUID()) =>
-    call(t.app, {
-      method: 'POST',
-      url: `/v1/bookings/${id}/confirm`,
-      cookie,
-      headers: { 'idempotency-key': key },
-      body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
-    });
+  // Held → paid by card on the mock gateway → confirmed (ADR-0020).
+  const confirm = (cookie: string, id: string) => payBooking(t.app, cookie, id);
 
   it('lists the venue with its from-price and free times when searching by date and time', async () => {
     const r = await call(t.app, {

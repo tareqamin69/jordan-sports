@@ -5,6 +5,7 @@ import { totpCode } from '../../src/platform/security/totp.js';
 import {
   call,
   createOrganization,
+  createVenue,
   createTestApp,
   randomIp,
   sessionCookie,
@@ -209,6 +210,7 @@ describe('admin account security', () => {
     // re-authenticated more than 10 minutes ago.
     const admin = await signInAdmin(t.app, 'admin');
     const org = await createOrganization(t.app, admin.cookie);
+    const { venueId } = await createVenue(t.app, admin.cookie, org.id);
     const staff = await signInAdmin(t.app, 'finance');
     await t.ownerPool.query('UPDATE identity.users SET platform_role = NULL WHERE id = $1', [
       owner.rows[0]!.id,
@@ -222,10 +224,10 @@ describe('admin account security', () => {
     );
     const adjust = () =>
       call(t.app, {
-        method: 'POST',
-        url: `/v1/admin/organizations/${org.id}/balance/adjustments`,
+        method: 'PUT',
+        url: `/v1/admin/venues/${venueId}/commission`,
         cookie: staff.cookie,
-        body: { amount: 1000, reason: 'Opening credit' },
+        body: { commissionBps: 700, reason: 'Launch offer' },
       });
     expect((await adjust()).json()).toMatchObject({ code: 'REAUTH_REQUIRED' });
 
@@ -241,7 +243,7 @@ describe('admin account security', () => {
     const ok = await reauth(staff.password, totpCode(staff.totpSecret));
     expect(ok.statusCode, ok.body).toBe(200);
     const done = await adjust();
-    expect(done.statusCode, done.body).toBe(201);
+    expect(done.statusCode, done.body).toBe(200);
 
     // The audit trail has the request, with secrets redacted.
     const rows = await t.ownerPool.query<{ details: { endpoint: string; body: unknown } }>(
@@ -250,7 +252,7 @@ describe('admin account security', () => {
     );
     const endpoints = rows.rows.map((r) => r.details.endpoint);
     expect(endpoints).toContain('POST /v1/admin/auth/reauth');
-    expect(endpoints).toContain('POST /v1/admin/organizations/:organizationId/balance/adjustments');
+    expect(endpoints).toContain('PUT /v1/admin/venues/:venueId/commission');
     const reauthRow = rows.rows.find((r) => r.details.endpoint === 'POST /v1/admin/auth/reauth');
     expect(reauthRow!.details.body).toEqual({ password: '[redacted]', totpCode: '[redacted]' });
   });

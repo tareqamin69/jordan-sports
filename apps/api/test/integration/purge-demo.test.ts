@@ -10,6 +10,7 @@ import {
   signInAdmin,
   signInPlayer,
   type TestApp,
+  payBooking,
 } from '../support/app.js';
 
 interface Arranged {
@@ -86,13 +87,7 @@ describe('removing demo data before launch', () => {
       body: { resourceId: court, start: slot.start, durationMinutes: 60 },
     });
     const bookingId = (held.json() as { id: string }).id;
-    const confirmed = await call(t.app, {
-      method: 'POST',
-      url: `/v1/bookings/${bookingId}/confirm`,
-      cookie: player.cookie,
-      headers: { 'idempotency-key': randomUUID() },
-      body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
-    });
+    const confirmed = await payBooking(t.app, player.cookie, bookingId);
     expect(confirmed.statusCode, confirmed.body).toBe(200);
     // A photo row (the file itself lives in storage and is removed by the CLI).
     await t.ownerPool.query(

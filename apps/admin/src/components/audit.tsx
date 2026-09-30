@@ -7,11 +7,12 @@ import {
   Card,
   ListSkeleton,
   PageHeader,
+  SelectField,
   TextField,
   buttonClass,
 } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
 import { dmyTime } from '@/lib/format';
@@ -41,6 +42,17 @@ export function AuditPage() {
     return ta.has(key as never) ? ta(key as never) : action;
   };
   const targetLabel = (type: string) => (tt.has(type as never) ? tt(type as never) : type);
+  // Filters are picked from the labelled lists (plain words, not "venue.updated").
+  const messages = useMessages() as unknown as {
+    admin: { audit: { actions: Record<string, string>; targets: Record<string, string> } };
+  };
+  const actionOptions = Object.keys(messages.admin.audit.actions)
+    .map((key) => ({ value: key.replace('_', '.'), label: ta(key as never) }))
+    .sort((a, b) => a.label.localeCompare(b.label, locale));
+  const targetOptions = [...new Set(Object.keys(messages.admin.audit.targets))]
+    .filter((key) => key !== 'setting')
+    .map((key) => ({ value: key, label: tt(key as never) }))
+    .sort((a, b) => a.label.localeCompare(b.label, locale));
   const [draft, setDraft] = useState<Filters>(EMPTY);
   const [filters, setFilters] = useState<Filters>(EMPTY);
   const query = Object.fromEntries(
@@ -65,21 +77,32 @@ export function AuditPage() {
             setFilters(draft);
           }}
         >
-          <TextField
+          <SelectField
             label={t('filters.action')}
-            hint={t('filters.actionHint')}
-            dir="ltr"
             value={draft.action}
             onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
             name="auditAction"
-          />
-          <TextField
+          >
+            <option value="">{t('filters.anyAction')}</option>
+            {actionOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField
             label={t('filters.targetType')}
-            dir="ltr"
             value={draft.targetType}
             onChange={(e) => setDraft((d) => ({ ...d, targetType: e.target.value }))}
             name="auditTargetType"
-          />
+          >
+            <option value="">{t('filters.anyTarget')}</option>
+            {targetOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </SelectField>
           <TextField
             label={t('filters.targetId')}
             dir="ltr"

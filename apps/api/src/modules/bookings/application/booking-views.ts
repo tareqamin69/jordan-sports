@@ -15,6 +15,21 @@ import {
 
 type Localized = { ar?: string; en?: string };
 
+interface ChargeJson {
+  status: 'pending' | 'succeeded' | 'failed';
+  amount: number;
+  brand: 'visa' | 'mastercard' | null;
+  last4: string | null;
+  completedAt: string | null;
+  failure: string | null;
+}
+interface RefundJson {
+  status: 'pending' | 'succeeded' | 'failed';
+  amount: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
 /**
  * Base query joining everything a booking view needs. Venue customers are private to their
  * organization (row-level security): without a tenant context the join yields nulls.
@@ -26,7 +41,6 @@ export function bookingQuery(db: DbOrTx) {
     .innerJoin('resource.resources as r', 'r.id', 'b.resource_id')
     .leftJoin('identity.users as u', 'u.id', 'b.customer_user_id')
     .leftJoin('booking.venue_customers as vc', 'vc.id', 'b.venue_customer_id')
-    .leftJoin('payment.payments as p', 'p.booking_id', 'b.id')
     .select([
       'b.id',
       'b.reference',
@@ -66,17 +80,20 @@ export function bookingQuery(db: DbOrTx) {
       'u.locale as user_locale',
       'vc.name as vc_name',
       'vc.phone as vc_phone',
-      'p.id as pay_id',
-      'p.status as pay_status',
-      'p.amount as pay_amount',
-      'p.payee_alias as pay_alias',
-      'p.payee_holder as pay_holder',
-      'p.reference as pay_reference',
-      'p.submitted_at as pay_submitted_at',
-      'p.reject_reason as pay_reject_reason',
-      'p.refund_status as pay_refund_status',
-      'p.refund_due_at as pay_refund_due_at',
-      'p.refunded_at as pay_refunded_at',
+      // The latest card charge attempt and the refund, if any (ADR-0020).
+      sql<ChargeJson | null>`(
+        SELECT jsonb_build_object(
+          'status', t.status, 'amount', t.amount, 'brand', t.card_brand, 'last4', t.card_last4,
+          'completedAt', t.completed_at, 'failure', t.failure_code)
+        FROM payment.transactions t
+        WHERE t.booking_id = b.id AND t.kind = 'charge'
+        ORDER BY t.created_at DESC LIMIT 1)`.as('charge'),
+      sql<RefundJson | null>`(
+        SELECT jsonb_build_object(
+          'status', t.status, 'amount', t.amount, 'createdAt', t.created_at,
+          'completedAt', t.completed_at)
+        FROM payment.transactions t
+        WHERE t.booking_id = b.id AND t.kind = 'refund')`.as('refund'),
       (eb) =>
         eb
           .selectFrom('resource.resource_formats as rf')
@@ -97,27 +114,27 @@ export type LoadedBooking = Awaited<ReturnType<BookingQuery['execute']>>[number]
 const iso = (d: Date | string | null) => (d ? new Date(d).toISOString() : null);
 
 function toPayment(r: LoadedBooking): Booking['payment'] {
-  if (!r.pay_id || r.pay_amount === null || r.pay_alias === null) return null;
-  const amount = Number(r.pay_amount);
-  const total = r.total === null ? amount : Number(r.total);
+  // Only online (card) bookings have a payment; venue-added and older bookings do not.
+  if (r.payment_method !== 'CARD' || r.total === null) return null;
+  const c = r.charge;
+  const paid = c?.status === 'succeeded';
   return {
-    id: r.pay_id,
-    provider: 'CLIQ_MANUAL',
-    status: r.pay_status as NonNullable<Booking['payment']>['status'],
-    amount: { amount, currency: r.currency },
-    remainder: { amount: total - amount, currency: r.currency },
-    payee: { alias: r.pay_alias, holderName: r.pay_holder },
-    reference: r.pay_reference,
-    submittedAt: iso(r.pay_submitted_at),
-    rejectReason: r.pay_reject_reason,
-    refund:
-      r.pay_refund_status && r.pay_refund_due_at
-        ? {
-            status: r.pay_refund_status as 'DUE' | 'REFUNDED',
-            dueSince: iso(r.pay_refund_due_at)!,
-            refundedAt: iso(r.pay_refunded_at),
-          }
-        : null,
+    status: paid ? 'paid' : c?.status === 'pending' ? 'pending' : 'unpaid',
+    amount: { amount: Number(r.total), currency: r.currency },
+    card: paid && c.brand && c.last4 ? { brand: c.brand, last4: c.last4 } : null,
+    paidAt: paid ? iso(c.completedAt) : null,
+    lastFailure: c?.status === 'failed' ? c.failure : null,
+  };
+}
+
+function toRefund(r: LoadedBooking): Booking['refund'] {
+  const f = r.refund;
+  if (!f) return null;
+  return {
+    amount: { amount: Number(f.amount), currency: r.currency },
+    status: f.status,
+    requestedAt: iso(f.createdAt)!,
+    completedAt: iso(f.completedAt),
   };
 }
 
@@ -133,6 +150,7 @@ export function toBooking(r: LoadedBooking): Booking {
     paymentMethod: r.payment_method as Booking['paymentMethod'],
     channel: r.channel as Booking['channel'],
     payment: toPayment(r),
+    refund: toRefund(r),
     venue: {
       id: r.venue_id,
       slug: r.venue_slug,
@@ -157,6 +175,7 @@ export function toBooking(r: LoadedBooking): Booking {
     cancellation: {
       cutoffHours: policy.cutoffHours,
       freeUntil: freeCancellationUntil(start, policy).toISOString(),
+      lateRefundPercent: (policy.lateRefundPercent ?? 0) as 0 | 50 | 100,
       late: r.late_cancellation,
     },
     cancelledAt: r.cancelled_at ? new Date(r.cancelled_at).toISOString() : null,
@@ -185,5 +204,5 @@ export function toVenueBooking(r: LoadedBooking): VenueBooking {
 /** Front-desk staff never see prices (docs/rbac-plan.md §3): removed on the server. */
 export function forVenueRole(booking: VenueBooking, role: MembershipRole): VenueBooking {
   if (hasOrgPermission(role, 'pricing.read')) return booking;
-  return { ...booking, price: null, payment: null };
+  return { ...booking, price: null, payment: null, refund: null };
 }

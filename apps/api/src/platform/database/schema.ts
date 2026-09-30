@@ -60,6 +60,7 @@ export interface BookingBookings {
   channel: string;
   checked_in_at: Timestamp | null;
   checked_in_by: string | null;
+  commission_bps: number | null;
   confirmed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
   created_by: string | null;
@@ -211,6 +212,37 @@ export interface FinanceBalances {
   updated_at: Generated<Timestamp>;
 }
 
+export interface FinancePayoutAccounts {
+  bank_name: string | null;
+  holder_name: string;
+  iban: string;
+  organization_id: string;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+}
+
+export interface FinancePayoutItems {
+  booking_id: string;
+  commission: Int8;
+  gross: Int8;
+  net: Int8;
+  payout_id: string;
+}
+
+export interface FinancePayouts {
+  commission: Int8;
+  currency: string;
+  gross: Int8;
+  iban: string;
+  id: string;
+  net: Int8;
+  organization_id: string;
+  paid_at: Generated<Timestamp>;
+  paid_by: string;
+  reference: string;
+  venue_id: string;
+}
+
 export interface IdentityAccountSetupTokens {
   created_at: Generated<Timestamp>;
   created_by: string | null;
@@ -344,6 +376,27 @@ export interface PaymentPayments {
   venue_id: string;
 }
 
+export interface PaymentTransactions {
+  amount: Int8;
+  attempts: Generated<number>;
+  booking_id: string;
+  card_brand: string | null;
+  card_last4: string | null;
+  completed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  currency: string;
+  failure_code: string | null;
+  gateway: string;
+  gateway_ref: string | null;
+  id: string;
+  kind: string;
+  organization_id: string;
+  reason: string | null;
+  status: string;
+  updated_at: Generated<Timestamp>;
+  venue_id: string;
+}
+
 export interface PlatformIdempotencyKeys {
   created_at: Generated<Timestamp>;
   key: string;
@@ -370,6 +423,7 @@ export interface PlatformSettings {
   commission_bps: Generated<number>;
   features: Generated<Json>;
   id: Generated<boolean>;
+  support_email: string | null;
   support_whatsapp: string | null;
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
@@ -594,6 +648,7 @@ export interface VenueVenues {
   deposit_percentage: number | null;
   description: Generated<Json>;
   id: string;
+  late_refund_percent: Generated<number>;
   location: string | null;
   name: Json;
   organization_id: string;
@@ -623,6 +678,9 @@ export interface DB {
   'catalog.sports': CatalogSports;
   'finance.balance_entries': FinanceBalanceEntries;
   'finance.balances': FinanceBalances;
+  'finance.payout_accounts': FinancePayoutAccounts;
+  'finance.payout_items': FinancePayoutItems;
+  'finance.payouts': FinancePayouts;
   'identity.account_setup_tokens': IdentityAccountSetupTokens;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;
@@ -633,6 +691,7 @@ export interface DB {
   'notification.deliveries': NotificationDeliveries;
   'payment.disputes': PaymentDisputes;
   'payment.payments': PaymentPayments;
+  'payment.transactions': PaymentTransactions;
   'platform.idempotency_keys': PlatformIdempotencyKeys;
   'platform.outbox_events': PlatformOutboxEvents;
   'platform.settings': PlatformSettings;

@@ -1,11 +1,11 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query, Req } from '@nestjs/common';
 import {
   cancelBooking,
-  confirmBooking,
   createBookingHold,
   getBooking,
   listMyBookings,
-  submitPaymentProof,
+  startCheckout,
+  verifyCheckout,
   type Booking,
 } from '@jordan-sports/contracts';
 import type { FastifyRequest } from 'fastify';
@@ -17,18 +17,20 @@ import {
   unwrapStored,
 } from '../../../platform/idempotency/idempotency.service.js';
 import { BookingsService } from '../application/bookings.service.js';
+import { CheckoutService } from '../application/checkout.service.js';
 
 function idempotencyKey(request: FastifyRequest): string | undefined {
   const key = request.headers['idempotency-key'];
   return typeof key === 'string' ? key : undefined;
 }
 
-/** Player bookings. Hold and confirm are idempotent: clients retry with the same key. */
+/** Player bookings. The hold is idempotent: clients retry with the same key. */
 @Controller()
 @UserAuth()
 export class BookingsController {
   constructor(
     private readonly bookings: BookingsService,
+    private readonly checkout: CheckoutService,
     private readonly idempotency: IdempotencyService,
   ) {}
 
@@ -66,45 +68,26 @@ export class BookingsController {
     return this.bookings.get(actor.userId, parseInput(getBooking.params, params).bookingId);
   }
 
-  @Post(confirmBooking.path)
+  @Post(startCheckout.path)
   @HttpCode(200)
-  async confirm(
+  async startCheckout(
     @Param() params: unknown,
     @Body() body: unknown,
     @CurrentActor() actor: Actor,
     @Req() request: FastifyRequest,
-  ): Promise<Booking> {
-    const { bookingId } = parseInput(confirmBooking.params, params);
-    const input = parseInput(confirmBooking.body, body);
-    const response = await this.idempotency.run<Booking>(
-      actor.userId,
-      idempotencyKey(request),
-      IdempotencyService.hash(['confirm', bookingId, input]),
-      async () => ({ status: 200, body: await this.bookings.confirm(actor.userId, bookingId) }),
-    );
-    return unwrapStored(response);
+  ): Promise<{ redirectUrl: string }> {
+    const { bookingId } = parseInput(startCheckout.params, params);
+    const { locale } = parseInput(startCheckout.body, body);
+    const origin = typeof request.headers.origin === 'string' ? request.headers.origin : undefined;
+    return { redirectUrl: await this.checkout.start(actor.userId, bookingId, locale, origin) };
   }
 
-  @Post(submitPaymentProof.path)
+  @Post(verifyCheckout.path)
   @HttpCode(200)
-  async submitProof(
-    @Param() params: unknown,
-    @Body() body: unknown,
-    @CurrentActor() actor: Actor,
-    @Req() request: FastifyRequest,
-  ): Promise<Booking> {
-    const { bookingId } = parseInput(submitPaymentProof.params, params);
-    const { reference } = parseInput(submitPaymentProof.body, body);
-    const response = await this.idempotency.run<Booking>(
-      actor.userId,
-      idempotencyKey(request),
-      IdempotencyService.hash(['payment-proof', bookingId, reference]),
-      async () => ({
-        status: 200,
-        body: await this.bookings.submitProof(actor.userId, bookingId, reference),
-      }),
-    );
-    return unwrapStored(response);
+  async verifyCheckout(@Param() params: unknown, @CurrentActor() actor: Actor): Promise<Booking> {
+    const { bookingId } = parseInput(verifyCheckout.params, params);
+    await this.checkout.verify(actor.userId, bookingId);
+    return this.bookings.get(actor.userId, bookingId);
   }
 
   @Post(cancelBooking.path)

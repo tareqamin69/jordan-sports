@@ -4,7 +4,8 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
-import { LifecycleService } from '../modules/bookings/index.js';
+import { CheckoutService, LifecycleService } from '../modules/bookings/index.js';
+import { PaymentsService } from '../modules/payments/index.js';
 import { OutboxDispatcher } from '../modules/notifications/index.js';
 
 interface Job {
@@ -26,6 +27,8 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
 
   constructor(
     private readonly lifecycle: LifecycleService,
+    private readonly checkout: CheckoutService,
+    private readonly payments: PaymentsService,
     private readonly outbox: OutboxDispatcher,
   ) {}
 
@@ -33,6 +36,8 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
     { name: 'outbox', everyMs: 2_000, run: () => this.outbox.dispatchOnce() },
     { name: 'expire-holds', everyMs: 15_000, run: () => this.lifecycle.expireHolds() },
     { name: 'complete-bookings', everyMs: 60_000, run: () => this.lifecycle.completeFinished() },
+    { name: 'reconcile-checkouts', everyMs: 60_000, run: () => this.checkout.reconcile() },
+    { name: 'refunds', everyMs: 30_000, run: () => this.payments.processRefunds() },
   ];
 
   onApplicationBootstrap(): void {

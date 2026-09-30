@@ -265,3 +265,19 @@ export async function makeBookable(owner: APIRequestContext, venueId: string, re
     if (!res.ok()) throw new Error(`Venue setup failed: ${await res.text()}`);
   }
 }
+
+/**
+ * On a held booking page: accept the terms, pay on the staging test-card page, and come back.
+ * Test cards (mock gateway): 4242… succeeds, 4000 0000 0000 0002 is declined.
+ */
+export async function payWithTestCard(page: Page, card = '4242 4242 4242 4242') {
+  const checkout = page.getByTestId('card-checkout');
+  await checkout.getByRole('checkbox').check();
+  await page.getByTestId('pay-button').click();
+  await page.waitForURL(/\/pay\/test\/[0-9a-f-]{36}/);
+  await page.locator('input[name="cardNumber"]').fill(card);
+  await page.locator('input[name="expiry"]').fill('12/30');
+  await page.locator('input[name="cvc"]').fill('123');
+  await page.locator('form button[type="submit"]').click();
+  await page.waitForURL(/\/bookings\/[0-9a-f-]{36}/);
+}

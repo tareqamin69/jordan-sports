@@ -16,8 +16,8 @@ const CACHE_MS = 5_000;
 interface Loaded {
   commissionBps: number;
   supportWhatsapp: string | null;
+  supportEmail: string | null;
   venueEditsNeedReview: boolean;
-  features: { cliqPayments: boolean | null };
   adminIpAllowlist: string[];
   updatedAt: Date;
   updatedBy: string | null;
@@ -27,8 +27,8 @@ interface Loaded {
 export type SettingsPatch = {
   commissionBps?: number | undefined;
   supportWhatsapp?: string | null | undefined;
+  supportEmail?: string | null | undefined;
   venueEditsNeedReview?: boolean | undefined;
-  features?: { cliqPayments?: boolean | null | undefined } | undefined;
   adminIpAllowlist?: string[] | undefined;
 };
 
@@ -63,8 +63,8 @@ function matches(list: BlockList, ip: string | null): boolean {
 }
 
 /**
- * Platform settings managed by the owner (docs/rbac-plan.md §7). Feature flags fall back to the
- * server environment when not set. Every change is audited with before/after values.
+ * Platform settings managed by the owner (docs/rbac-plan.md §7). Every change is audited with
+ * before/after values.
  */
 @Injectable()
 export class SettingsService {
@@ -79,12 +79,11 @@ export class SettingsService {
   private async load(): Promise<Loaded> {
     if (this.cached && Date.now() - this.cached.at < CACHE_MS) return this.cached.value;
     const row = await this.db.selectFrom('platform.settings').selectAll().executeTakeFirstOrThrow();
-    const features = (row.features ?? {}) as { cliqPayments?: boolean | null };
     const value: Loaded = {
       commissionBps: row.commission_bps,
       supportWhatsapp: row.support_whatsapp,
+      supportEmail: row.support_email,
       venueEditsNeedReview: row.venue_edits_need_review,
-      features: { cliqPayments: features.cliqPayments ?? null },
       adminIpAllowlist: row.admin_ip_allowlist,
       updatedAt: row.updated_at,
       updatedBy: row.updated_by,
@@ -98,16 +97,16 @@ export class SettingsService {
     this.cached = undefined;
   }
 
-  async cliqPayments(): Promise<boolean> {
-    return (await this.load()).features.cliqPayments ?? this.config.features.cliqPayments;
-  }
-
   async venueEditsNeedReview(): Promise<boolean> {
     return (await this.load()).venueEditsNeedReview;
   }
 
   async supportWhatsapp(): Promise<string | null> {
     return (await this.load()).supportWhatsapp;
+  }
+
+  async supportEmail(): Promise<string | null> {
+    return (await this.load()).supportEmail;
   }
 
   /** True when the admin panel may be used from this address (no allowlist: everywhere). */
@@ -121,11 +120,8 @@ export class SettingsService {
     return {
       commissionBps: s.commissionBps,
       supportWhatsapp: s.supportWhatsapp,
+      supportEmail: s.supportEmail,
       venueEditsNeedReview: s.venueEditsNeedReview,
-      features: s.features,
-      effectiveFeatures: {
-        cliqPayments: s.features.cliqPayments ?? this.config.features.cliqPayments,
-      },
       adminIpAllowlist: s.adminIpAllowlist,
       yourIp,
       updatedAt: s.updatedAt.toISOString(),
@@ -162,15 +158,6 @@ export class SettingsService {
         .selectAll()
         .forUpdate()
         .executeTakeFirstOrThrow();
-      const beforeFeatures = (before.features ?? {}) as Record<string, unknown>;
-      const features =
-        patch.features === undefined
-          ? beforeFeatures
-          : Object.fromEntries(
-              Object.entries({ ...beforeFeatures, ...patch.features }).filter(
-                ([, v]) => v !== undefined,
-              ),
-            );
       const after = await tx
         .updateTable('platform.settings')
         .set({
@@ -179,7 +166,7 @@ export class SettingsService {
           ...(patch.venueEditsNeedReview !== undefined
             ? { venue_edits_need_review: patch.venueEditsNeedReview }
             : {}),
-          ...(patch.features !== undefined ? { features: JSON.stringify(features) } : {}),
+          ...(patch.supportEmail !== undefined ? { support_email: patch.supportEmail } : {}),
           ...(patch.adminIpAllowlist !== undefined
             ? { admin_ip_allowlist: patch.adminIpAllowlist }
             : {}),
@@ -191,8 +178,8 @@ export class SettingsService {
       const snapshot = (r: typeof before) => ({
         commissionBps: r.commission_bps,
         supportWhatsapp: r.support_whatsapp,
+        supportEmail: r.support_email,
         venueEditsNeedReview: r.venue_edits_need_review,
-        features: r.features,
         adminIpAllowlist: r.admin_ip_allowlist,
       });
       await this.audit.record(

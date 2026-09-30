@@ -399,11 +399,12 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
   const setSchedule = useSetSchedule(schedule.venue.id);
   const errorMessage = useErrorMessage();
   const [hours, setHours] = useState(String(schedule.venue.cancellationCutoffHours));
+  const [lateRefund, setLateRefund] = useState<0 | 50 | 100>(schedule.venue.lateRefundPercent);
   const save = useMutation({
     mutationFn: () =>
       api(updateScheduleSettings, {
         params: { venueId: schedule.venue.id },
-        body: { cancellationCutoffHours: Number(hours) },
+        body: { cancellationCutoffHours: Number(hours), lateRefundPercent: lateRefund },
       }),
     meta: { toast: t('saved') },
     onSuccess: setSchedule,
@@ -433,6 +434,20 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
               required
               name="cutoffHours"
             />
+          </div>
+          <div className="w-52">
+            <SelectField
+              label={t('lateRefund')}
+              value={String(lateRefund)}
+              onChange={(e) => setLateRefund(Number(e.target.value) as 0 | 50 | 100)}
+              name="lateRefundPercent"
+            >
+              {(['0', '50', '100'] as const).map((p) => (
+                <option key={p} value={p}>
+                  {t(`lateRefunds.${p}`)}
+                </option>
+              ))}
+            </SelectField>
           </div>
           <Button type="submit" busy={save.isPending}>
             {tc('save')}

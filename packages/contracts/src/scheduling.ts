@@ -104,6 +104,8 @@ export const venueScheduleSchema = z.object({
     businessDayStartMinute: z.number().int(),
     closedOnPublicHolidays: z.boolean(),
     cancellationCutoffHours: z.number().int(),
+    /** Refunded when a player cancels after the free window: 0, 50 or 100%. */
+    lateRefundPercent: z.union([z.literal(0), z.literal(50), z.literal(100)]),
   }),
   role: membershipRoleSchema,
   permissions: z.array(z.string()),
@@ -166,6 +168,7 @@ export const updateScheduleSettings = endpoint({
   body: z.object({
     closedOnPublicHolidays: z.boolean().optional(),
     cancellationCutoffHours: z.number().int().min(0).max(168).optional(),
+    lateRefundPercent: z.union([z.literal(0), z.literal(50), z.literal(100)]).optional(),
   }),
   response: venueScheduleSchema,
 });

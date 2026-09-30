@@ -50,7 +50,7 @@
 | `bookings.cancel` | cancel any booking with a reason | ✓ | ✓ | ✓ | – |
 | `complaints.read` | the complaints queue and threads | ✓ | ✓ | ✓ | ✓ |
 | `complaints.handle` | assign, reply, change status, close | ✓ | ✓ | ✓ | – |
-| `finance.manage` | manual balance adjustments (CliQ balance, currently switched off) | 🔒 | – | – | – |
+| `finance.manage` | record venue payouts, retry failed refunds (ADR-0020) | 🔒 | – | – | – |
 | `settings.read` | see platform settings | ✓ | ✓ | – | – |
 | `settings.manage` | commission %, platform WhatsApp, feature flags, admin IP allowlist | 🔒 | – | – | – |
 | `catalog.manage` | sports, governorates/areas, public holidays | ✓ | – | – | – |
@@ -80,7 +80,7 @@ member lacking the permission gets **403**.
 | `booking.create` | add a phone / walk-in booking | ✓ | ✓ | ✓ |
 | `booking.cancel` | cancel a booking with a reason | ✓ | ✓ | – |
 | `booking.checkin` | check-in / no-show | ✓ | ✓ | ✓ |
-| `payments.manage` | confirm CliQ transfers, refunds (CliQ currently switched off) | ✓ | ✓ | – |
+| `payouts.manage` | the organization's payout bank account (IBAN) (ADR-0020) | ✓ | – | – |
 | `reports.read` | financial reports, commission balance | ✓ | – | – |
 | `staff.manage` | invite by phone, change role, remove staff | ✓ | – | – |
 | `complaints.create` | report a problem to the platform, see its status and replies | ✓ | ✓ | – |

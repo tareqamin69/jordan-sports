@@ -30,13 +30,10 @@ export interface VenueRow {
   contactPhone: string | null;
   businessDayStartMinute: number;
   cancellationCutoffHours: number;
-  cliqAlias: string | null;
-  cliqAliasHolder: string | null;
-  depositPercentage: number | null;
+  /** Refunded on a cancellation after the free window: 0, 50 or 100%. */
+  lateRefundPercent: 0 | 50 | 100;
   /** Platform commission, basis points of the booking price. */
   commissionBps: number;
-  /** CliQ hold: time for the player's transfer, and again for the venue's confirmation. */
-  paymentHoldMinutes: number;
   whatsappPhone: string | null;
   statusReason: string | null;
   createdAt: Date;
@@ -82,14 +79,11 @@ export class VenuesService {
         'contact_phone',
         'business_day_start_minute',
         'cancellation_cutoff_hours',
-        'cliq_alias',
-        'cliq_alias_holder',
-        'deposit_percentage',
+        'late_refund_percent',
         // A venue's own rate, else the platform default (Settings).
         sql<number>`coalesce(commission_bps, (SELECT s.commission_bps FROM platform.settings s))`.as(
           'commission_bps',
         ),
-        'payment_hold_minutes',
         'whatsapp_phone',
         'status_reason',
         'created_at',
@@ -119,11 +113,8 @@ export class VenuesService {
       contactPhone: r.contact_phone,
       businessDayStartMinute: r.business_day_start_minute,
       cancellationCutoffHours: r.cancellation_cutoff_hours,
-      cliqAlias: r.cliq_alias,
-      cliqAliasHolder: r.cliq_alias_holder,
-      depositPercentage: r.deposit_percentage,
+      lateRefundPercent: r.late_refund_percent as 0 | 50 | 100,
       commissionBps: r.commission_bps,
-      paymentHoldMinutes: r.payment_hold_minutes,
       whatsappPhone: r.whatsapp_phone,
       statusReason: r.status_reason,
       createdAt: r.created_at,
@@ -196,10 +187,6 @@ export class VenuesService {
     if (phone !== undefined) values.contact_phone = phone;
     const whatsapp = phoneOrNull(input.whatsapp);
     if (whatsapp !== undefined) values.whatsapp_phone = whatsapp;
-    if (input.cliqAlias !== undefined) values.cliq_alias = input.cliqAlias;
-    if (input.cliqAliasHolderName !== undefined)
-      values.cliq_alias_holder = input.cliqAliasHolderName;
-    if (input.depositPercentage !== undefined) values.deposit_percentage = input.depositPercentage;
     if (input.location !== undefined) {
       values.location =
         input.location === null

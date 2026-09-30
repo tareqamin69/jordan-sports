@@ -65,9 +65,9 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   RATE_LIMIT_SCALE: z.coerce.number().int().min(1).max(1000).default(1),
-  // CliQ-to-venue payments and the prepaid commission balance (ADR-0018). Off: every venue is
-  // pay-at-venue and none is hidden because of its balance (card gateway planned instead).
-  FEATURE_CLIQ_PAYMENTS: booleanString.default(false),
+  // Card payment gateway (ADR-0020). Only the mock (test cards) exists until the real acquirer is
+  // chosen; production refuses it outside staging — Jorena launches only with a live gateway.
+  PAYMENT_GATEWAY: z.enum(['mock']).default('mock'),
   // Staff security emails (sign-in alerts). Without SMTP_URL they are only logged.
   SMTP_URL: z
     .string()
@@ -106,7 +106,9 @@ export interface AppConfig {
   /** Test deployment with demo data (see STAGING). */
   readonly staging: boolean;
   readonly trustProxy: readonly string[];
-  readonly features: { readonly cliqPayments: boolean };
+  readonly paymentGateway: 'mock';
+  /** The player-facing site, for the payment page's return address (first of WEB_ORIGINS). */
+  readonly webBaseUrl: string;
   /** Outgoing email; `smtpUrl` null means emails are logged instead (development). */
   readonly email: { readonly smtpUrl: string | null; readonly from: string };
 }
@@ -156,7 +158,8 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     rateLimitScale: e.RATE_LIMIT_SCALE,
     staging: e.STAGING,
     trustProxy: e.TRUST_PROXY,
-    features: { cliqPayments: e.FEATURE_CLIQ_PAYMENTS },
+    paymentGateway: e.PAYMENT_GATEWAY,
+    webBaseUrl: e.WEB_ORIGINS[0] ?? 'http://localhost:3000',
     email: { smtpUrl: e.SMTP_URL ?? null, from: e.EMAIL_FROM },
   };
   assertProductionSafe(config);
@@ -175,6 +178,9 @@ export function assertProductionSafe(config: AppConfig): void {
   if (!config.cookieSecure) problems.push('COOKIE_SECURE must be true in production');
   if (!config.databaseAppRole) problems.push('DATABASE_APP_ROLE must be set in production');
   if (config.rateLimitScale !== 1) problems.push('RATE_LIMIT_SCALE is for tests only');
+  if (config.paymentGateway === 'mock' && !config.staging) {
+    problems.push('PAYMENT_GATEWAY=mock takes test cards only; configure the real card gateway');
+  }
   for (const origin of [...config.webOrigins, ...config.adminOrigins]) {
     if (!origin.startsWith('https://')) problems.push(`origin ${origin} must use https`);
   }

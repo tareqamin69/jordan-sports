@@ -9,6 +9,7 @@ import {
   signInAdmin,
   signInPlayer,
   type TestApp,
+  payBooking,
 } from '../support/app.js';
 
 /** Users (profile, reliability, suspend/ban) and bookings (search, detail, cancel). */
@@ -45,13 +46,7 @@ describe('admin users and bookings', () => {
       body: { resourceId: venue.resourceId, start: slot.start, durationMinutes: 60 },
     });
     ({ id: bookingId, reference } = held.json() as { id: string; reference: string });
-    const confirmed = await call(t.app, {
-      method: 'POST',
-      url: `/v1/bookings/${bookingId}/confirm`,
-      cookie: player.cookie,
-      headers: { 'idempotency-key': randomUUID() },
-      body: { paymentMethod: 'PAY_AT_VENUE', acceptCancellationPolicy: true },
-    });
+    const confirmed = await payBooking(t.app, player.cookie, bookingId);
     expect(confirmed.statusCode, confirmed.body).toBe(200);
   });
   afterAll(async () => {

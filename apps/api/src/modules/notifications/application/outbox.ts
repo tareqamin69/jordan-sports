@@ -7,8 +7,7 @@ export type OutboxEvent =
       type: 'booking.cancelled';
       payload: { bookingId: string; by: 'customer' | 'venue' | 'admin' | 'system' };
     }
-  // CliQ payments and the commission balance (plan §4–§5). No SMS/WhatsApp channel is connected
-  // yet: these are recorded so the same events drive notifications once a provider is chosen.
+  // Retired with CliQ (ADR-0020): no longer written; kept so old outbox rows still parse.
   | { type: 'payment.submitted'; payload: { bookingId: string; paymentId: string } }
   | { type: 'payment.rejected'; payload: { bookingId: string; paymentId: string } }
   | { type: 'dispute.opened'; payload: { disputeId: string; bookingId: string } }

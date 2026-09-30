@@ -1,11 +1,11 @@
-import { Global, Module } from '@nestjs/common';
-import { FinanceService } from './application/finance.service.js';
-import { AdminBalanceController, ManageBalanceController } from './http/finance.controller.js';
+import { Module } from '@nestjs/common';
+import { PayoutsService } from './application/payouts.service.js';
+import { AdminPayoutsController, ManagePayoutsController } from './http/payouts.controller.js';
 
-@Global()
+/** Venue earnings and weekly payouts of card bookings (ADR-0020). */
 @Module({
-  providers: [FinanceService],
-  controllers: [ManageBalanceController, AdminBalanceController],
-  exports: [FinanceService],
+  providers: [PayoutsService],
+  controllers: [ManagePayoutsController, AdminPayoutsController],
+  exports: [PayoutsService],
 })
 export class FinanceModule {}

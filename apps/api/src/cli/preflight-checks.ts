@@ -31,6 +31,11 @@ export async function preflightChecks(config: AppConfig, pool: pg.Pool): Promise
     config.otpChannel === 'releans' && config.releans !== null,
     config.otpChannel,
   );
+  add(
+    'a real card payment gateway is configured (not the test-card mock)',
+    config.paymentGateway !== 'mock',
+    config.paymentGateway,
+  );
   add('cookies are secure', config.cookieSecure);
   add('rate limits are not scaled', config.rateLimitScale === 1);
   const origins = [...config.webOrigins, ...config.adminOrigins];

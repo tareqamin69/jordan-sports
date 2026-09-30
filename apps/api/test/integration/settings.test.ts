@@ -34,8 +34,7 @@ describe('platform settings', () => {
     });
   const catalog = async () =>
     (await call(t.app, { method: 'GET', url: '/v1/catalog' })).json() as {
-      features: { cliqPayments: boolean };
-      support: { whatsapp: string | null };
+      support: { whatsapp: string | null; email: string | null };
     };
 
   it('only the owner changes settings; admins can read them', async () => {
@@ -49,25 +48,22 @@ describe('platform settings', () => {
     ).toBe(403);
   });
 
-  it('switches feature flags and the support WhatsApp, visible to the apps at once', async () => {
-    expect((await catalog()).features.cliqPayments).toBe(false);
-    const r = await patch({ features: { cliqPayments: true }, supportWhatsapp: '0791234567' });
+  it('sets the support WhatsApp and e-mail, visible to the apps at once', async () => {
+    expect((await catalog()).support).toEqual({ whatsapp: null, email: null });
+    const r = await patch({ supportWhatsapp: '0791234567', supportEmail: 'Help@Jorena.app' });
     expect(r.statusCode, r.body).toBe(200);
     expect(r.json()).toMatchObject({
-      features: { cliqPayments: true },
-      effectiveFeatures: { cliqPayments: true },
       supportWhatsapp: '+962791234567',
+      supportEmail: 'help@jorena.app',
     });
-    expect(await catalog()).toMatchObject({
-      features: { cliqPayments: true },
-      support: { whatsapp: '+962791234567' },
+    expect((await catalog()).support).toEqual({
+      whatsapp: '+962791234567',
+      email: 'help@jorena.app',
     });
-    // null: back to the server default.
-    await patch({ features: { cliqPayments: null }, supportWhatsapp: null });
-    expect(await catalog()).toMatchObject({
-      features: { cliqPayments: false },
-      support: { whatsapp: null },
-    });
+    // null hides them again (e.g. before the domain's mailbox exists).
+    await patch({ supportWhatsapp: null, supportEmail: null });
+    expect((await catalog()).support).toEqual({ whatsapp: null, email: null });
+    expect((await patch({ supportEmail: 'not-an-email' })).statusCode).toBe(400);
     expect((await patch({ supportWhatsapp: '12345678' })).json()).toMatchObject({
       code: 'INVALID_PHONE',
     });

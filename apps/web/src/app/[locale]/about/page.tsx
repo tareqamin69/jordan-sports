@@ -33,7 +33,6 @@ export default async function AboutPage({ params }: Props) {
       <div className="flex flex-col gap-4 text-ink">
         <p>{t('body1', { appName })}</p>
         <p>{t('body2')}</p>
-        <p>{t('body3')}</p>
       </div>
     </main>
   );

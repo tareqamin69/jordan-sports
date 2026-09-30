@@ -32,7 +32,7 @@ test.describe('venues: admin onboarding → public page', () => {
     await expect(page.getByTestId('venue-status')).toHaveText('Draft');
 
     // Resource: padel court with attributes.
-    await page.getByRole('button', { name: 'Add resource' }).click();
+    await page.getByRole('button', { name: 'Add a court' }).click();
     await page.locator('select[name="resourceType"]').selectOption({ label: 'Padel court' });
     await page.locator('input[name="resourceNameAr"]').fill('ملعب 1');
     await page.locator('input[name="resourceNameEn"]').fill('Court 1');
