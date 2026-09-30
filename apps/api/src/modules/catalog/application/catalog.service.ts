@@ -18,17 +18,14 @@ import {
   type Feature,
 } from '../domain/attributes.js';
 import { SettingsService } from '../../settings/index.js';
-import { StockPhotosService } from '../../stock-photos/index.js';
 
 type Localized = { ar?: string; en?: string };
 const fieldsSchema = z.object({ fields: z.array(attributeFieldSchema) });
 const CACHE_MS = 60_000;
 const KEY_PATTERN = /^[a-z0-9_]+$/;
 
-/** The cached part of the catalog (settings and stock photos have their own caches). */
-type Reference = Omit<Catalog, 'features' | 'support' | 'sports'> & {
-  sports: Array<Omit<Catalog['sports'][number], 'photos'>>;
-};
+/** The cached part of the catalog (settings have their own cache). */
+type Reference = Omit<Catalog, 'features' | 'support'>;
 
 @Injectable()
 export class CatalogService {
@@ -37,24 +34,17 @@ export class CatalogService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
     private readonly settings: SettingsService,
-    private readonly stock: StockPhotosService,
   ) {}
 
   /** Reference data changes rarely; cached briefly in memory. */
   async get(): Promise<Catalog> {
     // Owner settings have their own short cache, so a switched flag shows up within seconds.
-    const [base, cliqPayments, whatsapp, photos] = await Promise.all([
+    const [base, cliqPayments, whatsapp] = await Promise.all([
       this.reference(),
       this.settings.cliqPayments(),
       this.settings.supportWhatsapp(),
-      this.stock.bySport(),
     ]);
-    return {
-      ...base,
-      sports: base.sports.map((s) => ({ ...s, photos: photos.get(s.key) ?? [] })),
-      features: { cliqPayments },
-      support: { whatsapp },
-    };
+    return { ...base, features: { cliqPayments }, support: { whatsapp } };
   }
 
   private async reference(): Promise<Reference> {

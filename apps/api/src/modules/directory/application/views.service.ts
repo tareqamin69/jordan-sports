@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import type {
   AdminVenue,
   Catalog,
-  Media,
   PublicResource,
   PublicVenue,
   VenueSummary,
@@ -11,7 +10,6 @@ import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { CatalogService } from '../../catalog/index.js';
 import { overlapping, ResourcesService, type ResourceRow } from '../../resources/index.js';
-import { StockPhotosService } from '../../stock-photos/index.js';
 import { MediaService, VenuesService, type VenueRow } from '../../venues/index.js';
 
 type Localized = { ar?: string; en?: string };
@@ -31,7 +29,6 @@ export class VenueViewsService {
     private readonly venues: VenuesService,
     private readonly resources: ResourcesService,
     private readonly media: MediaService,
-    private readonly stock: StockPhotosService,
   ) {}
 
   private formatRefs(catalog: Catalog, formatIds: readonly string[]) {
@@ -106,7 +103,7 @@ export class VenueViewsService {
       name: venue.name,
       ...this.place(catalog, venue),
       sports: this.sportsOf(catalog, resources),
-      cover: media[0] ?? (await this.stockCover(venue.id, catalog, resources)),
+      cover: media[0] ?? null,
       location: venue.location,
       priceFrom: await this.priceFrom(venue),
     };
@@ -147,20 +144,10 @@ export class VenueViewsService {
       sports: this.sportsOf(catalog, resources),
       amenities: catalog.amenities.filter((a) => amenityIds.includes(a.id)),
       media,
-      cover: media[0] ?? (await this.stockCover(venue.id, catalog, resources)),
+      cover: media[0] ?? null,
       priceFrom: await this.priceFrom(venue),
       resources: await Promise.all(resources.map((r) => this.publicResource(catalog, r))),
     };
-  }
-
-  /** Illustrative sport photo for a venue without photos of its own (venue photos always win). */
-  private async stockCover(
-    venueId: string,
-    catalog: Catalog,
-    resources: readonly ResourceRow[],
-  ): Promise<Media | null> {
-    const keys = this.sportsOf(catalog, resources).map((s) => s.key);
-    return this.stock.coverFor(venueId, keys);
   }
 
   async owner(organizationId: string): Promise<{ name: string | null; phone: string | null }> {

@@ -126,15 +126,6 @@ export const ar = {
       terms: 'الشروط والأحكام',
       privacy: 'سياسة الخصوصية',
       rights: 'كل الحقوق محفوظة © {year}',
-      credits: 'مصادر الصور',
-    },
-    credits: {
-      title: 'مصادر الصور',
-      description:
-        'الملاعب اللي ما عندها صور خاصة فيها بتظهر معها صورة توضيحية للرياضة. هاي الصور من موقع Pexels وحسب رخصة Pexels.',
-      empty: 'لسا ما في صور توضيحية.',
-      by: 'تصوير {name}',
-      source: 'شوفها على Pexels',
     },
     about: {
       title: 'من نحن',
@@ -190,7 +181,6 @@ export const ar = {
         '{count, plural, zero {} one {رياضة وحدة} two {رياضتين} few {<n></n> رياضات} many {<n></n> رياضة} other {<n></n> رياضة}}',
       previous: 'السابق',
       next: 'التالي',
-      stockPhoto: 'صورة توضيحية',
     },
     search: {
       sport: 'الرياضة',

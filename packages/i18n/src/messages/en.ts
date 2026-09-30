@@ -132,15 +132,6 @@ export const en = {
       terms: 'Terms & conditions',
       privacy: 'Privacy policy',
       rights: 'All rights reserved © {year}',
-      credits: 'Photo credits',
-    },
-    credits: {
-      title: 'Photo credits',
-      description:
-        'Venues without their own photos show an illustrative photo of their sport. These photos come from Pexels, under the Pexels License.',
-      empty: 'No illustrative photos yet.',
-      by: 'Photo by {name}',
-      source: 'View on Pexels',
     },
     about: {
       title: 'About us',
@@ -194,7 +185,6 @@ export const en = {
       sportsCount: '{count, plural, =0 {} one {<n></n> sport} other {<n></n> sports}}',
       previous: 'Previous',
       next: 'Next',
-      stockPhoto: 'Illustrative photo',
     },
     search: {
       sport: 'Sport',

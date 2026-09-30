@@ -7,22 +7,19 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CourtArt } from './court-art';
 import { Icon } from './icons';
 import { Photo } from './photo';
-import { StockLabel } from './venue-photo';
 
 /**
  * Full-bleed photo hero with a dark fade, the venue title laid over it (`children`), swipe and
- * dots on touch, arrows and a lightbox on wider screens. Without uploaded photos it shows the
- * sport's stock photo (labelled "illustrative") or an illustrated court.
+ * dots on touch, arrows and a lightbox on wider screens. Without photos it shows an illustrated
+ * court for the venue's first sport.
  */
 export function VenueGallery({
   media,
-  cover,
   name,
   icon,
   children,
 }: {
   media: PublicVenue['media'];
-  cover: PublicVenue['cover'];
   name: string;
   icon?: string | undefined;
   children: ReactNode;
@@ -31,7 +28,6 @@ export function VenueGallery({
   const scroller = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const stock = media.length === 0 && cover?.stock ? cover : null;
   const alt = (i: number) => t('photoAlt', { name, n: String(i + 1), total: String(media.length) });
 
   const show = (i: number) => {
@@ -73,11 +69,6 @@ export function VenueGallery({
             </div>
           ))}
         </div>
-      ) : stock ? (
-        <>
-          <Photo photo={stock} alt="" sizes="100vw" eager />
-          <StockLabel linked className="bottom-auto top-20 sm:top-24" />
-        </>
       ) : (
         // The illustration only fills the area above the title block, so its court lines never
         // cross the venue name or address (QA #3).
@@ -96,7 +87,7 @@ export function VenueGallery({
         aria-hidden
         className={cx(
           'pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-35% to-night/90',
-          media.length === 0 && !stock && 'from-55%',
+          media.length === 0 && 'from-55%',
         )}
       />
       {media.length > 1 ? (

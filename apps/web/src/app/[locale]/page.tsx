@@ -1,12 +1,11 @@
 import { getCatalog, listVenues } from '@jordan-sports/contracts';
 import type { Locale } from '@jordan-sports/i18n';
-import { SectionHeading, buttonClass, cx } from '@jordan-sports/ui';
+import { SectionHeading, buttonClass } from '@jordan-sports/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import { HeroArt } from '@/components/court-art';
 import { GovernorateChips } from '@/components/governorate-chips';
 import { Icon } from '@/components/icons';
-import { Photo } from '@/components/photo';
 import { SearchBar } from '@/components/search-bar';
 import { SportTile } from '@/components/sport-tile';
 import { VenuePicks } from '@/components/venue-picks';
@@ -28,8 +27,6 @@ export default async function HomePage({ params }: Props) {
   ]);
   // Every active sport is shown, even before it has venues (the admin can hide one later).
   const tiles = catalog.sports;
-  // A self-hosted stock photo of the first sport that has one; the illustrated pitch otherwise.
-  const heroPhoto = catalog.sports.find((s) => s.photos.length > 0)?.photos[0];
   const count = (key: 'venuesCount' | 'sportsCount', n: number) =>
     t.rich(key, {
       count: n,
@@ -39,24 +36,14 @@ export default async function HomePage({ params }: Props) {
   return (
     <main className="flex-1">
       <section className="relative h-[470px] overflow-hidden rounded-b-hero bg-night sm:h-[540px]">
-        {heroPhoto ? (
-          // Taller than the hero so the slow drift never shows an edge.
-          <div className="parallax-slow absolute inset-x-0 -top-16 bottom-0">
-            <Photo photo={heroPhoto} alt="" sizes="100vw" eager />
-          </div>
-        ) : (
-          <HeroArt className="absolute inset-0" />
-        )}
+        <HeroArt className="absolute inset-0" />
         <div
           aria-hidden
           className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/70 to-transparent"
         />
         <div
           aria-hidden
-          className={cx(
-            'absolute inset-0 bg-gradient-to-b to-night/90',
-            heroPhoto ? 'from-night/10 from-20%' : 'from-night/0 from-40%',
-          )}
+          className="absolute inset-0 bg-gradient-to-b from-night/0 from-40% to-night/90"
         />
         <div className="absolute inset-x-0 bottom-[92px] sm:bottom-[120px]">
           <div className="mx-auto flex max-w-6xl animate-rise flex-col gap-2.5 px-6 text-canvas sm:px-8">

@@ -353,9 +353,18 @@ describe('catalog, venues and resources', () => {
       expect(served.rawPayload.includes(Buffer.from('secret-exif-marker'))).toBe(false);
 
       const pub = (await call(t.app, { method: 'GET', url: `/v1/venues/${slug}` })).json() as {
-        cover: { id: string };
+        cover: { id: string; blur: string | null };
       };
       expect(pub.cover.id).toBe(media[0]!.id);
+      // A tiny blurred preview for blur-up loading…
+      expect(pub.cover.blur).toMatch(/^data:image\/webp;base64,/);
+      // …and smaller copies on request (only the listed widths).
+      const small = await call(t.app, { method: 'GET', url: `${media[0]!.url}?w=640` });
+      expect(small.statusCode).toBe(200);
+      expect((await sharp(small.rawPayload).metadata()).width).toBe(640);
+      expect((await call(t.app, { method: 'GET', url: `${media[0]!.url}?w=123` })).statusCode).toBe(
+        400,
+      );
     });
 
     it('rejects files that are not images', async () => {

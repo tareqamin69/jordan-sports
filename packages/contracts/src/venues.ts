@@ -27,11 +27,6 @@ export const mediaSchema = z.object({
   height: z.number().int(),
   /** Tiny blurred preview (data URL) shown while the photo loads. */
   blur: z.string().nullable(),
-  /**
-   * Set when this is an illustrative stock photo (the venue has none of its own): the UI labels it
-   * "صورة توضيحية" so players don't take it for the actual venue.
-   */
-  stock: z.object({ photographer: z.string(), sourceUrl: z.string() }).nullable().optional(),
 });
 export type Media = z.infer<typeof mediaSchema>;
 

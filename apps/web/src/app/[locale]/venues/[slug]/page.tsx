@@ -145,12 +145,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
         bookLabel={t('book')}
       />
 
-      <VenueGallery
-        media={venue.media}
-        cover={venue.cover}
-        name={name}
-        icon={venue.sports[0]?.icon}
-      >
+      <VenueGallery media={venue.media} name={name} icon={venue.sports[0]?.icon}>
         <span className="text-xs font-medium ltr:tracking-[0.12em] text-canvas/85">
           {joinList(
             venue.sports.map((s) => pick(s.name, locale)),

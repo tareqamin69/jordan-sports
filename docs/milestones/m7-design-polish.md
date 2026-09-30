@@ -26,24 +26,21 @@ the rest of the app gets the same treatment.
 - Venue photos: responsive WebP variants (`?w=320|640|960|1600`, generated lazily and cached by
   `platform/storage/image-variants.ts`), blur-up preview stored in `venue.media.blur`
   (migration 0025; backfilled on first read). Web `Photo` component renders `srcset` + blur + fade.
-- Stock sport photos (fallback imagery): see `docs/image-credits.md`. Pexels only, downloaded and
-  self-hosted by `node dist/cli/stock-photos.js` on the server during deploy (needs
-  `PEXELS_API_KEY` in `/opt/jordan-sports/staging.env`; the sandbox cannot reach Pexels/Unsplash).
-  Used for sport tiles, the home hero, and as a venue's cover when it has no uploads (labelled
-  "صورة توضيحية"). Uploaded venue photos always win. Public credits page `/[locale]/credits`
-  (footer link) and `GET /v1/stock/credits`.
+- **Photos come only from venues:** the owner uploads them (registration wizard / venue
+  settings) or an admin does (admin venue editor). Without photos a venue shows the illustrated
+  court for its sport. (A Pexels stock-photo fallback was built in phase 1 and then removed at
+  the user's request — there is no stock imagery, credits page or `PEXELS_API_KEY`.)
 
 ### Home
-- Hero: stock photo with slow parallax when available, else the illustrated pitch split into three
-  parallax layers (sky/hills/pitch). Live counters from `catalog.counts` ("10 ملاعب · 17 رياضة",
+- Hero: the illustrated pitch split into three parallax layers (sky/hills/pitch). Live counters from `catalog.counts` ("10 ملاعب · 17 رياضة",
   ICU plurals, CSS count-up) with a live dot.
 - Search card: focus ring glow, button icon spring.
-- Sport tiles: photo tiles when the sport has stock photos, icon tiles otherwise; staggered reveal.
+- Sport tiles: icon tiles (`SportTile`, shared with `/sports`); staggered reveal.
 - Featured venues: swipeable scroll-snap carousel (arrows on ≥ sm, RTL-aware), numbered photo cards.
 
 ### Venue page
 - Gallery: swipe on phones, arrows + "All photos" lightbox (`<dialog>`, Esc/arrow keys) on ≥ md;
-  stock cover with the illustrative label when there are no uploads.
+  illustrated court when the venue has no photos.
 - Sticky mini header (name, from-price, Book) slides in once the hero scrolls away.
 - Amenity icons by catalog key (unknown keys fall back to a check).
 - Map preview card (drawn SVG + pin); MapLibre (~270 KB) loads only when tapped.
@@ -72,11 +69,8 @@ Lessons recorded here so they are not repeated:
 
 ## Phase 2 (after the user approved phase 1): the rest of the site + stabilization
 
-- **Stock photos are skipped for now (no Pexels key).** Everything falls back to the illustrated
-  art: sport tiles show icons, heroes show the drawn pitch/courts, venues without uploads show
-  court art with no "صورة توضيحية" label. `/credits` returns 404 while there are no stock photos
-  (and is linked only from the label on a stock venue hero, not the footer). The importer stays;
-  it no-ops without `PEXELS_API_KEY`.
+- Stock photos dropped entirely (module, CLI, deploy step, credits page, contract fields); see
+  Images above.
 - `/sports` subtitle no longer claims every sport has an approved venue.
 - **Shared building blocks** (`packages/ui`): skeleton presets (`ListSkeleton`, `StatsSkeleton`,
   `FormSkeleton`, `DetailSkeleton`, `GridSkeleton`), `EmptyState` with on-brand illustrations
@@ -112,9 +106,6 @@ calendar's 30-minute grid cells (28 px, a dense time grid).
 ## Deliberately deferred
 - Calendar drag-to-create.
 - Venue page LCP (~4 s simulated) is bound by hydration JS; next step is trimming client JS there.
-- Pexels stock photos until a key is added (see `docs/image-credits.md`).
 
 ## Open decisions
 - Whether to keep the numbered ("01", "02") style on carousel cards.
-- The stock photo set needs the user's eye once downloaded on staging (exclude list in
-  `infra/stock-photos/sports.json`).
