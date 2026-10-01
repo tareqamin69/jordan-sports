@@ -25,10 +25,11 @@ test.describe('QA fixes', () => {
       sports: Array<{ id: string; key: string }>;
       offeredSportIds: string[];
     };
+    // Home shows six (sports with venues first); /sports shows every one.
     await page.goto(`${WEB}/en`);
     await expect(
       page.locator('section[aria-labelledby="sports-heading"] a[href*="sport="]'),
-    ).toHaveCount(catalog.sports.length);
+    ).toHaveCount(Math.min(6, catalog.sports.length));
     await page.goto(`${WEB}/en/sports`);
     await expect(page.locator('main ul a[href*="sport="]')).toHaveCount(catalog.sports.length);
 

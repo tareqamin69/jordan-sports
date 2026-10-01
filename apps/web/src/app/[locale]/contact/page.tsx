@@ -76,6 +76,15 @@ export default async function ContactPage({ params }: Props) {
             {t('reportLink')}
           </Link>
         </div>
+        <div className="border-t border-line pt-5">
+          <p className="text-sm text-ink-muted">{t('faq')}</p>
+          <Link
+            href={{ pathname: '/how-it-works', hash: 'faq' }}
+            className="font-medium text-primary hover:underline"
+          >
+            {t('faqLink')}
+          </Link>
+        </div>
       </Card>
     </main>
   );

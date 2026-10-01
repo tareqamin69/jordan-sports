@@ -64,7 +64,7 @@ export function VenueNav() {
             href: { pathname: base, query: { tab: 'bookings' } },
             icon: 'calendar',
             label: t('bookings'),
-            active: tab === 'bookings',
+            active: tab === 'bookings' || tab === 'calendar',
           },
           ...(settingsTab
             ? [
@@ -73,7 +73,8 @@ export function VenueNav() {
                   href: { pathname: base, query: { tab: settingsTab } },
                   icon: 'sliders',
                   label: t('settings'),
-                  active: tab !== null && tab !== 'today' && tab !== 'bookings',
+                  active:
+                    tab !== null && tab !== 'today' && tab !== 'bookings' && tab !== 'calendar',
                 },
               ]
             : []),

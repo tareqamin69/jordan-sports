@@ -394,6 +394,7 @@ const defaultSportForm = {
 
 function SportsSection() {
   const t = useTranslations('admin.geography');
+  const tc = useTranslations('common');
   const tt = useTranslations('common.toast');
   const locale = useLocale();
   const api = useApi();
@@ -464,7 +465,17 @@ function SportsSection() {
     <section>
       <h2 className="mb-3 font-display text-2xl leading-tight">{t('sports')}</h2>
       <p className="mb-3 text-sm text-ink-muted">{t('sportsHint')}</p>
+      {sports.isError ? (
+        <Alert tone="error" className="mb-4">
+          {errorMessage(sports.error)}
+        </Alert>
+      ) : null}
       <Card className="mb-4 p-0">
+        {sports.isPending ? (
+          <div className="p-4">
+            <ListSkeleton label={tc('loading')} rows={4} thumb={false} />
+          </div>
+        ) : null}
         <ul className="divide-y divide-line">
           {(sports.data?.items ?? []).map((s) =>
             renaming?.id === s.id ? (

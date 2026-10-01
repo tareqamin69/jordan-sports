@@ -21,6 +21,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -95,7 +96,7 @@ export function TeamPanel({ venueId }: { venueId: string }) {
                 </p>
                 {m.phone ? (
                   <p className="text-sm text-ink-muted">
-                    <Ltr>{m.phone}</Ltr>
+                    <Ltr>{displayPhone(m.phone)}</Ltr>
                   </p>
                 ) : null}
               </div>

@@ -31,6 +31,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
 import { allIssuesMatched, fieldErrors } from '@/lib/field-errors';
@@ -282,7 +283,7 @@ function InfoStep({
     nameEn: venue?.name.en ?? '',
     governorateId: venue?.governorateId ?? catalog.governorates[0]?.id ?? '',
     areaId: venue?.areaId ?? '',
-    contactPhone: venue?.contactPhone ?? '',
+    contactPhone: venue?.contactPhone ? displayPhone(venue.contactPhone) : '',
   });
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
@@ -918,7 +919,12 @@ function PaymentStep({
     iban: string | null;
     holderName: string | null;
     bankName: string | null;
-  }>({ whatsapp: venue.whatsapp ?? '', iban: null, holderName: null, bankName: null });
+  }>({
+    whatsapp: venue.whatsapp ? displayPhone(venue.whatsapp) : '',
+    iban: null,
+    holderName: null,
+    bankName: null,
+  });
   const saved = account.data?.account;
   const iban = f.iban ?? saved?.iban ?? '';
   const holderName = f.holderName ?? saved?.holderName ?? '';

@@ -10,6 +10,7 @@ import {
 import { Alert, Badge, Button, Card, EmptyState, ListSkeleton, Ltr } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
@@ -78,7 +79,7 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
                 {b.customer.name ?? '—'}{' '}
                 {b.customer.phone ? (
                   <a href={`tel:${b.customer.phone}`} className="text-primary">
-                    <Ltr>{b.customer.phone}</Ltr>
+                    <Ltr>{displayPhone(b.customer.phone)}</Ltr>
                   </a>
                 ) : null}
               </p>

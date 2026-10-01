@@ -205,3 +205,34 @@ and all legal page text (`content/legal.ts`).
 - `web.manage.tabs`: `balance`, `payments`
 - `web.privacy`: `body`, `description`, `title`
 - `web.terms`: `body`, `description`, `title`
+
+## Follow-up: full-site detail review (2026-10-01)
+
+A screenshot tour of every player, owner and admin screen (Arabic, phone and desktop), fixing
+what it found:
+
+- **Home:** new hero line "جيب الطابة، والباقي علينا." / "Bring the ball. We’ve got the rest."
+  (`web.home.title`, rich text with `<br>` and a lime `<hl>`); six sport tiles (sports with venues
+  first, names wrap to two lines); picks eyebrow `featuredTitle` no longer repeats the title; owner
+  card copy mentions online payment and weekly payouts.
+- **Venues list:** `GET /v1/venues` returns `total`; the page shows the real count and a "show
+  more" button (cursor paging, 24 per page) instead of silently stopping at 60.
+- **Booking:** the terms checkbox sits inside the sticky pay bar (it could end up hidden behind
+  it on phones); the bar never covers the footer; one-line pay button; the booking is fetched
+  only after the return-from-payment check (no stale "awaiting payment"); payment page
+  description localized; trailing-period bidi glitch; "report a problem" flag icon.
+- **Nav:** "Explore" covers /venues and /sports (the desktop-only "All sports" item is gone);
+  the owner nav highlights "Bookings" on the calendar tab.
+- **Phones:** shown the way people write them (`displayPhone`: 079 123 4567) in web and admin,
+  and pre-filled that way in edit forms (the API normalizes either form).
+- **Owner dashboard:** short day/month labels in date selects; from/to side by side on phones
+  (hours, pricing, closures); price chips per duration; clearer photo order buttons and labels.
+- **Account:** empty "venues you run" card hidden for players; delete-account link to the privacy
+  page; contact page links to the FAQ.
+- **Legal/help:** numbered step cards and FAQ chevrons.
+- **Admin:** DD/MM/YYYY dates on payouts/payments; failure reasons and card brands in plain
+  words; role badges translated; quieter suspend button; wider audit action filter; loading and
+  error states for the sports list; commission hint matches card-only payments.
+
+Hero alternatives if the owner wants to swap: "الشباب جاهزين؟ الملعب كمان." ·
+"جمّع الشباب، والملعب جاهز." · "من «مين بيحجز؟» لـ «محجوز!» بثواني."

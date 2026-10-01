@@ -24,7 +24,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
-import { dmyTime } from '@/lib/format';
+import { dmyTime, displayPhone } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { VenueList } from './venues/venue-list';
@@ -238,7 +238,7 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
                   <span className="block font-medium">{m.displayName}</span>
                   {m.phone ? (
                     <span className="text-sm text-ink-muted">
-                      <Ltr>{m.phone}</Ltr>
+                      <Ltr>{displayPhone(m.phone)}</Ltr>
                     </span>
                   ) : null}
                 </span>

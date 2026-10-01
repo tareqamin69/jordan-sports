@@ -86,7 +86,8 @@ export function VenueGallery({
       <div
         aria-hidden
         className={cx(
-          'pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-35% to-night/90',
+          // Photos can be busy right where the name sits: darken the lower part enough to read it.
+          'pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-30% via-night/55 via-65% to-night/95',
           media.length === 0 && 'from-55%',
         )}
       />

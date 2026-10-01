@@ -215,10 +215,7 @@ export function VenueAvailability({
   const choice = selected?.choices[0];
 
   return (
-    <section
-      aria-labelledby="availability-heading"
-      className={cx('min-w-0', selected && 'pb-24 md:pb-0')}
-    >
+    <section aria-labelledby="availability-heading" className="min-w-0">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 id="availability-heading" className="font-display text-[1.75rem] leading-[1.25]">

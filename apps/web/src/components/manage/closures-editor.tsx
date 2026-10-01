@@ -162,26 +162,28 @@ export function ClosuresEditor({ schedule }: { schedule: VenueSchedule }) {
               <option value="closed">{t('closures.closed')}</option>
               <option value="hours">{t('closures.specialHours')}</option>
             </SelectField>
-            <DateSelect
-              from={today}
-              label={t('closures.from')}
-              value={form.dateFrom}
-              onChange={(v) =>
-                setForm((f) => ({
-                  ...f,
-                  dateFrom: v,
-                  dateTo: v > f.dateTo ? v : f.dateTo,
-                }))
-              }
-              name="overrideFrom"
-            />
-            <DateSelect
-              from={form.dateFrom}
-              label={t('closures.to')}
-              value={form.dateTo}
-              onChange={(v) => setForm((f) => ({ ...f, dateTo: v }))}
-              name="overrideTo"
-            />
+            <div className="grid grid-cols-2 gap-3 sm:contents">
+              <DateSelect
+                from={today}
+                label={t('closures.from')}
+                value={form.dateFrom}
+                onChange={(v) =>
+                  setForm((f) => ({
+                    ...f,
+                    dateFrom: v,
+                    dateTo: v > f.dateTo ? v : f.dateTo,
+                  }))
+                }
+                name="overrideFrom"
+              />
+              <DateSelect
+                from={form.dateFrom}
+                label={t('closures.to')}
+                value={form.dateTo}
+                onChange={(v) => setForm((f) => ({ ...f, dateTo: v }))}
+                name="overrideTo"
+              />
+            </div>
             {form.kind === 'hours' ? (
               <>
                 <SelectField

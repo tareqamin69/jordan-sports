@@ -15,6 +15,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
+import { displayPhone } from '@/lib/format';
 import { useMe } from '@/lib/session';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { Icon } from './icons';
@@ -71,7 +72,9 @@ export function AccountView() {
           </div>
           <div>
             <dt className="text-sm text-ink-muted">{t('phone')}</dt>
-            <dd className="mt-1 font-medium">{user.phone ? <Ltr>{user.phone}</Ltr> : null}</dd>
+            <dd className="mt-1 font-medium">
+              {user.phone ? <Ltr>{displayPhone(user.phone)}</Ltr> : null}
+            </dd>
           </div>
         </dl>
       </Card>
@@ -97,7 +100,7 @@ export function AccountView() {
       >
         <span className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-full bg-brand-50 text-primary">
-            <Icon name="share" className="size-5" />
+            <Icon name="flag" className="size-5" />
           </span>
           {t('supportLink')}
         </span>
@@ -125,18 +128,15 @@ export function AccountView() {
           className="size-5 text-ink-muted transition-transform duration-base ease-soft group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
         />
       </Link>
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl">{t('organizationsTitle')}</h2>
-          {user.memberships.length > 0 ? (
+      {/* Venues the user runs (nothing to show for players: the switch above covers that). */}
+      {user.memberships.length > 0 ? (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-2xl">{t('organizationsTitle')}</h2>
             <Link href="/manage" className={buttonClass({ size: 'sm' })} data-testid="manage-link">
               {t('manageLink')}
             </Link>
-          ) : null}
-        </div>
-        {user.memberships.length === 0 ? (
-          <p className="mt-2 text-ink-muted">{t('organizationsEmpty')}</p>
-        ) : (
+          </div>
           <ul className="mt-3 divide-y divide-line">
             {user.memberships.map((m) => (
               <li key={m.organizationId} className="flex items-center justify-between gap-3 py-3">
@@ -147,8 +147,20 @@ export function AccountView() {
               </li>
             ))}
           </ul>
-        )}
-      </Card>
+        </Card>
+      ) : null}
+      <p className="px-1 text-sm text-ink-muted">
+        {t.rich('deleteAccount', {
+          link: (chunks) => (
+            <Link
+              href={{ pathname: '/privacy', hash: 'delete' }}
+              className="font-medium text-primary hover:underline"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
     </div>
   );
 }

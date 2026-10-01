@@ -37,18 +37,38 @@ export class DirectoryService {
     time?: string;
     cursor?: string;
     limit: number;
-  }): Promise<{ items: VenueSummary[]; nextCursor: string | null }> {
+  }): Promise<{ items: VenueSummary[]; nextCursor: string | null; total: number }> {
     if (filters.date) return this.search({ ...filters, date: filters.date });
+    let query = this.approved(filters)
+      .select('v.id')
+      .orderBy('v.id', 'desc')
+      .limit(filters.limit + 1);
+    if (filters.cursor) query = query.where('v.id', '<', filters.cursor);
+    const [rows, count] = await Promise.all([
+      query.execute(),
+      this.approved(filters)
+        .select((eb) => eb.fn.countAll<string>().as('n'))
+        .executeTakeFirstOrThrow(),
+    ]);
+    const page = rows.slice(0, filters.limit);
+    const items = await Promise.all(
+      page.map(async (r) => this.views.summary(await this.venues.find(r.id))),
+    );
+    return {
+      items,
+      nextCursor: rows.length > filters.limit ? page.at(-1)!.id : null,
+      total: Number(count.n),
+    };
+  }
+
+  /** Approved, not archived venues matching the place and sport filters. */
+  private approved(filters: { sport?: string; governorate?: string; area?: string }) {
     let query = this.db
       .selectFrom('venue.venues as v')
       .innerJoin('catalog.cities as g', 'g.id', 'v.city_id')
       .leftJoin('catalog.areas as a', 'a.id', 'v.area_id')
-      .select('v.id')
       .where('v.status', '=', 'approved')
-      .where('v.archived_at', 'is', null)
-      .orderBy('v.id', 'desc')
-      .limit(filters.limit + 1);
-    if (filters.cursor) query = query.where('v.id', '<', filters.cursor);
+      .where('v.archived_at', 'is', null);
     if (filters.governorate) query = query.where('g.key', '=', filters.governorate);
     if (filters.area) query = query.where('a.key', '=', filters.area);
     if (filters.sport) {
@@ -67,12 +87,7 @@ export class DirectoryService {
         ),
       );
     }
-    const rows = await query.execute();
-    const page = rows.slice(0, filters.limit);
-    const items = await Promise.all(
-      page.map(async (r) => this.views.summary(await this.venues.find(r.id))),
-    );
-    return { items, nextCursor: rows.length > filters.limit ? page.at(-1)!.id : null };
+    return query;
   }
 
   /**
@@ -86,7 +101,7 @@ export class DirectoryService {
     date: string;
     time?: string;
     limit: number;
-  }): Promise<{ items: VenueSummary[]; nextCursor: null }> {
+  }): Promise<{ items: VenueSummary[]; nextCursor: null; total: number }> {
     const { date, time, ...rest } = filters;
     const candidates = await this.list({ ...rest, limit: SEARCH_CANDIDATES });
     const target = time ? minutesOf(time) : null;
@@ -128,10 +143,10 @@ export class DirectoryService {
         return free.length > 0 ? { ...venue, freeTimes: free } : null;
       }),
     );
-    return {
-      items: results.filter((v): v is NonNullable<typeof v> => v !== null).slice(0, filters.limit),
-      nextCursor: null,
-    };
+    const items = results
+      .filter((v): v is NonNullable<typeof v> => v !== null)
+      .slice(0, filters.limit);
+    return { items, nextCursor: null, total: items.length };
   }
 
   async get(slug: string): Promise<PublicVenue> {

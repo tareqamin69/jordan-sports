@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { LEGAL_UPDATED_AT, legalDocs, type LegalDocId } from '@/content/legal';
 import { Link } from '@/i18n/navigation';
+import { Icon } from './icons';
 
 const paths: Record<LegalDocId, string> = {
   terms: '/terms',
@@ -18,6 +19,9 @@ const related: Record<LegalDocId, LegalDocId[]> = {
   privacy: ['terms', 'howItWorks'],
   howItWorks: ['terms', 'privacy', 'venueTerms'],
 };
+
+const isSteps = (paragraphs: string[]) =>
+  paragraphs.length > 1 && paragraphs.every((p) => /^\d+\.\s/.test(p));
 
 async function docFor(id: LegalDocId, locale: Locale) {
   const tc = await getTranslations({ locale, namespace: 'common' });
@@ -53,11 +57,31 @@ export async function LegalDocument({ id, locale }: { id: LegalDocId; locale: Lo
         {doc.sections.map((section, i) => (
           <section key={i} id={section.id} className="flex scroll-mt-24 flex-col gap-3">
             <h2 className="font-display text-2xl leading-tight">{fill(section.heading)}</h2>
-            {section.paragraphs.map((p, j) => (
-              <p key={j} className="leading-relaxed">
-                {fill(p)}
-              </p>
-            ))}
+            {isSteps(section.paragraphs) ? (
+              // "1. …", "2. …": numbered step cards.
+              <ol className="flex flex-col gap-2.5">
+                {section.paragraphs.map((p, j) => {
+                  const [, n, text] = /^(\d+)\.\s*(.*)$/s.exec(p)!;
+                  return (
+                    <li
+                      key={j}
+                      className="flex items-start gap-3 rounded-tile border border-line bg-surface p-4"
+                    >
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-on-primary">
+                        {n}
+                      </span>
+                      <span className="leading-relaxed">{fill(text!)}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              section.paragraphs.map((p, j) => (
+                <p key={j} className="leading-relaxed">
+                  {fill(p)}
+                </p>
+              ))
+            )}
             {section.faq ? (
               <div className="flex flex-col gap-2">
                 {section.faq.map((item, j) => (
@@ -65,8 +89,12 @@ export async function LegalDocument({ id, locale }: { id: LegalDocId; locale: Lo
                     key={j}
                     className="group rounded-tile border border-line bg-surface p-4 open:border-line-strong"
                   >
-                    <summary className="cursor-pointer list-none font-semibold marker:hidden">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
                       {fill(item.q)}
+                      <Icon
+                        name="chevron"
+                        className="size-4 shrink-0 rotate-90 text-ink-muted transition-transform duration-base group-open:-rotate-90"
+                      />
                     </summary>
                     <p className="mt-2 leading-relaxed text-ink-muted">{fill(item.a)}</p>
                   </details>

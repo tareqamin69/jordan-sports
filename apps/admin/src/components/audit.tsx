@@ -71,25 +71,27 @@ export function AuditPage() {
       <PageHeader title={t('title')} description={t('description')} />
       <Card className="mb-4">
         <form
-          className="grid items-end gap-3 sm:grid-cols-3 lg:grid-cols-6"
+          className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4"
           onSubmit={(e: FormEvent) => {
             e.preventDefault();
             setFilters(draft);
           }}
         >
-          <SelectField
-            label={t('filters.action')}
-            value={draft.action}
-            onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
-            name="auditAction"
-          >
-            <option value="">{t('filters.anyAction')}</option>
-            {actionOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </SelectField>
+          <div className="sm:col-span-2">
+            <SelectField
+              label={t('filters.action')}
+              value={draft.action}
+              onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
+              name="auditAction"
+            >
+              <option value="">{t('filters.anyAction')}</option>
+              {actionOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </SelectField>
+          </div>
           <SelectField
             label={t('filters.targetType')}
             value={draft.targetType}

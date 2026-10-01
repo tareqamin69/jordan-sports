@@ -117,15 +117,18 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
           return (
             <li
               key={day}
-              className="grid items-end gap-3 py-3 sm:grid-cols-[10rem_1fr_1fr_auto]"
+              className="grid grid-cols-2 items-end gap-3 py-3 sm:grid-cols-[10rem_1fr_1fr_auto]"
               data-testid={`hours-day-${day}`}
             >
-              <CheckboxField
-                label={format.dateTime(isoWeekdayDate(day), { weekday: 'long', timeZone: 'UTC' })}
-                checked={h.open}
-                disabled={!editable}
-                onChange={(e) => update(day, { open: e.target.checked })}
-              />
+              {/* Phones: the day on its own row, then "from" and "to" side by side. */}
+              <div className="col-span-2 sm:col-span-1">
+                <CheckboxField
+                  label={format.dateTime(isoWeekdayDate(day), { weekday: 'long', timeZone: 'UTC' })}
+                  checked={h.open}
+                  disabled={!editable}
+                  onChange={(e) => update(day, { open: e.target.checked })}
+                />
+              </div>
               {h.open ? (
                 <>
                   <SelectField
@@ -166,7 +169,7 @@ export function HoursEditor({ schedule }: { schedule: VenueSchedule }) {
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="whitespace-nowrap"
+                      className="col-span-2 justify-self-start whitespace-nowrap sm:col-span-1"
                       onClick={() => copyToAllDays(day)}
                     >
                       {t('hours.copyToAllDays')}

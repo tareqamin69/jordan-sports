@@ -21,7 +21,7 @@ import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
-import { dmy } from '@/lib/format';
+import { dmy, displayPhone } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -161,7 +161,7 @@ export function BookingsPage() {
                     {b.customer.name}
                     {b.customer.phone ? (
                       <span className="block text-xs text-ink-muted">
-                        <Ltr>{b.customer.phone}</Ltr>
+                        <Ltr>{displayPhone(b.customer.phone)}</Ltr>
                       </span>
                     ) : null}
                   </td>

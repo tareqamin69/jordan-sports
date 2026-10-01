@@ -118,15 +118,20 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
                   {g.rule.label ? <Badge className="me-2">{g.rule.label}</Badge> : null}
                   {describe(g.rule)}
                 </p>
-                <p className="mt-1 text-sm font-medium">
-                  {joinList(
-                    g.rule.amounts.map(
-                      (a) =>
-                        `${t('minutes', { count: a.durationMinutes })}: ${formatMoney({ amount: a.amount, currency: g.rule.currency }, locale)}`,
-                    ),
-                    locale,
-                  )}
-                </p>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {g.rule.amounts.map((a) => (
+                    <li
+                      key={a.durationMinutes}
+                      className="rounded-full bg-canvas px-3 py-1 text-sm font-medium"
+                    >
+                      {t('minutes', { count: a.durationMinutes })}
+                      <span className="mx-1.5 text-ink-muted">·</span>
+                      <span className="text-primary">
+                        {formatMoney({ amount: a.amount, currency: g.rule.currency }, locale)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
                 <p className="mt-1 text-xs text-ink-muted">{courtsOf(g)}</p>
               </div>
               {editable ? (
@@ -136,7 +141,7 @@ export function PricingEditor({ schedule }: { schedule: VenueSchedule }) {
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="ghostDanger"
                     onClick={() => g.ruleIds.forEach((id) => remove.mutate(id))}
                     busy={remove.isPending && g.ruleIds.includes(remove.variables ?? '')}
                   >
@@ -349,36 +354,39 @@ function BandForm({
             ))}
           </div>
         </fieldset>
-        <SelectField
-          label={t('pricing.from')}
-          value={from}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            setFrom(v);
-            if (to <= v) setTo(v + 30);
-          }}
-          name="bandFrom"
-        >
-          {steps.slice(0, -1).map((m) => (
-            <option key={m} value={m}>
-              {m >= 1440 ? `${minutesToTime(m)} ${t('hours.nextDay')}` : minutesToTime(m)}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField
-          label={t('pricing.to')}
-          value={to}
-          onChange={(e) => setTo(Number(e.target.value))}
-          name="bandTo"
-        >
-          {steps
-            .filter((m) => m > from)
-            .map((m) => (
+        {/* Phones: "from" and "to" side by side; wider screens use the form's own grid. */}
+        <div className="grid grid-cols-2 gap-3 sm:contents">
+          <SelectField
+            label={t('pricing.from')}
+            value={from}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setFrom(v);
+              if (to <= v) setTo(v + 30);
+            }}
+            name="bandFrom"
+          >
+            {steps.slice(0, -1).map((m) => (
               <option key={m} value={m}>
                 {m >= 1440 ? `${minutesToTime(m)} ${t('hours.nextDay')}` : minutesToTime(m)}
               </option>
             ))}
-        </SelectField>
+          </SelectField>
+          <SelectField
+            label={t('pricing.to')}
+            value={to}
+            onChange={(e) => setTo(Number(e.target.value))}
+            name="bandTo"
+          >
+            {steps
+              .filter((m) => m > from)
+              .map((m) => (
+                <option key={m} value={m}>
+                  {m >= 1440 ? `${minutesToTime(m)} ${t('hours.nextDay')}` : minutesToTime(m)}
+                </option>
+              ))}
+          </SelectField>
+        </div>
         {durations.map((d) => (
           <TextField
             key={d}

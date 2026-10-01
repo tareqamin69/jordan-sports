@@ -14,10 +14,11 @@ import {
   TextField,
 } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
+import { dmy, dmyTime } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
 
@@ -29,7 +30,6 @@ export function PayoutsPage() {
   const t = useTranslations('admin.payouts');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
   const list = useQuery({
@@ -49,12 +49,7 @@ export function PayoutsPage() {
           <section className="flex flex-col gap-3">
             <h2 className="font-display text-2xl">{t('dueTitle')}</h2>
             <p className="text-sm text-ink-muted">
-              {t('cutoff', {
-                date: format.dateTime(new Date(`${list.data.cutoffDate}T12:00:00Z`), {
-                  dateStyle: 'medium',
-                  numberingSystem: 'latn',
-                }),
-              })}
+              {t('cutoff', { date: dmy(list.data.cutoffDate) })}
             </p>
             {list.data.due.length === 0 ? (
               <EmptyState art="bookings" title={t('dueEmpty')} />
@@ -82,11 +77,8 @@ export function PayoutsPage() {
                       <span className="flex flex-col gap-0.5 text-sm">
                         <span className="font-semibold">{pick(p.venueName, locale)}</span>
                         <span className="text-xs text-ink-muted">
-                          {format.dateTime(new Date(p.paidAt), {
-                            dateStyle: 'medium',
-                            numberingSystem: 'latn',
-                          })}{' '}
-                          · {t('paidLine', { count: p.bookings, last4: p.ibanLast4 })} ·{' '}
+                          {dmyTime(new Date(p.paidAt))} ·{' '}
+                          {t('paidLine', { count: p.bookings, last4: p.ibanLast4 })} ·{' '}
                           <Ltr>{p.reference}</Ltr>
                           {p.paidBy ? ` · ${p.paidBy}` : ''}
                         </span>

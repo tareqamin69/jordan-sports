@@ -19,12 +19,16 @@ import {
   cx,
 } from '@jordan-sports/ui';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useCan } from '@/lib/admin-session';
 import { useApi } from '@/lib/api';
+import { dmyTime } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
+
+/** Card brand names as printed on cards. */
+const BRANDS: Record<string, string> = { visa: 'Visa', mastercard: 'Mastercard' };
 
 type Kind = Transaction['kind'];
 type Status = Transaction['status'];
@@ -131,8 +135,8 @@ export function PaymentsPage() {
 
 function TransactionRow({ tx }: { tx: Transaction }) {
   const t = useTranslations('admin.payments');
+  const failures = useTranslations('admin.payments.failures');
   const locale = useLocale();
-  const format = useFormatter();
   const api = useApi();
   const can = useCan();
   const queryClient = useQueryClient();
@@ -168,22 +172,25 @@ function TransactionRow({ tx }: { tx: Transaction }) {
         </span>
       </div>
       <p className="text-xs text-ink-muted">
-        {format.dateTime(new Date(tx.createdAt), {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-          numberingSystem: 'latn',
-        })}
+        {dmyTime(new Date(tx.createdAt))}
         {tx.card ? (
           <>
             {' · '}
-            <Ltr>{t('card', { brand: tx.card.brand, last4: tx.card.last4 })}</Ltr>
+            <Ltr>
+              {t('card', { brand: BRANDS[tx.card.brand] ?? tx.card.brand, last4: tx.card.last4 })}
+            </Ltr>
           </>
         ) : null}
         {tx.reason ? ` · ${t(`reasons.${tx.reason}`)}` : ''}
         {tx.failureCode ? (
           <>
             {' · '}
-            {t('failure')} <Ltr>{tx.failureCode}</Ltr>
+            {t('failure')}{' '}
+            {failures.has(tx.failureCode as never) ? (
+              failures(tx.failureCode as never)
+            ) : (
+              <Ltr>{tx.failureCode}</Ltr>
+            )}
           </>
         ) : null}
         {tx.kind === 'refund' && tx.attempts > 1

@@ -248,7 +248,7 @@ export function BookingView({
   const cell = 'flex min-w-0 flex-col gap-0.5 px-4 py-3';
 
   return (
-    <div className={cx('flex flex-col gap-4', holding && 'pb-44 md:pb-0')}>
+    <div className="flex flex-col gap-4">
       <button
         type="button"
         onClick={() => router.back()}
@@ -395,30 +395,26 @@ export function BookingView({
               {t('paymentFailed', { reason: failure(b.payment.lastFailure) })}
             </Alert>
           ) : null}
-          <CheckboxField
-            label={t('accept')}
-            checked={accepted}
-            onChange={(e) => setAccepted(e.target.checked)}
-          />
           {/*
-            The confirm bar is `fixed` on mobile (so it stays reachable while the page scrolls),
-            which takes it out of normal flow — this invisible spacer of the same size keeps the
-            rest of the card (the "release" link below) from sliding up underneath it.
+            Phones: sticks above the tab bar while the checkout card is on screen, then scrolls
+            away with it (so it never covers the footer). Wider screens: inline.
           */}
-          <div aria-hidden className="invisible rounded-card border border-line p-2.5 md:hidden">
-            <div className="flex items-center gap-3">
-              <span className="h-12 w-32 shrink-0 rounded-full" />
-              <span className="h-14 flex-1 rounded-full" />
+          <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 -mx-2 rounded-card border border-line bg-surface p-2.5 shadow-float flex flex-col gap-2.5 md:static md:mx-0 md:border-0 md:bg-transparent md:gap-4 md:p-0 md:shadow-none">
+            {/* The terms box travels with the pay button, so it is never hidden behind it. */}
+            <div className="px-1.5 md:px-0">
+              <CheckboxField
+                label={t('accept')}
+                checked={accepted}
+                onChange={(e) => setAccepted(e.target.checked)}
+              />
             </div>
-          </div>
-          <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 rounded-card border border-line bg-surface p-2.5 shadow-float md:static md:inset-auto md:bottom-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
             <div className="flex items-center gap-3">
               <HoldCountdown holdLeft={holdLeft} total={holdTotal}>
                 {t('countdown', { time: remaining(holdLeft) })}
               </HoldCountdown>
               <Button
                 size="lg"
-                className="flex-1 md:flex-none md:px-10"
+                className="flex-1 whitespace-nowrap px-4 md:flex-none md:px-10"
                 onClick={() => void pay()}
                 disabled={!accepted}
                 busy={busy === 'pay'}
@@ -461,7 +457,7 @@ export function BookingView({
             target="_blank"
             rel="noreferrer"
           >
-            <Icon name="share" className="size-4" />
+            <Icon name="flag" className="size-4" />
             {t('inviteFriends')}
           </a>
           <Link

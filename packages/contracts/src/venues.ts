@@ -116,7 +116,8 @@ export const listVenues = endpoint({
       .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
       .optional(),
   }),
-  response: page(venueSummarySchema),
+  /** `total`: all matching venues (a date search returns them all in one page). */
+  response: page(venueSummarySchema).extend({ total: z.number().int() }),
 });
 
 export const getVenue = endpoint({

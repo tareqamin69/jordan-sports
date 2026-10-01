@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { BRAND_NAME } from '@jordan-sports/brand';
 import type { AppConfig } from '../../../platform/config/config.js';
 import { APP_CONFIG } from '../../../platform/config/config.module.js';
 import type { Db } from '../../../platform/database/database.js';
@@ -109,7 +110,10 @@ export class CheckoutService {
     return this.payments.openCheckout(started.chargeId, {
       amount: started.amount,
       currency: started.currency,
-      description: `Jorena — ${started.reference}`,
+      description:
+        locale === 'ar'
+          ? `${BRAND_NAME.ar} — حجز ${started.reference}`
+          : `${BRAND_NAME.en} — booking ${started.reference}`,
       returnUrl: `${bookingUrl}?payment=return`,
       locale,
     });

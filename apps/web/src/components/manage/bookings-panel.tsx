@@ -26,7 +26,7 @@ import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useApi } from '@/lib/api';
 import { useNow } from '@/lib/use-now';
-import { dmy } from '@/lib/format';
+import { dmy, displayPhone } from '@/lib/format';
 import { joinList, pick } from '@/lib/localized';
 import { can, useSetSchedule } from '@/lib/manage';
 import { addDays, businessToday, dateForLabel, minutesToTime } from '@/lib/time';
@@ -157,7 +157,7 @@ function BookingRow({ booking: b, schedule }: { booking: VenueBooking; schedule:
               <>
                 {' · '}
                 <a href={`tel:${b.customer.phone}`} className="underline">
-                  <Ltr>{b.customer.phone}</Ltr>
+                  <Ltr>{displayPhone(b.customer.phone)}</Ltr>
                 </a>
               </>
             ) : null}

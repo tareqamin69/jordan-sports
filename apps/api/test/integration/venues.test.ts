@@ -94,6 +94,22 @@ describe('catalog, venues and resources', () => {
       (otherSport.json() as { items: Array<{ slug: string }> }).items.map((v) => v.slug),
     ).not.toContain(slug);
 
+    // The total counts every match, not just this page.
+    const firstOnly = await call(t.app, {
+      method: 'GET',
+      url: '/v1/venues?sport=padel&governorate=amman&limit=1',
+    });
+    const page1 = firstOnly.json() as {
+      items: unknown[];
+      total: number;
+      nextCursor: string | null;
+    };
+    const all = list.json() as { items: unknown[]; total: number };
+    expect(page1.items).toHaveLength(1);
+    expect(page1.total).toBe(all.total);
+    expect(all.total).toBeGreaterThanOrEqual(all.items.length);
+    if (all.total > 1) expect(page1.nextCursor).not.toBeNull();
+
     // Invalid transition.
     const bad = await setStatus('draft');
     expect(bad.statusCode).toBe(409);

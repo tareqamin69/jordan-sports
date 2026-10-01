@@ -116,7 +116,7 @@ test.describe('bookings', () => {
     await page.locator('input[name="transactionSearch"]').fill(reference!);
     await expect(page.getByTestId('transaction')).toHaveCount(3);
     await expect(page.getByTestId('transactions')).toContainText('Refund');
-    await expect(page.getByTestId('transactions')).toContainText('card_declined');
+    await expect(page.getByTestId('transactions')).toContainText('Card declined');
     await expectNoAccessibilityViolations(page);
     await page.goto(`${ADMIN}/en/payouts`);
     await expect(page.getByRole('heading', { name: 'Venue payouts', level: 1 })).toBeVisible();
@@ -163,7 +163,7 @@ test.describe('bookings', () => {
     await page.getByRole('button', { name: 'Add booking' }).click();
     await expect(page.getByText('4 bookings added.')).toBeVisible();
     await expect(page.getByTestId('venue-booking').first()).toContainText('Team Falcons');
-    await expect(page.getByTestId('venue-booking').first()).toContainText('+962791234567');
+    await expect(page.getByTestId('venue-booking').first()).toContainText('079 123 4567');
     await expect(page.getByTestId('venue-booking').first()).toContainText('Weekly');
     await expect(page.getByTestId('venue-booking')).toHaveCount(2);
 

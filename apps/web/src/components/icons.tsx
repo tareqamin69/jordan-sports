@@ -26,6 +26,7 @@ const paths: Record<string, string> = {
   close: 'M6 6l12 12M18 6L6 18',
   expand: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   card: 'M3 6h18v12H3zM3 10h18M7 15h4',
+  flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
   lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
   bank: 'M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18',
   map: 'M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20',

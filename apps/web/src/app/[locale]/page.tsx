@@ -25,8 +25,13 @@ export default async function HomePage({ params }: Props) {
     serverApi(getCatalog),
     serverApi(listVenues, { query: { limit: 6 } }),
   ]);
-  // Every active sport is shown, even before it has venues (the admin can hide one later).
-  const tiles = catalog.sports;
+  // Six tiles (two rows on a phone, one on desktop): sports with venues first, in catalog order;
+  // the rest are one tap away on /sports.
+  const offered = new Set(catalog.offeredSportIds);
+  const tiles = [
+    ...catalog.sports.filter((s) => offered.has(s.id)),
+    ...catalog.sports.filter((s) => !offered.has(s.id)),
+  ].slice(0, 6);
   const count = (key: 'venuesCount' | 'sportsCount', n: number) =>
     t.rich(key, {
       count: n,
@@ -50,8 +55,11 @@ export default async function HomePage({ params }: Props) {
             <span className="text-xs font-medium ltr:tracking-[0.12em] opacity-85">
               {t('eyebrow')}
             </span>
-            <h1 className="max-w-[12ch] font-display text-[3rem] leading-[1.12] text-balance sm:max-w-none sm:text-[4.5rem]">
-              {t('title')}
+            <h1 className="font-display text-[3rem] leading-[1.12] text-balance sm:max-w-none sm:text-[4.5rem]">
+              {t.rich('title', {
+                br: () => <br />,
+                hl: (chunks) => <span className="text-lime">{chunks}</span>,
+              })}
             </h1>
             <p className="hidden max-w-xl text-lg text-canvas/85 sm:block">{t('description')}</p>
             {catalog.counts.venues > 0 ? (

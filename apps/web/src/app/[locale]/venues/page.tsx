@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState, PageHeader, buttonClass, chipClass } from '@jordan-sports/ui';
 import { Icon } from '@/components/icons';
 import { SearchBar } from '@/components/search-bar';
-import { VenueCard } from '@/components/venue-card';
+import { VenueResults } from '@/components/venue-results';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/lib/localized';
 import { serverApi } from '@/lib/server-api';
@@ -40,6 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const PAGE_SIZE = 24;
+
 export default async function VenuesPage({ params, searchParams }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -55,7 +57,8 @@ export default async function VenuesPage({ params, searchParams }: Props) {
     serverApi(getCatalog),
     serverApi(listVenues, {
       query: {
-        limit: 60,
+        // A date search returns all matches in one page (no cursor).
+        limit: date ? 60 : PAGE_SIZE,
         ...(governorate ? { governorate } : {}),
         ...(sport ? { sport } : {}),
         ...(area ? { area } : {}),
@@ -80,7 +83,7 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <PageHeader
-        eyebrow={t('count', { count: venues.items.length, n: String(venues.items.length) })}
+        eyebrow={t('count', { count: venues.total, n: String(venues.total) })}
         title={sportName ? t('titleForSport', { sport: pick(sportName, locale) }) : t('title')}
         description={date ? t('searchDescription') : t('description')}
       />
@@ -132,13 +135,17 @@ export default async function VenuesPage({ params, searchParams }: Props) {
           }
         />
       ) : (
-        <ul className="reveal-stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {venues.items.map((v) => (
-            <li key={v.id}>
-              <VenueCard venue={v} locale={locale} date={date} />
-            </li>
-          ))}
-        </ul>
+        <VenueResults
+          initial={venues.items}
+          nextCursor={venues.nextCursor}
+          filters={{
+            ...(governorate ? { governorate } : {}),
+            ...(sport ? { sport } : {}),
+            ...(area ? { area } : {}),
+          }}
+          date={date}
+          pageSize={PAGE_SIZE}
+        />
       )}
     </main>
   );

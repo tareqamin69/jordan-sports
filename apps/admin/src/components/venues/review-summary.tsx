@@ -9,6 +9,7 @@ import { formatMoney } from '@jordan-sports/money';
 import { Alert, Card, Ltr, SkeletonGroup, SkeletonText } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -154,7 +155,7 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
               {venue.ownerName ?? '—'}{' '}
               {venue.ownerPhone ? (
                 <>
-                  <Ltr>{venue.ownerPhone}</Ltr>{' '}
+                  <Ltr>{displayPhone(venue.ownerPhone)}</Ltr>{' '}
                   <a className="text-primary" href={`tel:${venue.ownerPhone}`}>
                     {t('call')}
                   </a>{' '}
@@ -172,7 +173,7 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
             </p>
             {digits && digits !== venue.ownerPhone ? (
               <p className="text-ink-muted">
-                {t('venuePhone')}: <Ltr>{digits}</Ltr>
+                {t('venuePhone')}: <Ltr>{displayPhone(digits)}</Ltr>
               </p>
             ) : null}
           </section>

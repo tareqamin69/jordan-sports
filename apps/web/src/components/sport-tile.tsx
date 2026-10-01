@@ -19,7 +19,9 @@ export function SportTile({ sport, locale }: { sport: Sport; locale: string }) {
         className="size-7 transition-transform duration-base ease-spring group-hover:-rotate-6 group-hover:scale-110"
         strokeWidth={1.5}
       />
-      <span className="truncate text-sm font-semibold">{pick(sport.name, locale)}</span>
+      <span className="line-clamp-2 text-sm font-semibold leading-snug">
+        {pick(sport.name, locale)}
+      </span>
     </Link>
   );
 }

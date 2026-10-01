@@ -23,3 +23,12 @@ export function dmyTime(instant: Date, timeZone = 'Asia/Amman'): string {
   }).format(instant);
   return `${dmy(date)} ${time}`;
 }
+
+/**
+ * A phone number as people write it: Jordanian mobiles in the local form "079 123 4567"; other
+ * numbers stay international.
+ */
+export function displayPhone(e164: string): string {
+  const jo = /^\+962(7[789])(\d{3})(\d{4})$/.exec(e164);
+  return jo ? `0${jo[1]} ${jo[2]} ${jo[3]}` : e164;
+}

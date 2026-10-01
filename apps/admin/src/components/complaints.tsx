@@ -27,6 +27,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 import { useAdminMe, useCan } from '@/lib/admin-session';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -198,7 +199,7 @@ function ComplaintDetail({ id }: { id: string }) {
       </div>
       <p className="mt-1 text-sm text-ink-muted">
         {t(`categories.${c.category}`)} · {t(`kinds.${c.reporterKind}`)} · {c.reporter.name ?? '—'}{' '}
-        {c.reporter.phone ? <Ltr>{c.reporter.phone}</Ltr> : null}
+        {c.reporter.phone ? <Ltr>{displayPhone(c.reporter.phone)}</Ltr> : null}
         {c.venue ? ` · ${pick(c.venue.name, locale)}` : ''}
         {c.bookingReference ? (
           <>

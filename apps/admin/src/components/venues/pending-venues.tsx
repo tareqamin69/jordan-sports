@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -68,7 +69,7 @@ export function PendingVenues() {
                   {v.ownerPhone ? (
                     <>
                       {' · '}
-                      <Ltr>{v.ownerPhone}</Ltr>
+                      <Ltr>{displayPhone(v.ownerPhone)}</Ltr>
                     </>
                   ) : null}
                 </span>

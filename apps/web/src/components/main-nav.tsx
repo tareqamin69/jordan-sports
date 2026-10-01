@@ -14,7 +14,6 @@ import { Icon } from './icons';
  */
 export function MainNav({ overlay }: { overlay: boolean }) {
   const t = useTranslations('web.header');
-  const tc = useTranslations('common');
   const pathname = usePathname();
   const me = useMe();
   // The header hydrates late (Suspense): by then "me" may already be known, so it keeps the
@@ -34,15 +33,8 @@ export function MainNav({ overlay }: { overlay: boolean }) {
       href: '/venues',
       icon: 'compass',
       label: t('explore'),
-      active: pathname.startsWith('/venues'),
-    },
-    {
-      key: 'sports',
-      href: '/sports',
-      icon: 'grid',
-      label: tc('allSports'),
-      active: pathname.startsWith('/sports'),
-      desktopOnly: true,
+      // Browsing by sport is part of exploring (one highlighted item on every breakpoint).
+      active: pathname.startsWith('/venues') || pathname.startsWith('/sports'),
     },
     {
       key: 'bookings',
@@ -79,7 +71,6 @@ export function MainNav({ overlay }: { overlay: boolean }) {
           className={cx(
             'group flex min-w-0 justify-center rounded-full focus-visible:outline-canvas md:flex-none',
             item.active ? 'shrink-0' : 'flex-1',
-            item.desktopOnly && 'hidden md:flex',
             !overlay && 'md:focus-visible:outline-focus',
           )}
         >

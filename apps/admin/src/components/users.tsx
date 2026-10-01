@@ -23,6 +23,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useCan } from '@/lib/admin-session';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -82,6 +83,7 @@ export function UsersPage() {
 
 function UserRow({ user }: { user: AdminUser }) {
   const t = useTranslations('admin.users');
+  const tr = useTranslations('admin.roles');
   const tt = useTranslations('common.toast');
   const tc = useTranslations('common.actions');
   const api = useApi();
@@ -112,12 +114,12 @@ function UserRow({ user }: { user: AdminUser }) {
         <div>
           <p className="font-medium">{user.displayName ?? '—'}</p>
           <p className="text-sm text-ink-muted">
-            <Ltr>{user.phone ?? user.email}</Ltr>
+            <Ltr>{user.phone ? displayPhone(user.phone) : user.email}</Ltr>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{t(`statuses.${user.status}`)}</Badge>
-          {user.platformRole ? <Badge>{user.platformRole}</Badge> : null}
+          {user.platformRole ? <Badge>{tr(user.platformRole)}</Badge> : null}
           <Button
             size="sm"
             variant="secondary"
@@ -128,7 +130,8 @@ function UserRow({ user }: { user: AdminUser }) {
           {manageable ? (
             <Button
               size="sm"
-              variant={user.status === 'active' ? 'danger' : 'secondary'}
+              // Opens a confirm step with a reason; no need to shout on every row.
+              variant={user.status === 'active' ? 'ghostDanger' : 'secondary'}
               onClick={() => setOpen((v) => (v === 'status' ? null : 'status'))}
             >
               {user.status === 'active' ? t('suspend') : t('reactivate')}

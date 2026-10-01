@@ -23,6 +23,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, type FormEvent } from 'react';
+import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { useCatalog } from '@/lib/catalog';
 import { pick } from '@/lib/localized';
@@ -50,8 +51,9 @@ function toForm(v: AdminVenue): Form {
     descEn: v.description.en ?? '',
     addrAr: v.address.ar ?? '',
     addrEn: v.address.en ?? '',
-    phone: v.contactPhone ?? '',
-    whatsapp: v.whatsapp ?? '',
+    // Shown as people type them (079…); the API normalizes either form.
+    phone: v.contactPhone ? displayPhone(v.contactPhone) : '',
+    whatsapp: v.whatsapp ? displayPhone(v.whatsapp) : '',
     amenityIds: v.amenityIds,
   };
 }
