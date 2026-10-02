@@ -63,7 +63,7 @@ export async function LegalDocument({ id, locale }: { id: LegalDocId; locale: Lo
         {doc.intro ? <p className="text-lg leading-relaxed">{fill(doc.intro)}</p> : null}
         {doc.sections.map((section, i) => (
           <section key={i} id={section.id} className="flex scroll-mt-24 flex-col gap-3">
-            <h2 className="font-display text-2xl leading-tight">{fill(section.heading)}</h2>
+            <h2 className="font-display text-2xl leading-[1.35]">{fill(section.heading)}</h2>
             {isSteps(section.paragraphs) ? (
               // "1. …", "2. …": numbered step cards.
               <ol className="flex flex-col gap-2.5">

@@ -55,7 +55,7 @@ export function PageHeader({
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow ? <Eyebrow className="mb-1">{eyebrow}</Eyebrow> : null}
-        <h1 className="font-display text-[2rem] leading-[1.2] text-ink text-balance sm:text-[2.75rem]">
+        <h1 className="font-display text-[2rem] leading-[1.3] text-ink text-balance sm:text-[2.75rem]">
           {title}
         </h1>
         {description ? <p className="mt-2 max-w-2xl text-ink-muted">{description}</p> : null}

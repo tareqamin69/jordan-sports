@@ -146,29 +146,6 @@
       opacity: 1;
     }
   }
-
-  /* Hero parallax: layers drift at different speeds while the page scrolls away (no JS). */
-  @supports (animation-timeline: scroll()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .parallax-slow,
-      .parallax-fast {
-        animation: parallax linear both;
-        animation-timeline: scroll(root block);
-        animation-range: 0 600px;
-      }
-      .parallax-slow {
-        --parallax-distance: 60px;
-      }
-      .parallax-fast {
-        --parallax-distance: 140px;
-      }
-    }
-  }
-  @keyframes parallax {
-    to {
-      transform: translateY(var(--parallax-distance, 80px));
-    }
-  }
 }
 
 /*

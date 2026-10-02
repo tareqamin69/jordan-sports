@@ -92,7 +92,7 @@ export function TeamPanel({ venueId }: { venueId: string }) {
             <li key={m.memberId} className="flex flex-wrap items-end justify-between gap-3 py-3">
               <div>
                 <p className="font-medium">
-                  {m.displayName ?? '—'} {m.isYou ? <Badge>{t('you')}</Badge> : null}
+                  {m.displayName ?? '-'} {m.isYou ? <Badge>{t('you')}</Badge> : null}
                 </p>
                 {m.phone ? (
                   <p className="text-sm text-ink-muted">

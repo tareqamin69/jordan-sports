@@ -36,7 +36,7 @@ test.describe('venues: admin onboarding → public page', () => {
     await page.locator('select[name="resourceType"]').selectOption({ label: 'Padel court' });
     await page.locator('input[name="resourceNameAr"]').fill('ملعب 1');
     await page.locator('input[name="resourceNameEn"]').fill('Court 1');
-    await page.getByLabel('Padel — Doubles').check();
+    await page.getByLabel('Padel · Doubles').check();
     await page.getByLabel('Panoramic glass').check();
     await page.getByRole('button', { name: 'Create' }).click();
     await expect(page.getByTestId('resource-list')).toContainText('Court 1');

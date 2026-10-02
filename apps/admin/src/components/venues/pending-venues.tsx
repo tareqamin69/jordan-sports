@@ -65,7 +65,7 @@ export function PendingVenues() {
               <Link href={`/venues/${v.id}`} className="min-w-0 hover:underline">
                 <span className="block font-medium">{pick(v.name, locale)}</span>
                 <span className="text-sm text-ink-muted">
-                  {t('owner')}: {v.ownerName ?? '—'}
+                  {t('owner')}: {v.ownerName ?? '-'}
                   {v.ownerPhone ? (
                     <>
                       {' · '}

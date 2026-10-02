@@ -146,7 +146,7 @@ export function SettingsPage() {
             name="supportEmail"
           />
           <CheckboxField
-            label={`${t('venueEdits')} — ${t('venueEditsHint')}`}
+            label={`${t('venueEdits')} · ${t('venueEditsHint')}`}
             disabled={!editable}
             checked={current.venueEdits}
             onChange={(e) => set({ venueEdits: e.target.checked })}
@@ -179,7 +179,7 @@ export function SettingsPage() {
             ))}
           </fieldset>
           <p className="text-sm text-ink-muted">
-            {t('yourIp')} <Ltr>{settings.data.yourIp ?? '—'}</Ltr>
+            {t('yourIp')} <Ltr>{settings.data.yourIp ?? '-'}</Ltr>
           </p>
           {editable ? (
             <div>

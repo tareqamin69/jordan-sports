@@ -111,9 +111,9 @@ export const en = {
     bookingCancelledByVenue:
       '{appName}: {venue} cancelled your booking {reference} on {date} at {time}. Reason: {reason}.{refundStatus, select, some { {refund} will be back on your card within 5–10 business days.} other {}}',
     venueNewBooking:
-      '{appName}: new booking {reference} — {resource}, {date} at {time}, {customer} ({phone}). Amount paid: {price}.',
+      '{appName}: new booking {reference}: {resource}, {date} at {time}, {customer} ({phone}). Amount paid: {price}.',
     venueBookingCancelled:
-      '{appName}: booking {reference} — {resource}, {date} at {time} was cancelled by the player.',
+      '{appName}: booking {reference}: {resource}, {date} at {time} was cancelled by the player.',
     noPrice: 'price not set',
   },
   web: {
@@ -147,7 +147,7 @@ export const en = {
       title: 'About us',
       description: 'Why we built {appName}.',
       body1:
-        '{appName} connects players with venue owners across Jordan — from Amman to Aqaba. We want booking a court to be simple: see free times as they open up, book and pay by card in minutes.',
+        '{appName} connects players with venue owners across Jordan, from Amman to Aqaba. We want booking a court to be simple: see free times as they open up, book and pay by card in minutes.',
       body2:
         'Venue owners can register their own venue, manage prices and opening hours, and take bookings without needing someone answering the phone all day.',
     },
@@ -252,7 +252,7 @@ export const en = {
       allSports: 'All sports',
       allAreas: 'All areas',
       apply: 'Show venues',
-      emptySport: 'There are no venues for this sport yet — do you have one? Register it.',
+      emptySport: 'There are no venues for this sport yet. Do you have one? Register it.',
       emptySportCta: 'Register your venue',
       empty: 'No venues match these filters yet.',
       browse: 'Browse venues',
@@ -313,7 +313,7 @@ export const en = {
         courts: 'Courts',
         courtsValue: '{count, plural, one {1 court} other {# courts}}',
         window: 'Book ahead',
-        windowValue: 'Up to {days} days',
+        windowValue: '{days, plural, one {Up to 1 day} other {Up to # days}}',
         payment: 'Payment',
         paymentValue: 'Card, online',
       },
@@ -340,7 +340,7 @@ export const en = {
         suspended: 'Suspended',
       },
       status: {
-        draft: 'Your listing is still a draft — finish registration and submit it for review.',
+        draft: 'Your listing is still a draft. Finish registration and submit it for review.',
         submitted:
           'Your venue is under review. We will review it and get back to you within 24 hours.',
         rejected: 'The venue was rejected: {reason}',
@@ -515,7 +515,7 @@ export const en = {
       earnings: {
         intro:
           'Players pay by card when they book. Jorena keeps its commission ({commission}) and transfers the rest to you every week.',
-        schedule: 'Next transfer: {date} — for bookings played up to the Saturday before.',
+        schedule: 'Next transfer: {date}, for bookings played up to the Saturday before.',
         due: 'Ready to transfer',
         pending: 'In the next transfer',
         upcoming: 'Upcoming bookings',
@@ -585,7 +585,7 @@ export const en = {
         blocked: 'Time blocked.',
         tapHint: 'Tap an empty time to add a booking.',
         newBookingTitle: 'New booking · {time}',
-        freeTime: 'Free {time} — tap to book',
+        freeTime: 'Free {time}, tap to book',
         reasons: {
           maintenance: 'Maintenance',
           closure: 'Closure',
@@ -1103,7 +1103,7 @@ export const en = {
       net: 'To transfer',
       account: 'Transfer to:',
       noAccount:
-        'No bank account yet — the venue owner adds it from the Earnings tab of the venue dashboard',
+        'No bank account yet. The venue owner adds it from the Earnings tab of the venue dashboard',
       markPaid: 'Record transfer',
       minus: '−{amount}',
       reference: 'Bank transfer reference',

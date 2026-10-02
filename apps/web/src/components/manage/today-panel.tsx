@@ -76,7 +76,7 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
                 · {pick(b.resource.name, locale)}
               </p>
               <p className="text-sm">
-                {b.customer.name ?? '—'}{' '}
+                {b.customer.name ?? '-'}{' '}
                 {b.customer.phone ? (
                   <a href={`tel:${b.customer.phone}`} className="text-primary">
                     <Ltr>{displayPhone(b.customer.phone)}</Ltr>

@@ -113,7 +113,7 @@ function UserRow({ user }: { user: AdminUser }) {
     <li className="px-5 py-4" data-testid="admin-user">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-medium">{user.displayName ?? '—'}</p>
+          <p className="font-medium">{user.displayName ?? '-'}</p>
           <p className="text-sm text-ink-muted">
             <Ltr>{user.phone ? displayPhone(user.phone) : user.email}</Ltr>
           </p>
@@ -221,7 +221,7 @@ function UserDetails({ userId }: { userId: string }) {
   const r = user.data.reliability;
   const tiles: Array<[string, string | number]> = [
     [t('reliability.bookings'), r.bookings],
-    [t('reliability.kept'), r.keptPercent === null ? '—' : `${r.keptPercent}%`],
+    [t('reliability.kept'), r.keptPercent === null ? '-' : `${r.keptPercent}%`],
     [t('reliability.cancelled'), r.cancelled],
     [t('reliability.late'), r.lateCancellations],
     [t('reliability.noShows'), r.noShows],

@@ -88,7 +88,7 @@ export function QuickBookingSheet({
         }}
       >
         <div>
-          <h2 id="quick-booking-title" className="font-display text-2xl leading-tight">
+          <h2 id="quick-booking-title" className="font-display text-2xl leading-[1.35]">
             {t('calendar.newBookingTitle', { time: startTime })}
           </h2>
           <p className="text-sm text-ink-muted">{pick(resource?.name, locale)}</p>

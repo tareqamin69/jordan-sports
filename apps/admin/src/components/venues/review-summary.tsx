@@ -154,7 +154,7 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
           <section className="text-sm">
             <h2 className="mb-1 text-sm font-medium text-ink-muted">{t('owner')}</h2>
             <p>
-              {venue.ownerName ?? '—'}{' '}
+              {venue.ownerName ?? '-'}{' '}
               {venue.ownerPhone ? (
                 <>
                   <Ltr>{displayPhone(venue.ownerPhone)}</Ltr>{' '}

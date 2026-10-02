@@ -169,7 +169,7 @@ export function AuditPage() {
                     {dmyTime(new Date(entry.occurredAt))}
                   </td>
                   <td className="px-4 py-3">
-                    {entry.actorName ?? (entry.actorType === 'system' ? t('system') : '—')}
+                    {entry.actorName ?? (entry.actorType === 'system' ? t('system') : '-')}
                   </td>
                   <td className="px-4 py-3">
                     <span className="block font-medium">{actionLabel(entry.action)}</span>

@@ -132,7 +132,7 @@ function CreateOrganizationForm({ onDone }: { onDone: () => void }) {
   return (
     <Card className="mb-6">
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <h2 className="font-display text-2xl leading-tight sm:col-span-2">{t('createTitle')}</h2>
+        <h2 className="font-display text-2xl leading-[1.35] sm:col-span-2">{t('createTitle')}</h2>
         {create.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(create.error)}
@@ -230,7 +230,7 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
       <PageHeader title={pick(org.data.name, locale)} description={org.data.slug} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="font-display text-2xl leading-tight">{t('members')}</h2>
+          <h2 className="font-display text-2xl leading-[1.35]">{t('members')}</h2>
           <ul className="mt-3 divide-y divide-line">
             {org.data.members.map((m) => (
               <li key={m.userId} className="flex items-center justify-between gap-3 py-3">
@@ -255,7 +255,7 @@ export function OrganizationDetailPage({ organizationId }: { organizationId: str
             }}
             className="flex flex-col gap-4"
           >
-            <h2 className="font-display text-2xl leading-tight">{t('addMember')}</h2>
+            <h2 className="font-display text-2xl leading-[1.35]">{t('addMember')}</h2>
             {add.isError ? <Alert tone="error">{errorMessage(add.error)}</Alert> : null}
             <TextField
               label={t('memberName')}

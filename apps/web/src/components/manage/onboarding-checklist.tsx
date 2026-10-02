@@ -62,7 +62,7 @@ export function OnboardingChecklist({ schedule }: { schedule: VenueSchedule }) {
                 }
                 className={chipClass(true)}
               >
-                {t(item.key)} — {t('go')}
+                {t(item.key)} · {t('go')}
               </Link>
             )}
           </li>

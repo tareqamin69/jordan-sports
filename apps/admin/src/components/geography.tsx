@@ -108,7 +108,7 @@ function GovernoratesSection({ catalog }: { catalog: Catalog }) {
 
   return (
     <section>
-      <h2 className="mb-3 font-display text-2xl leading-tight">{t('governorates')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-[1.35]">{t('governorates')}</h2>
       <Card className="mb-4 p-0">
         <ul className="divide-y divide-line">
           {catalog.governorates.map((g) =>
@@ -259,7 +259,7 @@ function AreasSection({ catalog }: { catalog: Catalog }) {
 
   return (
     <section>
-      <h2 className="mb-3 font-display text-2xl leading-tight">{t('areas')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-[1.35]">{t('areas')}</h2>
       <div className="mb-3 max-w-xs">
         <SelectField
           label={t('governorate')}
@@ -463,7 +463,7 @@ function SportsSection() {
 
   return (
     <section>
-      <h2 className="mb-3 font-display text-2xl leading-tight">{t('sports')}</h2>
+      <h2 className="mb-3 font-display text-2xl leading-[1.35]">{t('sports')}</h2>
       <p className="mb-3 text-sm text-ink-muted">{t('sportsHint')}</p>
       {sports.isError ? (
         <Alert tone="error" className="mb-4">

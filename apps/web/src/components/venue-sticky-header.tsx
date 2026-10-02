@@ -39,7 +39,7 @@ export function VenueStickyHeader({
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
         <div className="flex min-w-0 flex-col">
-          <span className="truncate font-display text-lg leading-tight">{name}</span>
+          <span className="truncate font-display text-lg leading-[1.35]">{name}</span>
           {price ? <span className="text-xs text-ink-muted">{price}</span> : null}
         </div>
         <a href="#book" className={buttonClass({ className: 'shrink-0 px-6' })}>

@@ -75,7 +75,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
           ? ''
           : t(`calendar.kinds.${e.kind}`);
     const who = e.customerName ? `${base}: ${e.customerName}` : base;
-    return e.note ? `${who} — ${e.note}` : who;
+    return e.note ? `${who} · ${e.note}` : who;
   };
 
   let span = { from: 16 * 60, to: 24 * 60 };
@@ -123,7 +123,7 @@ export function CalendarView({ schedule }: { schedule: VenueSchedule }) {
         >
           {t('calendar.next')}
         </Button>
-        <h2 className="ms-2 font-display text-2xl leading-tight" data-testid="calendar-date">
+        <h2 className="ms-2 font-display text-2xl leading-[1.35]" data-testid="calendar-date">
           {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
         </h2>
       </div>
@@ -337,7 +337,7 @@ function BlockForm({ schedule, date }: { schedule: VenueSchedule; date: string }
         }}
       >
         <div className="sm:col-span-2 lg:col-span-3">
-          <h2 className="font-display text-2xl leading-tight">{t('calendar.blockTitle')}</h2>
+          <h2 className="font-display text-2xl leading-[1.35]">{t('calendar.blockTitle')}</h2>
           <p className="mt-1 text-sm text-ink-muted">{t('calendar.blockHint')}</p>
         </div>
         {create.isError ? (

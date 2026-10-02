@@ -13,7 +13,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
-import { HeroArt } from './court-art';
+import { PitchLines } from './pitch-lines';
 import { Icon } from './icons';
 
 type Step =
@@ -116,9 +116,8 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
   return (
     <Card className="mx-auto w-full max-w-md animate-rise overflow-hidden p-0">
-      <div className="relative h-32 bg-night">
-        <HeroArt className="absolute inset-0" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-night/0 to-night/70" />
+      <div className="relative h-32 bg-brand-900">
+        <PitchLines className="absolute inset-0 size-full rtl:-scale-x-100" />
         <ol aria-hidden className="absolute bottom-4 start-6 flex gap-1.5 sm:start-8">
           {STEPS.map((s, i) => (
             <li
@@ -146,7 +145,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
         {step.name === 'phone' ? (
           <form onSubmit={sendCode} className="flex animate-rise flex-col gap-5">
-            <h1 className="font-display text-[2rem] leading-[1.2]">{t('title')}</h1>
+            <h1 className="font-display text-[2rem] leading-[1.3]">{t('title')}</h1>
             <TextField
               label={t('phoneLabel')}
               hint={t('phoneHint')}
@@ -167,7 +166,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
         {step.name === 'code' ? (
           <form onSubmit={verify} className="flex animate-rise flex-col gap-5">
-            <h1 className="font-display text-[2rem] leading-[1.2]">{t('codeTitle')}</h1>
+            <h1 className="font-display text-[2rem] leading-[1.3]">{t('codeTitle')}</h1>
             <p className="text-ink-muted">
               {t.rich('codeSentTo', {
                 number: step.phone,
@@ -203,7 +202,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
         {step.name === 'profile' ? (
           <form onSubmit={continueToMode} className="flex animate-rise flex-col gap-5">
-            <h1 className="font-display text-[2rem] leading-[1.2]">{t('profileTitle')}</h1>
+            <h1 className="font-display text-[2rem] leading-[1.3]">{t('profileTitle')}</h1>
             <TextField
               label={t('nameLabel')}
               hint={t('nameHint')}
@@ -262,7 +261,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
         {step.name === 'mode' ? (
           <div className="flex animate-rise flex-col gap-5">
-            <h1 className="font-display text-[2rem] leading-[1.2]">{t('modeTitle')}</h1>
+            <h1 className="font-display text-[2rem] leading-[1.3]">{t('modeTitle')}</h1>
             <div className="flex flex-col gap-3">
               <button
                 type="button"

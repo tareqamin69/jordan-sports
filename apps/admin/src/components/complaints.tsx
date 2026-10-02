@@ -122,7 +122,7 @@ export function ComplaintsPage() {
                       </span>
                     </span>
                     <span className="mt-1 line-clamp-2 block text-sm text-ink-muted">
-                      {c.venue ? `${pick(c.venue.name, locale)} — ` : ''}
+                      {c.venue ? `${pick(c.venue.name, locale)} · ` : ''}
                       {c.body}
                     </span>
                     <span className="text-xs text-ink-muted">
@@ -198,7 +198,7 @@ function ComplaintDetail({ id }: { id: string }) {
         <Badge>{t(`statuses.${c.status}`)}</Badge>
       </div>
       <p className="mt-1 text-sm text-ink-muted">
-        {t(`categories.${c.category}`)} · {t(`kinds.${c.reporterKind}`)} · {c.reporter.name ?? '—'}{' '}
+        {t(`categories.${c.category}`)} · {t(`kinds.${c.reporterKind}`)} · {c.reporter.name ?? '-'}{' '}
         {c.reporter.phone ? <Ltr>{displayPhone(c.reporter.phone)}</Ltr> : null}
         {c.venue ? ` · ${pick(c.venue.name, locale)}` : ''}
         {c.bookingReference ? (
@@ -227,7 +227,7 @@ function ComplaintDetail({ id }: { id: string }) {
           >
             <p className="text-xs text-ink-muted">
               {m.internal ? `${t('internal')} · ` : ''}
-              {m.authorName ?? '—'} ·{' '}
+              {m.authorName ?? '-'} ·{' '}
               {format.dateTime(new Date(m.createdAt), { dateStyle: 'short', timeStyle: 'short' })}
             </p>
             <p className="whitespace-pre-wrap">{m.body}</p>

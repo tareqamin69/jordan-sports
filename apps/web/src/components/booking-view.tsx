@@ -227,7 +227,7 @@ export function BookingView({
   const venueUrl = `${origin}/${locale}/venues/${b.venue.slug}`;
   const event: CalendarEvent = {
     uid: `${b.id}@jordan-sports`,
-    title: `${resourceName} — ${venueName}`,
+    title: `${resourceName} · ${venueName}`,
     location: [venueName, address].filter(Boolean).join('، '),
     description: `${t('reference')}: ${b.reference}\n${venueUrl}`,
     start: new Date(b.start),
@@ -264,7 +264,7 @@ export function BookingView({
       </button>
       <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-[2.25rem] leading-[1.2] sm:text-[2.75rem]">
+          <h1 className="font-display text-[2.25rem] leading-[1.3] sm:text-[2.75rem]">
             {holding ? t('heldTitle') : t('title')}
           </h1>
         </div>

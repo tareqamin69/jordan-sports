@@ -106,9 +106,9 @@ export const ar = {
     bookingCancelledByVenue:
       '{appName}: {venue} لغى حجزك {reference} يوم {date} الساعة {time}. السبب: {reason}.{refundStatus, select, some { رح يرجعلك {refund} على بطاقتك خلال 5–10 أيام عمل.} other {}}',
     venueNewBooking:
-      '{appName}: حجز جديد {reference} — {resource}، {date} الساعة {time}، {customer} ({phone}). المبلغ المدفوع: {price}.',
+      '{appName}: حجز جديد {reference}: {resource}، {date} الساعة {time}، {customer} ({phone}). المبلغ المدفوع: {price}.',
     venueBookingCancelled:
-      '{appName}: اللاعب لغى الحجز {reference} — {resource}، {date} الساعة {time}.',
+      '{appName}: اللاعب لغى الحجز {reference}: {resource}، {date} الساعة {time}.',
     noPrice: 'السعر مش محدد',
   },
   web: {
@@ -142,7 +142,7 @@ export const ar = {
       title: 'من نحن',
       description: 'ليش سوّينا {appName}.',
       body1:
-        '{appName} منصة بتربط اللاعبين بأصحاب الملاعب بكل الأردن — من عمّان للعقبة. بندور نسهّل حجز الملاعب: شوف الأوقات الفاضية أول بأول، احجز وادفع بالبطاقة بدقايق.',
+        '{appName} منصة بتربط اللاعبين بأصحاب الملاعب بكل الأردن، من عمّان للعقبة. بندور نسهّل حجز الملاعب: شوف الأوقات الفاضية أول بأول، احجز وادفع بالبطاقة بدقايق.',
       body2:
         'وأصحاب الملاعب بيقدروا يسجّلوا ملعبهم بنفسهم، يديروا الأسعار وساعات الدوام، ويستقبلوا الحجوزات من غير ما يحتاجوا موظف رد على التلفون طول الوقت.',
     },
@@ -248,7 +248,7 @@ export const ar = {
       allSports: 'كل الرياضات',
       allAreas: 'كل المناطق',
       apply: 'اعرض الملاعب',
-      emptySport: 'لسا ما في ملاعب لهاي الرياضة — عندك ملعب؟ سجّله',
+      emptySport: 'لسا ما في ملاعب لهاي الرياضة. عندك ملعب؟ سجّله',
       emptySportCta: 'سجّل ملعبك',
       empty: 'ما في ملاعب بتناسب هالاختيارات لسا.',
       browse: 'شوف الملاعب',
@@ -311,7 +311,8 @@ export const ar = {
         courts: 'الساحات',
         courtsValue: '{count, plural, one {ساحة وحدة} two {ساحتين} few {# ساحات} other {# ساحة}}',
         window: 'الحجز المسبق',
-        windowValue: 'لحد {days} يوم لقدّام',
+        windowValue:
+          '{days, plural, one {لحد يوم لقدّام} two {لحد يومين لقدّام} few {لحد # أيام لقدّام} other {لحد # يوم لقدّام}}',
         payment: 'الدفع',
         paymentValue: 'بالبطاقة، أونلاين',
       },
@@ -338,7 +339,7 @@ export const ar = {
         suspended: 'موقوف',
       },
       status: {
-        draft: 'الملف لسا مسودة — كمّل التسجيل وابعته للمراجعة.',
+        draft: 'الملف لسا مسودة. كمّل التسجيل وابعته للمراجعة.',
         submitted: 'ملعبك قيد المراجعة. رح نراجعه ونتواصل معك خلال 24 ساعة.',
         rejected: 'الملعب انرفض: {reason}',
         rejectedNoReason: 'الملعب انرفض. عدّل المعلومات وابعته للمراجعة من جديد.',
@@ -510,7 +511,7 @@ export const ar = {
       earnings: {
         intro:
           'اللاعبين بيدفعوا بالبطاقة لما يحجزوا. جورينا بتاخد عمولتها ({commission}) وبتحوّللك الباقي كل أسبوع.',
-        schedule: 'التحويل الجاي: {date} — بنحوّل مستحقات الحجوزات اللي خلصت لغاية آخر السبت.',
+        schedule: 'التحويل الجاي: {date}. بنحوّل مستحقات الحجوزات اللي خلصت لغاية آخر السبت.',
         due: 'جاهز للتحويل',
         pending: 'بالتحويل الجاي',
         upcoming: 'حجوزات جاية',
@@ -577,7 +578,7 @@ export const ar = {
         blocked: 'تسكّر الوقت.',
         tapHint: 'اضغط على أي وقت فاضي لتضيف حجز.',
         newBookingTitle: 'حجز جديد · {time}',
-        freeTime: 'فاضي {time} — اضغط لتحجز',
+        freeTime: 'فاضي {time}، اضغط لتحجز',
         reasons: {
           maintenance: 'صيانة',
           closure: 'إغلاق',
@@ -1090,7 +1091,7 @@ export const ar = {
       commission: 'العمولة',
       net: 'المبلغ للتحويل',
       account: 'حوّل على:',
-      noAccount: 'ما في حساب بنكي لسا — صاحب الملعب بيضيفه من تبويب «المستحقات» بلوحة الملعب',
+      noAccount: 'ما في حساب بنكي لسا. صاحب الملعب بيضيفه من تبويب «المستحقات» بلوحة الملعب',
       markPaid: 'سجّل التحويل',
       minus: '−{amount}',
       reference: 'رقم الحوالة البنكية',

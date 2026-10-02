@@ -198,7 +198,7 @@ export function TeamPage() {
             <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div className="min-w-0">
                 <p className="font-medium">
-                  {m.displayName ?? '—'} {m.lockedUntil ? <Badge>{t('locked')}</Badge> : null}
+                  {m.displayName ?? '-'} {m.lockedUntil ? <Badge>{t('locked')}</Badge> : null}
                 </p>
                 <p className="text-sm text-ink-muted">
                   <Ltr>{m.email}</Ltr>

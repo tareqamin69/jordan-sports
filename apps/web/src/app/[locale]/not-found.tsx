@@ -6,7 +6,7 @@ export default function NotFound() {
   const t = useTranslations('common.notFound');
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 sm:px-8 sm:py-24">
-      <h1 className="font-display text-[2.25rem] leading-[1.2] sm:text-[3rem]">{t('title')}</h1>
+      <h1 className="font-display text-[2.25rem] leading-[1.3] sm:text-[3rem]">{t('title')}</h1>
       <p className="mt-3 text-ink-muted">{t('description')}</p>
       <Link href="/" className={buttonClass({ className: 'mt-8' })}>
         {t('backHome')}

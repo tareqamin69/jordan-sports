@@ -785,7 +785,7 @@ function CourtsStep({
             {formats.map((fm) => (
               <CheckboxField
                 key={fm.id}
-                label={`${pick(fm.sport.name, locale)} — ${pick(fm.name, locale)}`}
+                label={`${pick(fm.sport.name, locale)} · ${pick(fm.name, locale)}`}
                 checked={formatIds.includes(fm.id)}
                 onChange={(e) =>
                   setFormatIds((ids) =>
@@ -894,7 +894,7 @@ function EditCourtForm({
           {formats.map((fm) => (
             <CheckboxField
               key={fm.id}
-              label={`${pick(fm.sport.name, locale)} — ${pick(fm.name, locale)}`}
+              label={`${pick(fm.sport.name, locale)} · ${pick(fm.name, locale)}`}
               checked={formatIds.includes(fm.id)}
               onChange={(e) =>
                 setFormatIds((ids) =>
@@ -1075,18 +1075,18 @@ function ReviewStep({
         <div>
           <dt className="text-sm text-ink-muted">{t('governorate')}</dt>
           <dd className="font-medium">
-            {governorate ? pick(governorate.name, locale) : '—'}
-            {area ? ` — ${pick(area.name, locale)}` : ''}
+            {governorate ? pick(governorate.name, locale) : '-'}
+            {area ? ` · ${pick(area.name, locale)}` : ''}
           </dd>
         </div>
         <div>
           <dt className="text-sm text-ink-muted">{t('address')}</dt>
-          <dd className="font-medium">{pick(venue.address, locale) || '—'}</dd>
+          <dd className="font-medium">{pick(venue.address, locale) || '-'}</dd>
         </div>
         <div>
           <dt className="text-sm text-ink-muted">{t('whatsapp')}</dt>
           <dd className="font-medium" dir="ltr">
-            {venue.whatsapp || '—'}
+            {venue.whatsapp || '-'}
           </dd>
         </div>
       </dl>
@@ -1101,14 +1101,14 @@ function ReviewStep({
       <div>
         <p className="text-sm text-ink-muted">{t('courtsIntro')}</p>
         {courts.length === 0 ? (
-          <p className="mt-1 font-medium">—</p>
+          <p className="mt-1 font-medium">-</p>
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
             {courts.map((r) => (
               <li key={r.id} className="rounded-tile border border-line px-3 py-2 text-sm">
                 <span className="font-medium">{pick(r.name, locale)}</span>
                 <span className="text-ink-muted">
-                  {' — '}
+                  {' · '}
                   {r.formats
                     .map((fm) => `${pick(fm.sportName, locale)} (${pick(fm.name, locale)})`)
                     .join('، ')}

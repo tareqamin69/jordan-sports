@@ -105,7 +105,7 @@ function DayGroup({
   const format = useFormatter();
   return (
     <section>
-      <h2 className="mb-3 font-display text-2xl leading-tight">
+      <h2 className="mb-3 font-display text-2xl leading-[1.35]">
         {format.dateTime(dateForLabel(date), { weekday: 'long' })} {dmy(date)}
       </h2>
       <ul className="flex flex-col gap-2">
@@ -283,7 +283,7 @@ function ManualBookingForm({ schedule }: { schedule: VenueSchedule }) {
           create.mutate();
         }}
       >
-        <h2 className="font-display text-2xl leading-tight sm:col-span-2 lg:col-span-3">
+        <h2 className="font-display text-2xl leading-[1.35] sm:col-span-2 lg:col-span-3">
           {t('newTitle')}
         </h2>
         {create.isError ? (
@@ -418,7 +418,7 @@ function CutoffSettings({ schedule }: { schedule: VenueSchedule }) {
           save.mutate();
         }}
       >
-        <h2 className="font-display text-2xl leading-tight">{t('cutoffTitle')}</h2>
+        <h2 className="font-display text-2xl leading-[1.35]">{t('cutoffTitle')}</h2>
         <p className="text-sm text-ink-muted">{t('cutoffHint')}</p>
         {save.isError ? <Alert tone="error">{errorMessage(save.error)}</Alert> : null}
         <div className="flex flex-wrap items-end gap-3">

@@ -236,7 +236,9 @@ function ProfileForm({ venue, catalog }: { venue: AdminVenue; catalog: Catalog }
           save.mutate(undefined);
         }}
       >
-        <h2 className="font-display text-2xl leading-tight sm:col-span-2">{t('venues.profile')}</h2>
+        <h2 className="font-display text-2xl leading-[1.35] sm:col-span-2">
+          {t('venues.profile')}
+        </h2>
         {save.isError ? (
           <Alert tone="error" className="sm:col-span-2">
             {errorMessage(save.error)}
@@ -391,7 +393,7 @@ function ResourcesPanel({ venue, catalog }: { venue: AdminVenue; catalog: Catalo
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-2xl leading-tight">{t('resources')}</h2>
+        <h2 className="font-display text-2xl leading-[1.35]">{t('resources')}</h2>
         <Button size="sm" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
           {t('addResource')}
         </Button>
@@ -566,7 +568,7 @@ function AddResourceForm({
           {formats.map((fm) => (
             <CheckboxField
               key={fm.id}
-              label={`${pick(fm.sport.name, locale)} — ${pick(fm.name, locale)}`}
+              label={`${pick(fm.sport.name, locale)} · ${pick(fm.name, locale)}`}
               checked={formatIds.includes(fm.id)}
               onChange={(e) =>
                 setFormatIds((ids) =>
@@ -601,7 +603,7 @@ function AddResourceForm({
               })
             }
           >
-            <option value="">—</option>
+            <option value="">-</option>
             {field.options.map((o) => (
               <option key={o.value} value={o.value}>
                 {pick(o.label, locale)}
@@ -661,7 +663,7 @@ function FacilitiesPanel({ venue }: { venue: AdminVenue }) {
   );
   return (
     <Card>
-      <h2 className="font-display text-2xl leading-tight">{t('venues.facilities')}</h2>
+      <h2 className="font-display text-2xl leading-[1.35]">{t('venues.facilities')}</h2>
       <ul className="mt-2 flex flex-wrap gap-2">
         {venue.facilities.map((fa) => (
           <li key={fa.id}>
@@ -728,7 +730,7 @@ function PhotosPanel({ venue }: { venue: AdminVenue }) {
 
   return (
     <Card>
-      <h2 className="font-display text-2xl leading-tight">{t('photos')}</h2>
+      <h2 className="font-display text-2xl leading-[1.35]">{t('photos')}</h2>
       {error ? (
         <Alert tone="error" className="mt-3">
           {errorMessage(error)}

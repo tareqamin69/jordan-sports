@@ -302,7 +302,7 @@ function BandForm({
   return (
     <Card>
       <form className="grid gap-4 sm:grid-cols-2" onSubmit={submit}>
-        <h2 className="font-display text-2xl leading-tight sm:col-span-2">
+        <h2 className="font-display text-2xl leading-[1.35] sm:col-span-2">
           {editing ? t('pricing.editTitle') : t('pricing.add')}
         </h2>
         {add.isError ? (
@@ -479,7 +479,7 @@ function PricePreview({ schedule, bdStart }: { schedule: VenueSchedule; bdStart:
           check.mutate();
         }}
       >
-        <h2 className="font-display text-2xl leading-tight sm:col-span-2 lg:col-span-4">
+        <h2 className="font-display text-2xl leading-[1.35] sm:col-span-2 lg:col-span-4">
           {t('pricing.previewTitle')}
         </h2>
         <SelectField

@@ -63,7 +63,7 @@ export default tseslint.config(
         {
           noStrings: true,
           ignoreProps: true,
-          allowedStrings: ['·', '—', '–', '/', ':', '(', ')', '×'],
+          allowedStrings: ['·', '-', '—', '–', '/', ':', '(', ')', '×'],
         },
       ],
     },

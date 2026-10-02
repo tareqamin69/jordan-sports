@@ -91,7 +91,7 @@ export function AccountSetupForm() {
   return (
     <Card className="mx-auto w-full max-w-lg">
       <form onSubmit={submit} className="flex flex-col gap-5" data-testid="account-setup">
-        <h1 className="font-display text-[2rem] leading-[1.2]">{t('title')}</h1>
+        <h1 className="font-display text-[2rem] leading-[1.3]">{t('title')}</h1>
         <p className="text-sm text-ink-muted">{t('intro')}</p>
         <p className="text-sm">
           <Ltr>{details.email}</Ltr> · {t('role', { role: tr(details.platformRole) })}

@@ -294,7 +294,7 @@ export const legalDocs: Record<LegalDocId, Record<'ar' | 'en', LegalDoc>> = {
           paragraphs: [
             'Every week (on Sunday) we transfer your net earnings for bookings played or ended in the previous week: what players paid, minus refunds, minus the commission.',
             'Payouts go to a Jordanian bank account (IBAN) in the name of the venue owner or organization. Only the owner can add or change it, and every change is logged. Until an account is added, earnings stay on hold.',
-            'Under “Earnings” you can see each booking — paid, commission and your share — and every payout with its transfer reference.',
+            'Under “Earnings” you can see each booking (paid, commission and your share) and every payout with its transfer reference.',
           ],
         },
         {
