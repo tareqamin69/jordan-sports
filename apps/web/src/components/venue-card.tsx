@@ -19,11 +19,14 @@ export function VenueCard({
   locale,
   date,
   distanceKm,
+  tonight = false,
 }: {
   venue: VenueSummary;
   locale: string;
   date?: string | undefined;
   distanceKm?: number | undefined;
+  /** Searching tonight: show the "free tonight" badge when the venue has free times. */
+  tonight?: boolean;
 }) {
   const t = useTranslations('web.venues');
   const href = `/venues/${venue.slug}`;
@@ -38,6 +41,15 @@ export function VenueCard({
           className="zoom-media"
           sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
         />
+        {tonight && venue.freeTimes && venue.freeTimes.length > 0 ? (
+          <span
+            className="absolute start-4 top-4 flex h-8 items-center gap-1.5 rounded-full bg-lime px-3 text-xs font-bold text-night"
+            data-testid="free-tonight"
+          >
+            <span aria-hidden className="size-1.5 rounded-full bg-night" />
+            {t('tonight')}
+          </span>
+        ) : null}
         <span className="absolute end-4 top-4 flex gap-1.5">
           {venue.sports.map((s) => (
             <span

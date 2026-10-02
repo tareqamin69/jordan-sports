@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { createAdmin, randomPhone, signInAdmin } from './helpers';
+import {
+  adminApi,
+  arrangeVenue,
+  createAdmin,
+  makeBookable,
+  randomPhone,
+  signInAdmin,
+  userApi,
+} from './helpers';
 import { ADMIN, expectNoAccessibilityViolations, WEB } from './support';
 
 test.describe('venues: admin onboarding → public page', () => {
@@ -89,6 +97,32 @@ test.describe('venues: admin onboarding → public page', () => {
     await expect(page.getByRole('link', { name: 'بادل', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'بادل', exact: true }).click();
     await expect(page).toHaveURL(`${WEB}/ar/venues?sport=padel`);
+  });
+
+  test('search: free tonight, sorting and the map view', async ({ page }) => {
+    const venue = await arrangeVenue(await adminApi(createAdmin()));
+    await makeBookable(await userApi(venue.ownerPhone, 'Owner'), venue.venueId, venue.resourceId);
+    await page.goto(`${WEB}/en/venues?sport=padel`);
+    await page.getByTestId('chip-tonight').click();
+    await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}&time=2[0-3](%3A|:)00/);
+    await expect(page.getByTestId('chip-tonight')).toHaveAttribute('aria-current', 'page');
+    // The test venue is open until midnight, so it has free times tonight until about 21:00.
+    const ammanHour = Number(
+      new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        hourCycle: 'h23',
+        timeZone: 'Asia/Amman',
+      }).format(new Date()),
+    );
+    if (ammanHour < 21) {
+      const card = page.getByTestId('venue-card').filter({ hasText: 'E2E Venue' }).first();
+      await expect(card.getByTestId('free-tonight')).toBeVisible();
+    }
+
+    await page.locator('select[name="sort"]').selectOption('price');
+    await page.getByTestId('view-map').click();
+    await expect(page.getByTestId('results-map')).toBeVisible();
+    await expectNoAccessibilityViolations(page);
   });
 
   test('publishes a sitemap and robots.txt', async ({ request }) => {

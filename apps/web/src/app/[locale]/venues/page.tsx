@@ -8,6 +8,7 @@ import { SearchBar } from '@/components/search-bar';
 import { VenueResults } from '@/components/venue-results';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/lib/localized';
+import { businessToday } from '@/lib/time';
 import { serverApi } from '@/lib/server-api';
 
 export const dynamic = 'force-dynamic';
@@ -73,6 +74,27 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   const sportHasVenues = sport
     ? catalog.offeredSportIds.includes(catalog.sports.find((x) => x.key === sport)?.id ?? '')
     : true;
+  // "Free tonight": today's free times from 20:00, or from the next hour once it is later than
+  // that (the search returns free times near the given one).
+  const today = businessToday('Asia/Amman', 360);
+  const ammanHour = Number(
+    new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      hourCycle: 'h23',
+      timeZone: 'Asia/Amman',
+    }).format(new Date()),
+  );
+  // After midnight (before 06:00), "tonight" is the coming evening.
+  const tonightDate = ammanHour < 6 ? businessToday('Asia/Amman', 0) : today;
+  const tonightTime =
+    ammanHour < 6
+      ? '20:00'
+      : `${String(Math.min(23, Math.max(20, ammanHour + 1))).padStart(2, '0')}:00`;
+  const tonight = date === tonightDate && !!time && time >= '18:00';
+  const place = {
+    ...(governorate ? { governorate } : {}),
+    ...(area ? { area } : {}),
+  };
   const keep = {
     ...(governorate ? { governorate } : {}),
     ...(area ? { area } : {}),
@@ -89,13 +111,39 @@ export default async function VenuesPage({ params, searchParams }: Props) {
       />
 
       <SearchBar
+        // Remount when the query changes (chips navigate client-side; the fields are uncontrolled).
+        key={[sport, governorate, area, date, time].join('|')}
         catalog={catalog}
         values={{ sport, governorate, area, date, time }}
         className="-mt-2"
       />
 
-      <nav aria-label={t('filterSport')} className="-mx-5 mt-4 sm:mx-0">
-        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-0">
+      <nav
+        aria-label={t('filterSport')}
+        className="sticky top-18 z-20 -mx-5 mt-4 bg-canvas/95 py-2 backdrop-blur-md sm:-mx-8"
+      >
+        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-1 sm:flex-wrap sm:px-8">
+          <li className="shrink-0">
+            <Link
+              href={{
+                pathname: '/venues',
+                query: tonight
+                  ? { ...place, ...(sport ? { sport } : {}) }
+                  : { ...place, ...(sport ? { sport } : {}), date: tonightDate, time: tonightTime },
+              }}
+              aria-current={tonight ? 'page' : undefined}
+              className={chipClass(tonight, { tone: 'night' })}
+              data-testid="chip-tonight"
+            >
+              <span
+                aria-hidden
+                className={
+                  tonight ? 'size-2 rounded-full bg-lime' : 'size-2 rounded-full bg-primary'
+                }
+              />
+              {t('tonight')}
+            </Link>
+          </li>
           <li className="shrink-0">
             <Link
               href={{ pathname: '/venues', query: keep }}
@@ -136,6 +184,8 @@ export default async function VenuesPage({ params, searchParams }: Props) {
         />
       ) : (
         <VenueResults
+          // New query, new list (chips navigate client-side; the list keeps paging state).
+          key={[sport, governorate, area, date, time].join('|')}
           initial={venues.items}
           nextCursor={venues.nextCursor}
           filters={{
@@ -144,6 +194,7 @@ export default async function VenuesPage({ params, searchParams }: Props) {
             ...(area ? { area } : {}),
           }}
           date={date}
+          tonight={tonight}
           pageSize={PAGE_SIZE}
         />
       )}
