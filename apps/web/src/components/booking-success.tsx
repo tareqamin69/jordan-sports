@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-const colors = ['#E7F06A', '#E3A583', '#F4F0E6', '#8DB39B', '#B4481F', '#FFFFFF'];
+const colors = ['#E7F06A', '#E3A583', '#F6F1E7', '#8DB39B', '#B4481F', '#E9DBBD'];
 // Fixed spread (no randomness, so server and client render the same pieces).
 const pieces = Array.from({ length: 14 }, (_, i) => {
   const angle = (i / 14) * Math.PI * 2;

@@ -90,6 +90,11 @@ export const publicVenueSchema = venueSummarySchema.extend({
   currency: z.string(),
   /** How many days ahead players can book: the venue's "advance booking days" rule (one stored value). */
   bookingWindowDays: z.number().int().min(1).max(365),
+  /** The venue's cancellation rule: free until this many hours before, then this share back. */
+  cancellation: z.object({
+    freeHours: z.number().int().min(0),
+    lateRefundPercent: z.union([z.literal(0), z.literal(50), z.literal(100)]),
+  }),
   amenities: z.array(namedRef),
   media: z.array(mediaSchema),
   resources: z.array(publicResourceSchema),

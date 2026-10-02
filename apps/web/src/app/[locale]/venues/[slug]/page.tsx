@@ -73,7 +73,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
               },
             ],
           }
-        : {}),
+        : // No photos yet: a generated share card (/og/venue/<slug>.png).
+          { images: [{ url: `${siteUrl}/og/venue/${slug}.png`, width: 1200, height: 630 }] }),
     },
   };
 }
@@ -169,6 +170,22 @@ export default async function VenuePage({ params, searchParams }: Props) {
         <div className="mt-6 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
           <div className="flex min-w-0 flex-col gap-10">
             <div className="flex flex-col gap-5">
+              <p
+                className="flex items-start gap-3 rounded-tile bg-brand-50 p-4 text-sm leading-6"
+                data-testid="cancellation-badge"
+              >
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-on-primary">
+                  <Icon name="check" className="size-4" />
+                </span>
+                <span>
+                  <strong className="font-semibold text-primary">
+                    {t('cancel.free', { hours: venue.cancellation.freeHours })}
+                  </strong>{' '}
+                  <span className="text-ink-muted">
+                    {t('cancel.late', { percent: String(venue.cancellation.lateRefundPercent) })}
+                  </span>
+                </span>
+              </p>
               <dl className="grid grid-cols-3 gap-2 sm:gap-3" data-testid="venue-facts">
                 {[
                   {

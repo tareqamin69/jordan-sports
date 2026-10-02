@@ -286,6 +286,8 @@ export const en = {
       noSlots: 'No available times on this day.',
       taken: 'Booked',
       duration: '{duration} min',
+      heatLow: 'Cheapest: {price}',
+      heatHigh: 'Peak: {price}',
       bookHint: 'Pick a time, then tap Book. You pay by card.',
       holding: 'Reserving this time…',
       durationLabel: 'Booking length',
@@ -322,6 +324,10 @@ export const en = {
       book: 'Book',
       call: 'Call',
       allPhotos: 'All photos ({count})',
+      cancel: {
+        free: '{hours, plural, =0 {Free cancellation until the booking starts.} one {Free cancellation up to 1 hour before.} other {Free cancellation up to # hours before.}}',
+        late: '{percent, select, 0 {After that, no refund.} 50 {After that, half back.} other {After that, still a full refund.}}',
+      },
       facts: {
         courts: 'Courts',
         courtsValue: '{count, plural, one {1 court} other {# courts}}',

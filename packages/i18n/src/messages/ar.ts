@@ -282,6 +282,8 @@ export const ar = {
       noSlots: 'ما في أوقات فاضية بهاد اليوم.',
       taken: 'محجوز',
       duration: '{duration} دقيقة',
+      heatLow: 'أرخص وقت: {price}',
+      heatHigh: 'وقت الذروة: {price}',
       bookHint: 'اختار الوقت وبعدين اضغط احجز. الدفع بالبطاقة.',
       holding: 'لحظة، عم نحجزلك الوقت…',
       durationLabel: 'مدة الحجز',
@@ -320,6 +322,10 @@ export const ar = {
       book: 'احجز',
       call: 'اتصل',
       allPhotos: 'كل الصور ({count})',
+      cancel: {
+        free: '{hours, plural, =0 {الإلغاء مجاني لحد وقت الحجز.} one {إلغاء مجاني لغاية ساعة قبل الموعد.} two {إلغاء مجاني لغاية ساعتين قبل الموعد.} few {إلغاء مجاني لغاية # ساعات قبل الموعد.} other {إلغاء مجاني لغاية # ساعة قبل الموعد.}}',
+        late: '{percent, select, 0 {بعدها ما بيرجع المبلغ.} 50 {بعدها بيرجعلك نص المبلغ.} other {وبعدها كمان بيرجعلك المبلغ كامل.}}',
+      },
       facts: {
         courts: 'الساحات',
         courtsValue: '{count, plural, one {ساحة وحدة} two {ساحتين} few {# ساحات} other {# ساحة}}',

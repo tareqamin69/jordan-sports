@@ -142,6 +142,18 @@ Motion explains what changed; it never decorates.
 - Photos get a dark scrim only where text sits on them, and are never filtered or tinted.
 - Maps stay neutral and load on click (privacy and speed).
 
+### Sport identity
+
+Each sport is an **icon + court illustration** pair, keyed by the sport's icon (no sport names in
+code): the icon on tiles, chips and card badges; the court art (`court-art.tsx`) wherever a venue
+has no photo yet. Sports do not get their own colours: green stays the only accent.
+
+### Share images
+
+Venues with photos share their cover. Venues without photos get a generated card
+(`/og/venue/<slug>.png`): pitch markings, lime ball, name, place, sports, "from" price. Latin text
+only, because the renderer cannot shape Arabic yet.
+
 ## 10. Components (in `@jordan-sports/ui`)
 
 `Button` (primary / secondary / ghost / danger / inverse / night; sm / md / lg), `chipClass`,

@@ -141,6 +141,10 @@ export class VenueViewsService {
       timezone: venue.timezone,
       currency: venue.currency,
       bookingWindowDays: Number(window?.days ?? DEFAULT_BOOKING_WINDOW_DAYS),
+      cancellation: {
+        freeHours: venue.cancellationCutoffHours,
+        lateRefundPercent: venue.lateRefundPercent,
+      },
       sports: this.sportsOf(catalog, resources),
       amenities: catalog.amenities.filter((a) => amenityIds.includes(a.id)),
       media,

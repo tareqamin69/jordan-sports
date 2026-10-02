@@ -123,6 +123,13 @@ test.describe('venues: admin onboarding → public page', () => {
     await page.getByTestId('view-map').click();
     await expect(page.getByTestId('results-map')).toBeVisible();
     await expectNoAccessibilityViolations(page);
+
+    // Venue page: the cancellation rule up front and a share image for photo-less venues.
+    await page.goto(`${WEB}/en/venues/${venue.slug}`);
+    await expect(page.getByTestId('cancellation-badge')).toContainText('Free cancellation');
+    const og = await page.request.get(`${WEB}/og/venue/${venue.slug}.png`);
+    expect(og.status()).toBe(200);
+    expect(og.headers()['content-type']).toBe('image/png');
   });
 
   test('publishes a sitemap and robots.txt', async ({ request }) => {

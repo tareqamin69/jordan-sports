@@ -120,6 +120,18 @@ export function VenueAvailability({
       choices: [...choices].sort((a, b) => a.slot.price.amount - b.slot.price.amount),
     }));
   const multipleCourts = free.length > 1;
+  // Price heat: where each free time sits between the day's cheapest and dearest price.
+  const amounts = free.flatMap((r) => r.slots.map((s) => s.price.amount));
+  const low = Math.min(...amounts);
+  const high = Math.max(...amounts);
+  const heat = (amount: number): 'low' | 'mid' | 'high' | null =>
+    amounts.length === 0 || low === high
+      ? null
+      : amount === low
+        ? 'low'
+        : amount === high
+          ? 'high'
+          : 'mid';
 
   // A new day, length or court mode starts a fresh choice.
   const pickDate = (d: string) => {
@@ -208,6 +220,22 @@ export function VenueAvailability({
           >
             {formatMoney(slot.price, locale)}
           </span>
+          {heat(slot.price.amount) ? (
+            <span
+              aria-hidden
+              data-heat={heat(slot.price.amount)}
+              className={cx(
+                'mt-1 h-1 w-6 rounded-full',
+                active
+                  ? 'bg-on-primary/60'
+                  : heat(slot.price.amount) === 'low'
+                    ? 'bg-primary'
+                    : heat(slot.price.amount) === 'high'
+                      ? 'bg-accent-400'
+                      : 'bg-sand-300',
+              )}
+            />
+          ) : null}
         </button>
       </li>
     );
@@ -363,6 +391,31 @@ export function VenueAvailability({
                 </details>
               ))
             : null}
+          {low !== high && amounts.length > 0 ? (
+            <p
+              className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-muted"
+              data-testid="price-heat-legend"
+            >
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="h-1 w-5 rounded-full bg-primary" />
+                {t('heatLow', {
+                  price: formatMoney(
+                    { amount: low, currency: free[0]?.slots[0]?.price.currency ?? 'JOD' },
+                    locale,
+                  ),
+                })}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="h-1 w-5 rounded-full bg-accent-400" />
+                {t('heatHigh', {
+                  price: formatMoney(
+                    { amount: high, currency: free[0]?.slots[0]?.price.currency ?? 'JOD' },
+                    locale,
+                  ),
+                })}
+              </span>
+            </p>
+          ) : null}
           <p className="text-sm text-ink-muted">{t('bookHint')}</p>
         </div>
       ) : null}
