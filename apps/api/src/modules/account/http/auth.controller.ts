@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, Inject, Post, Res } from '@nestjs/common';
 import {
   completeSignup,
+  LEGAL_TEXTS_VERSION,
   requestOtp,
   signOut,
   verifyOtp,
@@ -73,7 +74,13 @@ export class AuthController {
     const input = parseInput(completeSignup.body, body);
     const session = await this.auth.completeSignup(
       input.signupToken,
-      { displayName: input.displayName, locale: input.locale, preferredMode: input.preferredMode },
+      {
+        displayName: input.displayName,
+        locale: input.locale,
+        preferredMode: input.preferredMode,
+        termsVersion: LEGAL_TEXTS_VERSION,
+        marketingOptIn: input.marketingOptIn,
+      },
       requestMeta(request),
     );
     setSessionCookie(

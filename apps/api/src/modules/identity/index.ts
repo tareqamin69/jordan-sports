@@ -3,3 +3,4 @@ export { AuthService, WEB_SESSION_TTL_SECONDS } from './application/auth.service
 export { UsersService, type UserRow } from './application/users.service.js';
 export { normalizePhone } from './domain/phone.js';
 export { StaffSetupService, OwnerExistsError } from './application/staff-setup.service.js';
+export { recordConsent, type ConsentKind } from './application/consents.js';

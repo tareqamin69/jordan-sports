@@ -10,7 +10,9 @@ and the header comment in `apps/web/src/content/legal.ts` are the internal marke
 | --- | --- | --- |
 | Terms & conditions (players) | `/terms` | `legalDocs.terms` |
 | Venue owner terms | `/venue-terms` | `legalDocs.venueTerms` |
-| Privacy policy | `/privacy` | `legalDocs.privacy` |
+| Privacy policy | `/privacy` | `legalDocs.privacy` (+ company/contact block from settings) |
+| Cancellation & refund policy | `/refunds` | `legalDocs.refunds` |
+| Cookie policy | `/cookies` | `legalDocs.cookies` |
 | How Jorena works + FAQ | `/how-it-works` | `legalDocs.howItWorks` |
 
 ## Points for the lawyer
@@ -22,10 +24,16 @@ and the header comment in `apps/web/src/content/legal.ts` are the internal marke
   (snapshotted at booking); venue cancels → always full; no-show → no refund. Refund timing
   "5–10 business days".
 - Consumer-protection wording for the late-cancel and no-show rules.
-- Data retention for financial records (how many years under Jordanian law), and the 30-day account
-  deletion promise.
+- Data retention for financial records (how many years under Jordanian law). Account deletion is
+  now immediate and self-service (personal fields scrubbed; bookings/payments kept unlinked).
+- PDPL No. 24/2023: legal bases, cross-border transfer to the hosting provider (likely EU),
+  breach-notice wording and the authority's name, the 30-day reply for access requests.
+- Photo licence granted by venue owners (`venueTerms#photos`).
+- 16+ to sign up, 18+ to pay by card (confirmation logged per booking in `identity.consents`).
 - SMS (OTP and booking notices) and the SMS provider as a data processor.
 - Governing law / jurisdiction clause.
-- Minimum age (currently 16, from the sign-up checkbox).
 
-When the text changes, bump `LEGAL_UPDATED_AT` in `apps/web/src/content/legal.ts`.
+When the text changes, bump `LEGAL_TEXTS_VERSION` in `packages/contracts/src/identity.ts`: it is
+the "last updated" date on every page and the version recorded with each sign-up consent.
+
+See also [`../compliance-checklist.md`](../compliance-checklist.md).

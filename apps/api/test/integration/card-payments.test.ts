@@ -135,7 +135,7 @@ describe('card payments', () => {
       method: 'POST',
       url: `/v1/bookings/${held.id}/checkout`,
       cookie: player,
-      body: { locale: 'ar', acceptCancellationPolicy: true },
+      body: { locale: 'ar', acceptCancellationPolicy: true, confirmAdult: true },
     });
     const { redirectUrl } = start.json() as { redirectUrl: string };
     expect(redirectUrl).toMatch(/\/ar\/pay\/test\/[0-9a-f-]{36}$/);
@@ -239,7 +239,7 @@ describe('card payments', () => {
       method: 'POST',
       url: `/v1/bookings/${held.id}/checkout`,
       cookie: player,
-      body: { locale: 'en', acceptCancellationPolicy: true },
+      body: { locale: 'en', acceptCancellationPolicy: true, confirmAdult: true },
     });
     const session = (start.json() as { redirectUrl: string }).redirectUrl.split('/').pop()!;
     // The player walks away; the hold runs out and is swept.

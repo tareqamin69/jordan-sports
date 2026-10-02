@@ -63,6 +63,12 @@ export const catalogSchema = z.object({
   counts: z.object({ venues: z.number().int(), sports: z.number().int() }),
   /** Platform support contact (owner settings); null when not set. */
   support: z.object({ whatsapp: z.string().nullable(), email: z.string().nullable() }),
+  /** The company behind Jorena (owner settings); null until filled in, never invented. */
+  company: z.object({
+    name: localizedSchema.nullable(),
+    registrationNo: z.string().nullable(),
+    address: localizedSchema.nullable(),
+  }),
 });
 export type Catalog = z.infer<typeof catalogSchema>;
 

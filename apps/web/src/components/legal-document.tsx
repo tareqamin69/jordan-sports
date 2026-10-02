@@ -2,22 +2,29 @@ import type { Locale } from '@jordan-sports/i18n';
 import { PageHeader } from '@jordan-sports/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations } from 'next-intl/server';
+import { getCatalog, type Catalog } from '@jordan-sports/contracts';
 import { LEGAL_UPDATED_AT, legalDocs, type LegalDocId } from '@/content/legal';
 import { Link } from '@/i18n/navigation';
+import { displayPhone } from '@/lib/format';
+import { serverApi } from '@/lib/server-api';
 import { Icon } from './icons';
 
 const paths: Record<LegalDocId, string> = {
   terms: '/terms',
   venueTerms: '/venue-terms',
   privacy: '/privacy',
+  refunds: '/refunds',
+  cookies: '/cookies',
   howItWorks: '/how-it-works',
 };
 
 const related: Record<LegalDocId, LegalDocId[]> = {
-  terms: ['howItWorks', 'privacy', 'venueTerms'],
+  terms: ['refunds', 'privacy', 'howItWorks', 'venueTerms'],
   venueTerms: ['terms', 'privacy'],
-  privacy: ['terms', 'howItWorks'],
-  howItWorks: ['terms', 'privacy', 'venueTerms'],
+  privacy: ['cookies', 'terms', 'howItWorks'],
+  refunds: ['terms', 'howItWorks'],
+  cookies: ['privacy', 'terms'],
+  howItWorks: ['terms', 'refunds', 'privacy', 'venueTerms'],
 };
 
 const isSteps = (paragraphs: string[]) =>
@@ -104,6 +111,7 @@ export async function LegalDocument({ id, locale }: { id: LegalDocId; locale: Lo
           </section>
         ))}
       </article>
+      {id === 'privacy' ? <PrivacyContact locale={locale} /> : null}
       <nav
         aria-label={tl('related')}
         className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-5 text-sm"
@@ -127,5 +135,49 @@ export async function LegalDocument({ id, locale }: { id: LegalDocId; locale: Lo
         })}
       </p>
     </main>
+  );
+}
+
+/**
+ * Who to contact about personal data: the company details and support contacts from the owner's
+ * platform settings. Anything not filled in is simply left out (never invented).
+ */
+async function PrivacyContact({ locale }: { locale: Locale }) {
+  const tl = await getTranslations({ locale, namespace: 'web.legal' });
+  const catalog: Catalog | null = await serverApi(getCatalog).catch(() => null);
+  const company = catalog?.company;
+  const support = catalog?.support;
+  const rows: Array<[string, string, boolean?]> = [];
+  const name = company?.name?.[locale] ?? company?.name?.ar ?? company?.name?.en;
+  if (name) rows.push([tl('company'), name]);
+  if (company?.registrationNo) rows.push([tl('registration'), company.registrationNo, true]);
+  const address = company?.address?.[locale] ?? company?.address?.ar ?? company?.address?.en;
+  if (address) rows.push([tl('address'), address]);
+  if (support?.email) rows.push([tl('email'), support.email, true]);
+  if (support?.whatsapp) rows.push([tl('whatsapp'), displayPhone(support.whatsapp), true]);
+  return (
+    <section
+      className="mt-8 rounded-tile border border-line bg-surface p-5"
+      data-testid="privacy-contact"
+    >
+      <h2 className="font-display text-xl">{tl('contactTitle')}</h2>
+      {rows.length > 0 ? (
+        <dl className="mt-3 grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[auto_1fr]">
+          {rows.map(([label, value, ltr]) => (
+            <div key={label} className="contents">
+              <dt className="text-ink-muted">{label}</dt>
+              <dd dir={ltr ? 'ltr' : undefined} className="rtl:text-end">
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <p className="mt-3 text-sm">
+        <Link href="/contact" className="font-medium text-primary hover:underline">
+          {tl('contactPage')}
+        </Link>
+      </p>
+    </section>
   );
 }

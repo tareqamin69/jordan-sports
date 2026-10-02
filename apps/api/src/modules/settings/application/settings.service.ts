@@ -18,13 +18,23 @@ interface Loaded {
   supportWhatsapp: string | null;
   supportEmail: string | null;
   venueEditsNeedReview: boolean;
+  company: Company;
   adminIpAllowlist: string[];
   updatedAt: Date;
   updatedBy: string | null;
   allowlist: BlockList | null;
 }
 
+export interface Company {
+  nameAr: string | null;
+  nameEn: string | null;
+  registrationNo: string | null;
+  addressAr: string | null;
+  addressEn: string | null;
+}
+
 export type SettingsPatch = {
+  company?: Partial<Company> | undefined;
   commissionBps?: number | undefined;
   supportWhatsapp?: string | null | undefined;
   supportEmail?: string | null | undefined;
@@ -84,6 +94,13 @@ export class SettingsService {
       supportWhatsapp: row.support_whatsapp,
       supportEmail: row.support_email,
       venueEditsNeedReview: row.venue_edits_need_review,
+      company: {
+        nameAr: row.company_name_ar,
+        nameEn: row.company_name_en,
+        registrationNo: row.company_registration_no,
+        addressAr: row.company_address_ar,
+        addressEn: row.company_address_en,
+      },
       adminIpAllowlist: row.admin_ip_allowlist,
       updatedAt: row.updated_at,
       updatedBy: row.updated_by,
@@ -109,6 +126,10 @@ export class SettingsService {
     return (await this.load()).supportEmail;
   }
 
+  async company(): Promise<Company> {
+    return (await this.load()).company;
+  }
+
   /** True when the admin panel may be used from this address (no allowlist: everywhere). */
   async adminIpAllowed(ip: string | null): Promise<boolean> {
     const { allowlist } = await this.load();
@@ -122,6 +143,7 @@ export class SettingsService {
       supportWhatsapp: s.supportWhatsapp,
       supportEmail: s.supportEmail,
       venueEditsNeedReview: s.venueEditsNeedReview,
+      company: s.company,
       adminIpAllowlist: s.adminIpAllowlist,
       yourIp,
       updatedAt: s.updatedAt.toISOString(),
@@ -167,6 +189,17 @@ export class SettingsService {
             ? { venue_edits_need_review: patch.venueEditsNeedReview }
             : {}),
           ...(patch.supportEmail !== undefined ? { support_email: patch.supportEmail } : {}),
+          ...(patch.company?.nameAr !== undefined ? { company_name_ar: patch.company.nameAr } : {}),
+          ...(patch.company?.nameEn !== undefined ? { company_name_en: patch.company.nameEn } : {}),
+          ...(patch.company?.registrationNo !== undefined
+            ? { company_registration_no: patch.company.registrationNo }
+            : {}),
+          ...(patch.company?.addressAr !== undefined
+            ? { company_address_ar: patch.company.addressAr }
+            : {}),
+          ...(patch.company?.addressEn !== undefined
+            ? { company_address_en: patch.company.addressEn }
+            : {}),
           ...(patch.adminIpAllowlist !== undefined
             ? { admin_ip_allowlist: patch.adminIpAllowlist }
             : {}),
@@ -180,6 +213,13 @@ export class SettingsService {
         supportWhatsapp: r.support_whatsapp,
         supportEmail: r.support_email,
         venueEditsNeedReview: r.venue_edits_need_review,
+        company: [
+          r.company_name_ar,
+          r.company_name_en,
+          r.company_registration_no,
+          r.company_address_ar,
+          r.company_address_en,
+        ],
         adminIpAllowlist: r.admin_ip_allowlist,
       });
       await this.audit.record(

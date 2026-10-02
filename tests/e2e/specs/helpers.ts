@@ -39,6 +39,7 @@ export async function signUpPlayer(
   await page.locator('form button[type="submit"]').click();
   await page.locator('input[name="displayName"]').fill(name);
   await page.locator('input[name="ageConfirmed"]').check();
+  await page.locator('input[name="acceptTerms"]').check();
   await page.locator('form button[type="submit"]').click();
   await page.getByTestId(`mode-${mode}`).click();
   await expect(page).toHaveURL(
@@ -211,6 +212,7 @@ export async function userApi(phone: string, name = 'Player'): Promise<APIReques
         displayName: name,
         locale: 'en',
         ageConfirmed: true,
+        acceptTerms: true,
         preferredMode: 'player',
       },
     });

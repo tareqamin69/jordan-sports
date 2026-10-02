@@ -3,6 +3,7 @@
 import type { PublicVenue } from '@jordan-sports/contracts';
 import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CourtArt } from './court-art';
 import { Icon } from './icons';
@@ -17,8 +18,10 @@ export function VenueGallery({
   media,
   name,
   icon,
+  venueId,
   children,
 }: {
+  venueId: string;
   media: PublicVenue['media'];
   name: string;
   icon?: string | undefined;
@@ -138,6 +141,7 @@ export function VenueGallery({
       {lightbox !== null ? (
         <Lightbox
           media={media}
+          venueId={venueId}
           start={lightbox}
           alt={alt}
           onClose={(i) => {
@@ -174,11 +178,13 @@ function HeroArrow({
 /** Desktop photo viewer: a modal <dialog> (focus trap, Esc to close) with arrow-key paging. */
 function Lightbox({
   media,
+  venueId,
   start,
   alt,
   onClose,
 }: {
   media: PublicVenue['media'];
+  venueId: string;
   start: number;
   alt: (i: number) => string;
   onClose: (index: number) => void;
@@ -213,6 +219,13 @@ function Lightbox({
           <span className="text-sm tabular-nums text-canvas/80" dir="ltr">
             {i + 1} / {media.length}
           </span>
+          <Link
+            href={{ pathname: '/support', query: { venue: venueId, photo: String(i + 1) } }}
+            className="ms-auto me-3 text-sm text-canvas/80 underline-offset-4 hover:text-canvas hover:underline"
+            data-testid="report-photo"
+          >
+            {t('reportPhoto')}
+          </Link>
           <button
             type="button"
             onClick={() => dialog.current?.close()}

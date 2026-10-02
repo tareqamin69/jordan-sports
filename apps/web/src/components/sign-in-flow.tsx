@@ -10,7 +10,7 @@ import { Alert, Button, Card, CheckboxField, Ltr, TextField, cx } from '@jordan-
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, type FormEvent } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useApi } from '@/lib/api';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { HeroArt } from './court-art';
@@ -41,6 +41,9 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  // Offers and news: a separate box, unticked by default.
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Test builds only (no SMS provider yet): the code is shown on screen.
@@ -89,7 +92,7 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
 
   const continueToMode = (e: FormEvent) => {
     e.preventDefault();
-    if (step.name !== 'profile' || !ageConfirmed) return;
+    if (step.name !== 'profile' || !ageConfirmed || !termsAccepted) return;
     setStep({ name: 'mode', signupToken: step.signupToken });
   };
 
@@ -102,6 +105,8 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
           displayName: name,
           locale,
           ageConfirmed: true,
+          acceptTerms: true,
+          marketingOptIn,
           preferredMode,
         },
       });
@@ -215,7 +220,38 @@ export function SignInFlow({ devNotice, next }: { devNotice: boolean; next?: str
               onChange={(e) => setAgeConfirmed(e.target.checked)}
               name="ageConfirmed"
             />
-            <Button type="submit" disabled={!ageConfirmed || name.trim() === ''}>
+            <CheckboxField
+              label={t.rich('acceptTerms', {
+                terms: (chunks) => (
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="font-medium text-primary underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+                privacy: (chunks) => (
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="font-medium text-primary underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              name="acceptTerms"
+            />
+            <CheckboxField
+              label={t('marketingOptIn')}
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              name="marketingOptIn"
+            />
+            <Button type="submit" disabled={!ageConfirmed || !termsAccepted || name.trim() === ''}>
               {tc('continue')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setStep({ name: 'phone' })}>

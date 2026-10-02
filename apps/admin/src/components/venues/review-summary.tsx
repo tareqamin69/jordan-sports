@@ -6,9 +6,10 @@ import {
   type VenueReviewSummary,
 } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
-import { Alert, Card, Ltr, SkeletonGroup, SkeletonText } from '@jordan-sports/ui';
+import { Alert, Button, Card, Ltr, SkeletonGroup, SkeletonText } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { displayPhone } from '@/lib/format';
 import { useApi } from '@/lib/api';
 import { pick } from '@/lib/localized';
@@ -49,6 +50,7 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
   const format = useFormatter();
   const api = useApi();
   const errorMessage = useErrorMessage();
+  const [mapOpen, setMapOpen] = useState(false);
   const summary = useQuery({
     queryKey: ['venue-review-summary', venue.id],
     queryFn: () => api(adminGetVenueReviewSummary, { params: { venueId: venue.id } }),
@@ -180,7 +182,12 @@ export function ReviewSummary({ venue }: { venue: AdminVenue }) {
         </div>
         <section>
           <h2 className="mb-2 text-sm font-medium text-ink-muted">{t('location')}</h2>
-          {venue.location ? (
+          {venue.location && !mapOpen ? (
+            // The embed comes from openstreetmap.org: load it only when asked.
+            <Button size="sm" variant="secondary" onClick={() => setMapOpen(true)}>
+              {t('showMap')}
+            </Button>
+          ) : venue.location ? (
             <iframe
               title={t('location')}
               loading="lazy"

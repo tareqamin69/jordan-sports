@@ -6,6 +6,7 @@ import type { Db } from '../../../platform/database/database.js';
 import { DATABASE } from '../../../platform/database/database.module.js';
 import { transaction } from '../../../platform/database/transaction.js';
 import { AppError, Errors } from '../../../platform/http/errors.js';
+import { recordConsent } from '../../identity/index.js';
 import { enqueue } from '../../notifications/index.js';
 import {
   CHECKOUT_ABANDONED_MINUTES,
@@ -71,6 +72,8 @@ export class CheckoutService {
       if (b.status !== 'HELD') throw new AppError('INVALID_STATE_TRANSITION', 409);
       if (b.total === null || Number(b.total) <= 0) throw new AppError('NO_PRICE', 422);
 
+      // "I am 18 or older" was ticked to get here (the contract requires it): keep a record.
+      await recordConsent(tx, { userId, kind: 'adult_payment', bookingId });
       const live = await this.payments.liveCharge(tx, bookingId);
       if (live) await this.payments.failCharge(tx, live.id, 'superseded');
       const chargeId = await this.payments.insertCharge(tx, {

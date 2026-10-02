@@ -1,16 +1,17 @@
 'use client';
 
-import { signOut } from '@jordan-sports/contracts';
+import { deleteMyAccount, signOut, updateMe } from '@jordan-sports/contracts';
 import {
   Alert,
   Button,
   Card,
+  CheckboxField,
   DetailSkeleton,
   Ltr,
   PageHeader,
   buttonClass,
 } from '@jordan-sports/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -149,18 +150,91 @@ export function AccountView() {
           </ul>
         </Card>
       ) : null}
-      <p className="px-1 text-sm text-ink-muted">
-        {t.rich('deleteAccount', {
-          link: (chunks) => (
-            <Link
-              href={{ pathname: '/privacy', hash: 'delete' }}
-              className="font-medium text-primary hover:underline"
-            >
-              {chunks}
-            </Link>
-          ),
-        })}
-      </p>
+      <PrivacyCard marketingOptIn={user.marketingOptIn} />
     </div>
+  );
+}
+
+/** "خصوصيتك": the marketing preference and deleting the account (PDPL rights). */
+function PrivacyCard({ marketingOptIn }: { marketingOptIn: boolean }) {
+  const t = useTranslations('web.account.privacy');
+  const api = useApi();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const errorMessage = useErrorMessage();
+  const [confirming, setConfirming] = useState(false);
+  const marketing = useMutation({
+    mutationFn: (optIn: boolean) => api(updateMe, { body: { marketingOptIn: optIn } }),
+    meta: {
+      toast: (data: unknown) =>
+        (data as { marketingOptIn: boolean }).marketingOptIn ? t('on') : t('off'),
+    },
+    onSuccess: (me) => queryClient.setQueryData(['me'], me),
+  });
+  const remove = useMutation({
+    mutationFn: () => api(deleteMyAccount, { body: { confirm: true } }),
+    meta: { toast: t('deleted') },
+    onSuccess: () => {
+      queryClient.clear();
+      queryClient.setQueryData(['me'], null);
+      router.replace('/');
+    },
+  });
+
+  return (
+    <Card className="flex flex-col gap-4" data-testid="privacy-card">
+      <div>
+        <h2 className="font-display text-2xl">{t('title')}</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          {t.rich('intro', {
+            link: (chunks) => (
+              <Link href="/privacy" className="font-medium text-primary hover:underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+      </div>
+      <CheckboxField
+        label={t('marketing')}
+        checked={marketingOptIn}
+        disabled={marketing.isPending}
+        onChange={(e) => marketing.mutate(e.target.checked)}
+        name="marketingOptIn"
+      />
+      {marketing.isError ? <Alert tone="error">{errorMessage(marketing.error)}</Alert> : null}
+      <div className="border-t border-line pt-4">
+        {confirming ? (
+          <div className="flex flex-col gap-3" role="alertdialog" aria-labelledby="delete-title">
+            <p id="delete-title" className="font-semibold">
+              {t('deleteQuestion')}
+            </p>
+            <p className="text-sm leading-relaxed text-ink-muted">{t('deleteExplain')}</p>
+            {remove.isError ? <Alert tone="error">{errorMessage(remove.error)}</Alert> : null}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="danger"
+                busy={remove.isPending}
+                onClick={() => remove.mutate()}
+                data-testid="confirm-delete-account"
+              >
+                {t('deleteConfirm')}
+              </Button>
+              <Button variant="secondary" onClick={() => setConfirming(false)}>
+                {t('keep')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="ghostDanger"
+            onClick={() => setConfirming(true)}
+            data-testid="delete-account"
+          >
+            {t('delete')}
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }

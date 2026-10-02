@@ -18,6 +18,14 @@ export const platformSettingsSchema = z.object({
   supportEmail: z.string().nullable(),
   /** Owner edits of a published venue's name or photos send it back to review. */
   venueEditsNeedReview: z.boolean(),
+  /** The company behind Jorena (legal pages, footer, receipts); null fields are not shown. */
+  company: z.object({
+    nameAr: z.string().nullable(),
+    nameEn: z.string().nullable(),
+    registrationNo: z.string().nullable(),
+    addressAr: z.string().nullable(),
+    addressEn: z.string().nullable(),
+  }),
   adminIpAllowlist: z.array(z.string()),
   /** The address this request came from (to avoid locking yourself out). */
   yourIp: z.string().nullable(),
@@ -48,6 +56,16 @@ export const adminUpdateSettings = endpoint({
       supportWhatsapp: phoneInputSchema.nullable().optional(),
       supportEmail: z.string().trim().toLowerCase().email().max(120).nullable().optional(),
       venueEditsNeedReview: z.boolean().optional(),
+      company: z
+        .object({
+          nameAr: z.string().trim().min(2).max(160).nullable(),
+          nameEn: z.string().trim().min(2).max(160).nullable(),
+          registrationNo: z.string().trim().min(2).max(60).nullable(),
+          addressAr: z.string().trim().min(2).max(300).nullable(),
+          addressEn: z.string().trim().min(2).max(300).nullable(),
+        })
+        .partial()
+        .optional(),
       adminIpAllowlist: z.array(ipOrCidrSchema).max(50).optional(),
     })
     .strict(),

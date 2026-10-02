@@ -28,6 +28,7 @@ import { generateTotpSecret, verifyTotp } from '../../../platform/security/totp.
 import { AuditService } from '../../audit/index.js';
 import { normalizePhone } from '../domain/phone.js';
 import { enqueue } from '../../notifications/index.js';
+import { recordConsent } from './consents.js';
 import { OTP_SENDER, type OtpSender } from './otp-sender.js';
 
 export const OTP_TTL_SECONDS = 5 * 60;
@@ -199,7 +200,14 @@ export class AuthService {
 
   async completeSignup(
     signupToken: string,
-    profile: { displayName: string; locale: 'ar' | 'en'; preferredMode: 'player' | 'venue' },
+    profile: {
+      displayName: string;
+      locale: 'ar' | 'en';
+      preferredMode: 'player' | 'venue';
+      /** Version of the legal texts accepted (terms + privacy). */
+      termsVersion: string;
+      marketingOptIn: boolean;
+    },
     meta: RequestMeta,
   ): Promise<IssuedSession> {
     return this.db.transaction().execute(async (tx) => {
@@ -236,6 +244,9 @@ export class AuthService {
             locale: profile.locale,
             preferred_mode: profile.preferredMode,
             age_confirmed_at: now,
+            terms_version: profile.termsVersion,
+            terms_accepted_at: now,
+            marketing_opt_in_at: profile.marketingOptIn ? now : null,
           })
           .where('id', '=', userId)
           .execute();
@@ -250,9 +261,14 @@ export class AuthService {
             locale: profile.locale,
             preferred_mode: profile.preferredMode,
             age_confirmed_at: now,
+            terms_version: profile.termsVersion,
+            terms_accepted_at: now,
+            marketing_opt_in_at: profile.marketingOptIn ? now : null,
           })
           .execute();
       }
+      await recordConsent(tx, { userId, kind: 'terms', version: profile.termsVersion });
+      if (profile.marketingOptIn) await recordConsent(tx, { userId, kind: 'marketing_opt_in' });
       await tx
         .updateTable('identity.otp_challenges')
         .set({ signup_completed_at: now })
@@ -265,7 +281,7 @@ export class AuthService {
           action: 'user.signed_up',
           targetType: 'user',
           targetId: userId,
-          details: { ageConfirmed: true },
+          details: { ageConfirmed: true, termsVersion: profile.termsVersion },
           meta,
         },
         tx,

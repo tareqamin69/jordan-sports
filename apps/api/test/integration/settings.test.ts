@@ -35,6 +35,11 @@ describe('platform settings', () => {
   const catalog = async () =>
     (await call(t.app, { method: 'GET', url: '/v1/catalog' })).json() as {
       support: { whatsapp: string | null; email: string | null };
+      company: {
+        name: { ar?: string; en?: string } | null;
+        registrationNo: string | null;
+        address: { ar?: string; en?: string } | null;
+      };
     };
 
   it('only the owner changes settings; admins can read them', async () => {
@@ -67,6 +72,35 @@ describe('platform settings', () => {
     expect((await patch({ supportWhatsapp: '12345678' })).json()).toMatchObject({
       code: 'INVALID_PHONE',
     });
+  });
+
+  it('company details are empty until the owner fills them in, then shown as written', async () => {
+    expect((await catalog()).company).toEqual({ name: null, registrationNo: null, address: null });
+    const r = await patch({
+      company: { nameAr: 'شركة جورينا ذ.م.م', nameEn: 'Jorena LLC', registrationNo: '12345' },
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({
+      company: {
+        nameAr: 'شركة جورينا ذ.م.م',
+        nameEn: 'Jorena LLC',
+        registrationNo: '12345',
+        addressAr: null,
+      },
+    });
+    expect((await catalog()).company).toEqual({
+      name: { ar: 'شركة جورينا ذ.م.م', en: 'Jorena LLC' },
+      registrationNo: '12345',
+      address: null,
+    });
+    // Only the fields sent change; null clears one.
+    await patch({ company: { registrationNo: null } });
+    expect((await catalog()).company).toMatchObject({
+      registrationNo: null,
+      name: { en: 'Jorena LLC' },
+    });
+    await patch({ company: { nameAr: null, nameEn: null } });
+    expect((await catalog()).company.name).toBeNull();
   });
 
   it('records every change with before and after values', async () => {

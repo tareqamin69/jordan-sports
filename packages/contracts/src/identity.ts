@@ -35,8 +35,16 @@ export const meSchema = z.object({
   locale: localeSchema,
   preferredMode: preferredModeSchema,
   memberships: z.array(myMembershipSchema),
+  /** Opted in to offers and news (can be switched off at any time). */
+  marketingOptIn: z.boolean(),
 });
 export type Me = z.infer<typeof meSchema>;
+
+/**
+ * Version of the published legal texts (terms, privacy, refunds, cookies). Recorded with every
+ * sign-up consent; bump it whenever those texts change (docs/legal/README.md).
+ */
+export const LEGAL_TEXTS_VERSION = '2026-10-02';
 
 const signedIn = z.object({ status: z.literal('signed_in'), user: meSchema });
 
@@ -72,6 +80,10 @@ export const completeSignup = endpoint({
     locale: localeSchema,
     // Minimum age 16 (approved product decision): explicit self-attestation.
     ageConfirmed: z.literal(true),
+    /** Terms + privacy policy (version LEGAL_TEXTS_VERSION), recorded with a timestamp. */
+    acceptTerms: z.literal(true),
+    /** Offers and news: a separate box, unticked by default. */
+    marketingOptIn: z.boolean().default(false),
     // "بدك تحجز وتلعب؟" / "عندك ملعب وبدك تضيفه؟" — only decides where the new account lands.
     preferredMode: preferredModeSchema,
   }),
@@ -99,8 +111,23 @@ export const updateMe = endpoint({
   path: '/v1/me',
   summary: 'Update the signed-in user profile',
   auth: 'user',
-  body: z.object({ displayName: displayNameSchema.optional(), locale: localeSchema.optional() }),
+  body: z.object({
+    displayName: displayNameSchema.optional(),
+    locale: localeSchema.optional(),
+    /** Turning it off is as easy as turning it on; both are recorded. */
+    marketingOptIn: z.boolean().optional(),
+  }),
   response: meSchema,
+});
+
+export const deleteMyAccount = endpoint({
+  method: 'POST',
+  path: '/v1/me/delete',
+  summary:
+    'Delete the signed-in account: personal details are removed at once; booking and payment records stay for accounting, without them',
+  auth: 'user',
+  body: z.object({ confirm: z.literal(true) }),
+  response: okSchema,
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -200,7 +227,7 @@ export const adminUserSchema = z.object({
   phone: z.string().nullable(),
   email: z.string().nullable(),
   displayName: z.string().nullable(),
-  status: z.enum(['active', 'suspended', 'banned']),
+  status: z.enum(['active', 'suspended', 'banned', 'deleted']),
   platformRole: platformRoleSchema.nullable(),
   createdAt: z.string(),
 });
@@ -263,6 +290,28 @@ export const adminGetUser = endpoint({
   permission: 'users.read',
   params: z.object({ userId: uuidSchema }),
   response: adminUserDetailSchema,
+});
+
+/** Everything stored about one user, for access requests (PDPL). */
+export const userDataExportSchema = z.object({
+  exportedAt: z.string(),
+  profile: z.record(z.string(), z.unknown()),
+  consents: z.array(z.record(z.string(), z.unknown())),
+  memberships: z.array(z.record(z.string(), z.unknown())),
+  bookings: z.array(z.record(z.string(), z.unknown())),
+  payments: z.array(z.record(z.string(), z.unknown())),
+  complaints: z.array(z.record(z.string(), z.unknown())),
+});
+export type UserDataExport = z.infer<typeof userDataExportSchema>;
+
+export const adminExportUserData = endpoint({
+  method: 'GET',
+  path: '/v1/admin/users/:userId/export',
+  summary: 'Everything stored about a user, as JSON (access requests; audited)',
+  auth: 'admin',
+  permission: 'users.manage',
+  params: z.object({ userId: uuidSchema }),
+  response: userDataExportSchema,
 });
 
 export const auditLogSchema = z.object({

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  adminExportUserData,
   adminGetUser,
   adminListUsers,
   adminSetUserStatus,
@@ -106,7 +107,7 @@ function UserRow({ user }: { user: AdminUser }) {
     },
   });
   // Staff accounts are managed by the owner from the team page.
-  const manageable = can('users.manage') && !user.platformRole;
+  const manageable = can('users.manage') && !user.platformRole && user.status !== 'deleted';
 
   return (
     <li className="px-5 py-4" data-testid="admin-user">
@@ -196,6 +197,21 @@ function UserDetails({ userId }: { userId: string }) {
   const locale = useLocale();
   const api = useApi();
   const errorMessage = useErrorMessage();
+  const can = useCan();
+  // Access requests (PDPL): everything stored about this person, as a file. Audited by the API.
+  const download = useMutation({
+    mutationFn: () => api(adminExportUserData, { params: { userId } }),
+    onSuccess: (data) => {
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `user-${userId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+  });
   const user = useQuery({
     queryKey: ['user', userId],
     queryFn: () => api(adminGetUser, { params: { userId } }),
@@ -235,6 +251,19 @@ function UserDetails({ userId }: { userId: string }) {
       >
         {t('bookingsLink')}
       </Link>
+      {can('users.manage') ? (
+        <div>
+          {download.isError ? <Alert tone="error">{errorMessage(download.error)}</Alert> : null}
+          <Button
+            size="sm"
+            variant="secondary"
+            busy={download.isPending}
+            onClick={() => download.mutate()}
+          >
+            {t('exportData')}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

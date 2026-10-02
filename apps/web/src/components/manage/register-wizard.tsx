@@ -39,10 +39,16 @@ import { governorateCenter, isNearGovernorate } from '@/lib/governorate-geo';
 import { wizardSteps, type WizardStep } from '@/lib/wizard-steps';
 import { pick } from '@/lib/localized';
 import { useErrorMessage } from '@/lib/use-error-message';
-import { VenueMap } from '@/components/venue-map';
+import { VenueMapCard } from '@/components/venue-map-lazy';
+import dynamic from 'next/dynamic';
 import { BookingSuccess } from '../booking-success';
 import { Icon } from '../icons';
-import { LocationPicker } from './location-picker';
+
+// The map library is large and its tiles come from a third party: load it only when asked.
+const LocationPicker = dynamic(() => import('./location-picker').then((m) => m.LocationPicker), {
+  ssr: false,
+  loading: () => <div aria-hidden className="skeleton aspect-[4/3] w-full rounded-card" />,
+});
 
 type Localized = { ar?: string; en?: string };
 
@@ -413,6 +419,7 @@ function LocationStep({
     addressEn: venue.address.en ?? '',
   });
   const [location, setLocation] = useState(venue.location);
+  const [mapOpen, setMapOpen] = useState(false);
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
   const governorateKey = catalog.governorates.find((g) => g.id === venue.governorateId)?.key;
@@ -482,12 +489,29 @@ function LocationStep({
           lang="en"
         />
         <div className="sm:col-span-2">
-          <LocationPicker
-            location={location}
-            onChange={setLocation}
-            defaultCenter={defaultCenter}
-            markerLabel={tv('mapMarkerLabel', { name: pick(venue.name, locale) })}
-          />
+          {mapOpen ? (
+            <LocationPicker
+              location={location}
+              onChange={setLocation}
+              defaultCenter={defaultCenter}
+              markerLabel={tv('mapMarkerLabel', { name: pick(venue.name, locale) })}
+            />
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-dashed border-line p-4">
+              <p className="text-sm text-ink-muted">
+                {location ? t('locationSet') : t('locationNotSet')}
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setMapOpen(true)}
+                data-testid="open-location-map"
+              >
+                <Icon name="map" className="size-4" />
+                {location ? t('changeLocation') : t('setLocation')}
+              </Button>
+            </div>
+          )}
           {outsideGovernorate ? (
             <Alert tone="warning" className="mt-3">
               {t('locationOutsideGovernorate')}
@@ -1070,7 +1094,7 @@ function ReviewStep({
       {venue.location ? (
         <div>
           <p className="text-sm text-ink-muted">{t('reviewLocationLabel')}</p>
-          <VenueMap location={venue.location} name={pick(venue.name, locale)} />
+          <VenueMapCard location={venue.location} name={pick(venue.name, locale)} />
         </div>
       ) : null}
 

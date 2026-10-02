@@ -5,7 +5,7 @@ import { SupportCenter } from '@/components/support-center';
 
 type Props = {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ booking?: string; ref?: string; venue?: string }>;
+  searchParams: Promise<{ booking?: string; ref?: string; venue?: string; photo?: string }>;
 };
 
 export const metadata = { robots: { index: false } };
@@ -19,9 +19,12 @@ export default function SupportPage({ params, searchParams }: Props) {
   const bookingId = query.booking && uuid.test(query.booking) ? query.booking : undefined;
   const venueId = query.venue && uuid.test(query.venue) ? query.venue : undefined;
   const ref = query.ref && /^[A-Z0-9-]{3,20}$/.test(query.ref) ? query.ref : undefined;
+  // "Report this photo" from the venue gallery: the photo's position (1-based).
+  const photo =
+    venueId && query.photo && /^[1-9]\d?$/.test(query.photo) ? Number(query.photo) : undefined;
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
-      <SupportCenter bookingId={bookingId} bookingReference={ref} venueId={venueId} />
+      <SupportCenter bookingId={bookingId} bookingReference={ref} venueId={venueId} photo={photo} />
     </main>
   );
 }

@@ -259,6 +259,15 @@ export interface IdentityAccountSetupTokens {
   used_at: Timestamp | null;
 }
 
+export interface IdentityConsents {
+  booking_id: string | null;
+  created_at: Generated<Timestamp>;
+  id: string;
+  kind: string;
+  user_id: string;
+  version: string | null;
+}
+
 export interface IdentityOtpChallenges {
   attempts: Generated<number>;
   code_hash: string;
@@ -309,16 +318,20 @@ export interface IdentityTotpCredentials {
 export interface IdentityUsers {
   age_confirmed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
+  deleted_at: Timestamp | null;
   display_name: string | null;
   email: string | null;
   failed_sign_ins: Generated<number>;
   id: string;
   locale: Generated<string>;
   locked_until: Timestamp | null;
+  marketing_opt_in_at: Timestamp | null;
   phone: string | null;
   platform_role: string | null;
   preferred_mode: Generated<string>;
   status: Generated<string>;
+  terms_accepted_at: Timestamp | null;
+  terms_version: string | null;
   updated_at: Generated<Timestamp>;
 }
 
@@ -421,6 +434,11 @@ export interface PlatformOutboxEvents {
 export interface PlatformSettings {
   admin_ip_allowlist: Generated<string[]>;
   commission_bps: Generated<number>;
+  company_address_ar: string | null;
+  company_address_en: string | null;
+  company_name_ar: string | null;
+  company_name_en: string | null;
+  company_registration_no: string | null;
   features: Generated<Json>;
   id: Generated<boolean>;
   support_email: string | null;
@@ -682,6 +700,7 @@ export interface DB {
   'finance.payout_items': FinancePayoutItems;
   'finance.payouts': FinancePayouts;
   'identity.account_setup_tokens': IdentityAccountSetupTokens;
+  'identity.consents': IdentityConsents;
   'identity.otp_challenges': IdentityOtpChallenges;
   'identity.password_credentials': IdentityPasswordCredentials;
   'identity.sessions': IdentitySessions;

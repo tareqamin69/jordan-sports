@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   Logger,
   type OnApplicationBootstrap,
@@ -7,6 +8,9 @@ import {
 import { CheckoutService, LifecycleService } from '../modules/bookings/index.js';
 import { PaymentsService } from '../modules/payments/index.js';
 import { OutboxDispatcher } from '../modules/notifications/index.js';
+import type { Db } from '../platform/database/database.js';
+import { DATABASE } from '../platform/database/database.module.js';
+import { purgeExpiredPersonalData } from './retention.js';
 
 interface Job {
   readonly name: string;
@@ -30,6 +34,7 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
     private readonly checkout: CheckoutService,
     private readonly payments: PaymentsService,
     private readonly outbox: OutboxDispatcher,
+    @Inject(DATABASE) private readonly db: Db,
   ) {}
 
   private readonly jobs: Job[] = [
@@ -38,6 +43,7 @@ export class JobsService implements OnApplicationBootstrap, OnApplicationShutdow
     { name: 'complete-bookings', everyMs: 60_000, run: () => this.lifecycle.completeFinished() },
     { name: 'reconcile-checkouts', everyMs: 60_000, run: () => this.checkout.reconcile() },
     { name: 'refunds', everyMs: 30_000, run: () => this.payments.processRefunds() },
+    { name: 'retention', everyMs: 60 * 60_000, run: () => purgeExpiredPersonalData(this.db) },
   ];
 
   onApplicationBootstrap(): void {

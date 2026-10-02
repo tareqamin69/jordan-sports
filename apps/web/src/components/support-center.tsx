@@ -50,11 +50,14 @@ export function ReportForm({
   venueId,
   bookingId,
   bookingReference,
+  photo,
   asVenue = false,
 }: {
   venueId?: string | undefined;
   bookingId?: string | undefined;
   bookingReference?: string | undefined;
+  /** Reporting one of the venue's photos (1-based position in its gallery). */
+  photo?: number | undefined;
   asVenue?: boolean;
 }) {
   const t = useTranslations('web.support');
@@ -64,9 +67,9 @@ export function ReportForm({
   const toast = useToast();
   const categories = asVenue ? VENUE_CATEGORIES : PLAYER_CATEGORIES;
   const [category, setCategory] = useState<ComplaintCategory>(
-    bookingId ? 'booking' : categories[0]!,
+    bookingId ? 'booking' : photo ? 'venue' : categories[0]!,
   );
-  const [body, setBody] = useState('');
+  const [body, setBody] = useState(photo ? t('photoPrefill', { n: String(photo) }) : '');
   const send = useMutation({
     mutationFn: () => {
       const payload = { category, body, ...(bookingId ? { bookingId } : {}) };
@@ -236,10 +239,12 @@ export function SupportCenter({
   bookingId,
   bookingReference,
   venueId,
+  photo,
 }: {
   bookingId?: string | undefined;
   bookingReference?: string | undefined;
   venueId?: string | undefined;
+  photo?: number | undefined;
 }) {
   const t = useTranslations('web.support');
   const tc = useTranslations('common');
@@ -252,7 +257,12 @@ export function SupportCenter({
   return (
     <div className="flex animate-rise flex-col gap-4">
       <PageHeader title={t('title')} description={t('description')} />
-      <ReportForm venueId={venueId} bookingId={bookingId} bookingReference={bookingReference} />
+      <ReportForm
+        venueId={venueId}
+        bookingId={bookingId}
+        bookingReference={bookingReference}
+        photo={photo}
+      />
       <MyComplaints />
     </div>
   );

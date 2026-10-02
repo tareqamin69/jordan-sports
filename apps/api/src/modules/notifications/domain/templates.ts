@@ -25,6 +25,12 @@ export interface BookingMessageFacts {
   readonly refund?: { amount: number; currency: string } | null;
 }
 
+/** Jordanian mobiles as people write them (079 123 4567); other numbers unchanged. */
+function localPhone(e164: string): string {
+  const jo = /^\+962(7[789])(\d{3})(\d{4})$/.exec(e164);
+  return jo ? `0${jo[1]} ${jo[2]} ${jo[3]}` : e164;
+}
+
 function pick(text: { ar?: string; en?: string }, locale: Locale): string {
   return text[locale] ?? text.ar ?? text.en ?? '';
 }
@@ -41,11 +47,11 @@ export function renderBookingMessage(
     reference: facts.reference,
     venue: pick(facts.venueName, locale),
     resource: pick(facts.resourceName, locale),
-    date: local.toFormat('yyyy-MM-dd'),
+    date: local.toFormat('dd/MM/yyyy'),
     time: local.toFormat('HH:mm'),
     price: facts.price ? formatMoney(facts.price, locale) : t('noPrice'),
     customer: facts.customerName ?? '-',
-    phone: facts.customerPhone ?? '-',
+    phone: facts.customerPhone ? localPhone(facts.customerPhone) : '-',
     reason: facts.reason ?? '-',
     refundStatus: facts.refund && facts.refund.amount > 0 ? 'some' : 'none',
     refund: facts.refund ? formatMoney(facts.refund, locale) : '',

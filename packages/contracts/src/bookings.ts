@@ -133,6 +133,8 @@ export const startCheckout = endpoint({
   body: z.object({
     locale: z.enum(['ar', 'en']),
     acceptCancellationPolicy: z.literal(true),
+    /** Paying by card requires 18+; the confirmation is recorded with the booking. */
+    confirmAdult: z.literal(true),
   }),
   response: z.object({ redirectUrl: z.string() }),
 });

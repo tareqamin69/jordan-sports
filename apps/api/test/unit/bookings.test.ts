@@ -44,7 +44,7 @@ describe('notification templates', () => {
   const facts = {
     reference: 'ABCD2345',
     venueName: { ar: 'نادي الشمس', en: 'Sun Club' },
-    resourceName: { ar: 'ملعب 1', en: 'Court 1' },
+    resourceName: { ar: 'ساحة 1', en: 'Court 1' },
     start: new Date('2026-10-10T15:30:00Z'),
     timeZone: 'Asia/Amman',
     price: { amount: 25000, currency: 'JOD' },
@@ -54,7 +54,7 @@ describe('notification templates', () => {
     const text = renderBookingMessage('bookingConfirmed', 'ar', facts);
     expect(text).toContain('ABCD2345');
     expect(text).toContain('نادي الشمس');
-    expect(text).toContain('2026-10-10');
+    expect(text).toContain('10/10/2026');
     expect(text).toContain('18:30');
     expect(text).toContain('25.000 د.أ');
   });
@@ -67,7 +67,7 @@ describe('notification templates', () => {
       customerPhone: '+962790000000',
     });
     expect(text).toContain('Court 1');
-    expect(text).toContain('Lina (+962790000000)');
+    expect(text).toContain('Lina (079 000 0000)');
     expect(text).toContain('price not set');
   });
 });

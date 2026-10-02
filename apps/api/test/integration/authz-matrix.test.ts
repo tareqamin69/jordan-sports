@@ -339,7 +339,10 @@ describe('authorization matrix', () => {
         url: `/v1/bookings/${ids.bookingId}/${action}`,
         cookie: other,
         headers: { 'idempotency-key': randomUUID() },
-        body: action === 'checkout' ? { locale: 'en', acceptCancellationPolicy: true } : {},
+        body:
+          action === 'checkout'
+            ? { locale: 'en', acceptCancellationPolicy: true, confirmAdult: true }
+            : {},
       });
       expect(r.statusCode, `${action}: ${r.body}`).toBe(404);
     }

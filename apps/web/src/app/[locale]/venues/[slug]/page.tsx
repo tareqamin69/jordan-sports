@@ -12,6 +12,7 @@ import { VenueAvailability } from '@/components/venue-availability';
 import { VenueGallery } from '@/components/venue-gallery';
 import { VenueMapCard } from '@/components/venue-map-lazy';
 import { VenueStickyHeader } from '@/components/venue-sticky-header';
+import { Link } from '@/i18n/navigation';
 import { directionsUrl } from '@/lib/format';
 import { joinList, joinPlace, pick } from '@/lib/localized';
 import { isNotFound, serverApi, siteUrl } from '@/lib/server-api';
@@ -145,7 +146,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
         bookLabel={t('book')}
       />
 
-      <VenueGallery media={venue.media} name={name} icon={venue.sports[0]?.icon}>
+      <VenueGallery media={venue.media} venueId={venue.id} name={name} icon={venue.sports[0]?.icon}>
         <span className="text-xs font-medium ltr:tracking-[0.12em] text-canvas/85">
           {joinList(
             venue.sports.map((s) => pick(s.name, locale)),
@@ -351,6 +352,13 @@ export default async function VenuePage({ params, searchParams }: Props) {
                 </ul>
               </section>
             ) : null}
+            <Link
+              href={{ pathname: '/support', query: { venue: venue.id } }}
+              className="self-start text-sm text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+              data-testid="report-venue"
+            >
+              {t('reportVenue')}
+            </Link>
           </aside>
         </div>
       </div>

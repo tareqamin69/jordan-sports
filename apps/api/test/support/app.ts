@@ -152,6 +152,7 @@ export async function signInPlayer(
       displayName: options.name ?? 'Test Player',
       locale: 'ar',
       ageConfirmed: true,
+      acceptTerms: true,
       preferredMode: 'player',
     },
     ip,
@@ -412,7 +413,7 @@ export async function payBooking(
     method: 'POST',
     url: `/v1/bookings/${bookingId}/checkout`,
     cookie,
-    body: { locale: 'en', acceptCancellationPolicy: true },
+    body: { locale: 'en', acceptCancellationPolicy: true, confirmAdult: true },
   });
   if (start.statusCode !== 200) return start;
   const { redirectUrl } = start.json() as { redirectUrl: string };

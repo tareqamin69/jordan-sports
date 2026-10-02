@@ -29,7 +29,11 @@ interface Form {
   supportEmail: string;
   venueEdits: boolean;
   allowlist: string;
+  company: Record<CompanyField, string>;
 }
+
+const COMPANY_FIELDS = ['nameAr', 'nameEn', 'registrationNo', 'addressAr', 'addressEn'] as const;
+type CompanyField = (typeof COMPANY_FIELDS)[number];
 
 function toForm(s: PlatformSettings): Form {
   return {
@@ -38,6 +42,10 @@ function toForm(s: PlatformSettings): Form {
     supportEmail: s.supportEmail ?? '',
     venueEdits: s.venueEditsNeedReview,
     allowlist: s.adminIpAllowlist.join('\n'),
+    company: Object.fromEntries(COMPANY_FIELDS.map((k) => [k, s.company[k] ?? ''])) as Record<
+      CompanyField,
+      string
+    >,
   };
 }
 
@@ -62,6 +70,9 @@ export function SettingsPage() {
           supportWhatsapp: f.supportWhatsapp.trim() || null,
           supportEmail: f.supportEmail.trim() || null,
           venueEditsNeedReview: f.venueEdits,
+          company: Object.fromEntries(
+            COMPANY_FIELDS.map((k) => [k, f.company[k].trim() || null]),
+          ) as Record<CompanyField, string | null>,
           adminIpAllowlist: f.allowlist
             .split(/[\s,]+/)
             .map((x) => x.trim())
@@ -151,6 +162,22 @@ export function SettingsPage() {
             onChange={(e) => set({ allowlist: e.target.value })}
             name="allowlist"
           />
+          <fieldset className="flex flex-col gap-4">
+            <legend className="mb-1 font-medium">{t('company.title')}</legend>
+            <p className="text-sm text-ink-muted">{t('company.hint')}</p>
+            {COMPANY_FIELDS.map((k) => (
+              <TextField
+                key={k}
+                label={t(`company.${k}`)}
+                dir={k.endsWith('Ar') ? undefined : 'ltr'}
+                minLength={2}
+                disabled={!editable}
+                value={current.company[k]}
+                onChange={(e) => set({ company: { ...current.company, [k]: e.target.value } })}
+                name={`company.${k}`}
+              />
+            ))}
+          </fieldset>
           <p className="text-sm text-ink-muted">
             {t('yourIp')} <Ltr>{settings.data.yourIp ?? '—'}</Ltr>
           </p>

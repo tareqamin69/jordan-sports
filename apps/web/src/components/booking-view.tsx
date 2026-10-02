@@ -35,6 +35,7 @@ import {
   whatsappShareUrl,
   type CalendarEvent,
 } from '@/lib/format';
+import { useCatalog } from '@/lib/catalog';
 import { pick } from '@/lib/localized';
 import { dateForLabel } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
@@ -188,7 +189,11 @@ export function BookingView({
     try {
       const { redirectUrl } = await api(startCheckout, {
         params: { bookingId },
-        body: { locale: locale as 'ar' | 'en', acceptCancellationPolicy: true },
+        body: {
+          locale: locale as 'ar' | 'en',
+          acceptCancellationPolicy: true,
+          confirmAdult: true,
+        },
       });
       window.location.assign(redirectUrl);
     } catch (e) {
@@ -357,6 +362,24 @@ export function BookingView({
         </p>
       </article>
 
+      {b.payment?.paidAt && b.price ? (
+        <Receipt
+          reference={b.reference}
+          amount={formatMoney(b.payment.amount, locale)}
+          paidAt={format.dateTime(new Date(b.payment.paidAt), {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: 'Asia/Amman',
+            numberingSystem: 'latn',
+          })}
+          card={
+            b.payment.card
+              ? `${b.payment.card.brand === 'visa' ? 'Visa' : 'Mastercard'} •••• ${b.payment.card.last4}`
+              : null
+          }
+        />
+      ) : null}
+
       {holding ? (
         <Card className="flex flex-col gap-4 p-5" data-testid="card-checkout">
           <div className="flex items-start gap-3">
@@ -384,7 +407,7 @@ export function BookingView({
               {t('lateNote', { percent: String(pct) })} {t('refundTiming')}
             </p>
             <Link
-              href={{ pathname: '/terms', hash: 'cancellation' }}
+              href="/refunds"
               className="mt-2 inline-block font-medium text-primary hover:underline"
             >
               {t('fullTerms')}
@@ -570,5 +593,64 @@ function BookingSkeleton({ label }: { label: string }) {
       </div>
       <Skeleton className="h-40 rounded-card" />
     </SkeletonGroup>
+  );
+}
+
+/**
+ * The payment receipt: who was paid (the company from the owner's settings, else the brand), the
+ * booking reference, amount, date and card. Never shows anything that isn't set.
+ */
+function Receipt({
+  reference,
+  amount,
+  paidAt,
+  card,
+}: {
+  reference: string;
+  amount: string;
+  paidAt: string;
+  card: string | null;
+}) {
+  const t = useTranslations('web.booking.receipt');
+  const tc = useTranslations('common');
+  const locale = useLocale() as 'ar' | 'en';
+  const company = useCatalog().data?.company;
+  const merchant =
+    company?.name?.[locale] ?? company?.name?.ar ?? company?.name?.en ?? tc('appName');
+  const rows: Array<[string, string, boolean]> = [
+    [t('merchant'), merchant, false],
+    ...(company?.registrationNo
+      ? [[t('registration'), company.registrationNo, true] as [string, string, boolean]]
+      : []),
+    [t('reference'), reference, true],
+    [t('amount'), amount, false],
+    [t('paidAt'), paidAt, false],
+    ...(card ? [[t('card'), card, true] as [string, string, boolean]] : []),
+  ];
+  return (
+    <details
+      className="group rounded-card border border-line bg-surface px-5 py-4 text-sm"
+      data-testid="booking-receipt"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between font-medium [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-2">
+          <Icon name="card" className="size-4 text-primary" />
+          {t('title')}
+        </span>
+        <Icon
+          name="chevron"
+          className="size-4 rotate-90 text-ink-muted transition-transform group-open:-rotate-90"
+        />
+      </summary>
+      <dl className="mt-3 flex flex-col gap-1.5">
+        {rows.map(([label, value, ltr]) => (
+          <div key={label} className="flex justify-between gap-4">
+            <dt className="text-ink-muted">{label}</dt>
+            <dd className="text-end font-medium">{ltr ? <Ltr>{value}</Ltr> : value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs text-ink-muted">{t('note')}</p>
+    </details>
   );
 }

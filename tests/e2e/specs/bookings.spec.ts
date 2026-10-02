@@ -41,6 +41,7 @@ test.describe('bookings', () => {
     await page.locator('form button[type="submit"]').click();
     await page.locator('input[name="displayName"]').fill('Lina');
     await page.locator('input[name="ageConfirmed"]').check();
+    await page.locator('input[name="acceptTerms"]').check();
     await page.locator('form button[type="submit"]').click();
     await page.getByTestId('mode-player').click();
     // Back on the venue with the chosen day and time still highlighted.

@@ -49,6 +49,8 @@ export const errorCodes = [
   'PAYOUT_ACCOUNT_MISSING',
   'PAYOUT_AMOUNT_CHANGED',
   'NOTHING_TO_PAY_OUT',
+  'ACCOUNT_HAS_UPCOMING_BOOKINGS',
+  'ACCOUNT_RUNS_VENUE',
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];
 

@@ -17,6 +17,7 @@ export interface UserRow {
   preferred_mode: string;
   status: string;
   platform_role: string | null;
+  marketing_opt_in_at: Date | null;
   created_at: Date;
 }
 
@@ -29,6 +30,7 @@ const userColumns = [
   'preferred_mode',
   'status',
   'platform_role',
+  'marketing_opt_in_at',
   'created_at',
 ] as const;
 

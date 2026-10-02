@@ -23,6 +23,7 @@ export class AccountService {
       locale: user.locale as Me['locale'],
       preferredMode: user.preferred_mode as Me['preferredMode'],
       memberships: await this.memberships.forUser(user.id),
+      marketingOptIn: user.marketing_opt_in_at !== null,
     };
   }
 }
