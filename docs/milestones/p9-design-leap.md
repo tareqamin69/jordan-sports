@@ -2,7 +2,7 @@
 
 - **Spec:** [`/DESIGN.md`](../../DESIGN.md) ("Clubhouse": deep green + warm sand, Alexandria display +
   IBM Plex body, one radius family).
-- **Status:** 3a approved by the owner 2026-10-02; 3b shipped to staging 2026-10-02. 3c–3e next.
+- **Status:** 3a approved by the owner 2026-10-02; 3b and 3c shipped to staging 2026-10-03. 3d–3e next.
 
 ## 3a — Direction (shipped)
 
@@ -24,9 +24,22 @@ screens all switched together. On top of that:
   ESLint's allowed JSX literals gain `-`.
 - Screens reviewed at 390px (player, owner) and 1440px (owner, admin).
 
-## Deferred to 3c–3e
+## 3c — Next-level features (shipped)
 
-- Search list/map toggle, sticky filters, "free tonight" badges, availability heat strip, venue
-  cancellation badge, payment success animation, OG images, sport identity, owner "today" command
-  centre and payouts chart, dense admin tables, PWA polish.
+- Search: "free tonight" chip (today from 20:00 or the next hour; after midnight the coming
+  evening) with lime badges; sort (recommended / cheapest / nearest); list/map switch with a lazily
+  loaded results map; sticky chips. Fixed: the search form and results kept stale state (and the
+  form was duplicated) after a chip navigated client-side; both now key themselves internally.
+- Venue: public `cancellation` (free hours + late refund %) shown as a badge; free times carry a
+  price-heat bar (cheapest to peak) with a legend; generated share card `/og/venue/<slug>.png` for
+  photo-less venues (Latin text only).
+- Owner: "today" command centre (counts, playing now, next booking); weekly net earnings column
+  chart (8 weeks, open week lighter, table view).
+- PWA: icons regenerated in Alexandria (`tests/e2e/tools/generate-icons.mjs`), manifest/offline
+  colours, service-worker cache v2. Admin list rows tightened.
+- Not done (judged low value now): per-day price heat in the day strip (needs 7 availability
+  calls), a separate bottom sheet (the booking bar already is one on phones).
+
+## Deferred to 3d–3e
+
 - Motion pass (3d), quality gates (3e: axe/Lighthouse, break-ui, 390/1440 screenshots).

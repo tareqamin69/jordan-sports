@@ -442,6 +442,13 @@ export const en = {
       open: 'Open dashboard',
       notPublic: 'Not public yet',
       today: {
+        stats: {
+          total: 'Today',
+          arrived: 'Arrived',
+          upcoming: 'Still to come',
+        },
+        now: 'Playing now: {courts}',
+        next: '{minutes, plural, one {Next: {time} on {court}, in 1 minute.} other {Next: {time} on {court}, in # minutes.}}',
         intro: "Today's bookings in order. Record who arrived and who did not come.",
         empty: 'No bookings today.',
         arrived: 'Arrived',
@@ -532,6 +539,16 @@ export const en = {
         support: 'Report to platform',
       },
       earnings: {
+        chart: {
+          title: 'Net per week',
+          subtitle: 'Last 8 weeks, Sunday to Saturday, after commission and refunds.',
+          tooltip: 'Week of {week}: {amount}',
+          openWeek: 'This week, still open',
+          asTable: 'Show the numbers as a table',
+          week: 'Week starting',
+          net: 'Net',
+          open: 'still open',
+        },
         intro:
           'Players pay by card when they book. Jorena keeps its commission ({commission}) and transfers the rest to you every week.',
         schedule: 'Next transfer: {date}, for bookings played up to the Saturday before.',

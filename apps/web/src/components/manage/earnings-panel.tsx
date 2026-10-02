@@ -26,8 +26,10 @@ import { useApi } from '@/lib/api';
 import { dmy } from '@/lib/format';
 import { pick } from '@/lib/localized';
 import { can } from '@/lib/manage';
+import { businessToday } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { Icon } from '../icons';
+import { WeeklyEarningsChart } from './weekly-earnings-chart';
 
 const statusTone = {
   upcoming: 'bg-canvas-deep text-ink',
@@ -108,6 +110,11 @@ export function EarningsPanel({ schedule }: { schedule: VenueSchedule }) {
           </Card>
         ))}
       </dl>
+
+      <WeeklyEarningsChart
+        items={e.items}
+        today={businessToday(schedule.venue.timezone, schedule.venue.businessDayStartMinute)}
+      />
 
       <Card className="flex items-center gap-3 p-4 text-sm">
         <Icon name="bank" className="size-5 shrink-0 text-primary" />

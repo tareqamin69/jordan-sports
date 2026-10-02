@@ -111,8 +111,6 @@ export default async function VenuesPage({ params, searchParams }: Props) {
       />
 
       <SearchBar
-        // Remount when the query changes (chips navigate client-side; the fields are uncontrolled).
-        key={[sport, governorate, area, date, time].join('|')}
         catalog={catalog}
         values={{ sport, governorate, area, date, time }}
         className="-mt-2"
@@ -184,8 +182,6 @@ export default async function VenuesPage({ params, searchParams }: Props) {
         />
       ) : (
         <VenueResults
-          // New query, new list (chips navigate client-side; the list keeps paging state).
-          key={[sport, governorate, area, date, time].join('|')}
           initial={venues.items}
           nextCursor={venues.nextCursor}
           filters={{

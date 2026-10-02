@@ -110,7 +110,7 @@ function UserRow({ user }: { user: AdminUser }) {
   const manageable = can('users.manage') && !user.platformRole && user.status !== 'deleted';
 
   return (
-    <li className="px-5 py-4" data-testid="admin-user">
+    <li className="px-4 py-3" data-testid="admin-user">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-medium">{user.displayName ?? '-'}</p>

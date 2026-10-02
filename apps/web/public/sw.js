@@ -2,7 +2,7 @@
 // assets. It never caches pages or API responses — availability, prices and session state must
 // always come from the network, never a stale cache — so bump CACHE_VERSION on release and the
 // old cache is dropped in `activate`; nothing here is a substitute for freshness checks upstream.
-const CACHE_VERSION = 'jorena-shell-v1';
+const CACHE_VERSION = 'jorena-shell-v2';
 const SHELL_ASSETS = [
   '/offline.html',
   '/icons/icon-192.png',

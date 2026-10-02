@@ -33,7 +33,14 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
  * The venues list with sorting (recommended, cheapest, nearest), a list/map switch and "show
  * more" (cursor paging) after the server-rendered first page. Sorting covers the loaded venues.
  */
-export function VenueResults({
+export function VenueResults(props: Parameters<typeof ResultsList>[0]) {
+  // New results from the server (a new query) start a fresh list: paging and sorting state reset.
+  return (
+    <ResultsList key={props.initial.map((v) => v.id).join(',') + (props.date ?? '')} {...props} />
+  );
+}
+
+function ResultsList({
   initial,
   nextCursor,
   filters,

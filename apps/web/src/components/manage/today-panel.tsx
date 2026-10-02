@@ -7,7 +7,7 @@ import {
   type VenueBooking,
   type VenueSchedule,
 } from '@jordan-sports/contracts';
-import { Alert, Badge, Button, Card, EmptyState, ListSkeleton, Ltr } from '@jordan-sports/ui';
+import { Alert, Badge, Button, Card, EmptyState, ListSkeleton, Ltr, cx } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { displayPhone } from '@/lib/format';
@@ -18,7 +18,10 @@ import { businessToday } from '@/lib/time';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { useNow } from '@/lib/use-now';
 
-/** Front desk: today's bookings in time order, with arrival and no-show buttons. */
+/**
+ * Front desk "command centre": today at a glance (bookings, arrived, still to come), what is on
+ * now and what is next, then today's bookings in time order with arrival and no-show buttons.
+ */
 export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
   const t = useTranslations('web.manage.today');
   const tc = useTranslations('common');
@@ -51,8 +54,60 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
   if (bookings.isPending) return <ListSkeleton label={tc('loading')} rows={3} thumb={false} />;
   if (bookings.isError) return <Alert tone="error">{errorMessage(bookings.error)}</Alert>;
 
+  const live = items.filter((b) => b.status !== 'NO_SHOW');
+  const arrived = live.filter((b) => b.checkedInAt).length;
+  const upcoming = live.filter((b) => new Date(b.start).getTime() > now);
+  const playing = live.filter(
+    (b) => new Date(b.start).getTime() <= now && new Date(b.end).getTime() > now,
+  );
+  const next = upcoming[0];
+  const minutesTo = next
+    ? Math.max(1, Math.round((new Date(next.start).getTime() - now) / 60_000))
+    : 0;
+  const tiles: Array<[string, number, string]> = [
+    [t('stats.total'), live.length, 'total'],
+    [t('stats.arrived'), arrived, 'arrived'],
+    [t('stats.upcoming'), upcoming.length, 'upcoming'],
+  ];
+
   return (
     <div className="flex flex-col gap-3" data-testid="today-panel">
+      {items.length > 0 ? (
+        <>
+          <dl className="grid grid-cols-3 gap-2 sm:gap-3" data-testid="today-stats">
+            {tiles.map(([label, value, id]) => (
+              <div key={id} className="flex flex-col gap-1 rounded-tile bg-sand-100 p-3 sm:p-4">
+                <dt className="text-xs text-sand-700">{label}</dt>
+                <dd className="font-display text-2xl tabular-nums text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {playing.length > 0 || next ? (
+            <div className="flex flex-col gap-2 rounded-card bg-brand-900 p-4 text-canvas sm:flex-row sm:items-center sm:justify-between">
+              {playing.length > 0 ? (
+                <p className="flex items-center gap-2 text-sm" data-testid="today-now">
+                  <span aria-hidden className="relative flex size-2.5">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-60 motion-reduce:hidden" />
+                    <span className="relative inline-flex size-2.5 rounded-full bg-lime" />
+                  </span>
+                  {t('now', {
+                    courts: playing.map((b) => pick(b.resource.name, locale)).join('، '),
+                  })}
+                </p>
+              ) : null}
+              {next ? (
+                <p className="text-sm text-canvas/85" data-testid="today-next">
+                  {t('next', {
+                    time: next.localStart,
+                    court: pick(next.resource.name, locale),
+                    minutes: minutesTo,
+                  })}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </>
+      ) : null}
       <p className="text-ink-muted">{t('intro')}</p>
       {mark.isError ? <Alert tone="error">{errorMessage(mark.error)}</Alert> : null}
       {items.length === 0 ? <EmptyState art="bookings" title={t('empty')} /> : null}
@@ -65,7 +120,14 @@ export function TodayPanel({ schedule }: { schedule: VenueSchedule }) {
         return (
           <Card
             key={b.id}
-            className="flex animate-rise flex-wrap items-center justify-between gap-3"
+            className={cx(
+              'flex animate-rise flex-wrap items-center justify-between gap-3',
+              now >= start &&
+                now < end &&
+                b.status !== 'NO_SHOW' &&
+                'border-primary ring-2 ring-primary/15',
+              (now >= end || b.status === 'NO_SHOW') && 'opacity-70',
+            )}
             data-testid="today-booking"
           >
             <div className="min-w-0">

@@ -51,7 +51,14 @@ const select =
  * form to `/venues`; the governorate→area cascade is the only client state. `floating` is the
  * white card that overlaps the home hero.
  */
-export function SearchBar({
+export function SearchBar(props: Parameters<typeof SearchForm>[0]) {
+  // A new query (e.g. a filter chip navigating client-side) starts a fresh form: the fields are
+  // uncontrolled, so they would otherwise keep the previous values.
+  const v = props.values ?? {};
+  return <SearchForm key={[v.sport, v.governorate, v.area, v.date, v.time].join('|')} {...props} />;
+}
+
+function SearchForm({
   catalog,
   values = {},
   floating = false,

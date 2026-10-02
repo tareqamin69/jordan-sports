@@ -106,6 +106,8 @@ test.describe('venues: admin onboarding → public page', () => {
     await page.getByTestId('chip-tonight').click();
     await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}&time=2[0-3](%3A|:)00/);
     await expect(page.getByTestId('chip-tonight')).toHaveAttribute('aria-current', 'page');
+    // The page updates in place: one search form, not the old one plus the new one.
+    await expect(page.locator('form[role="search"]')).toHaveCount(1);
     // The test venue is open until midnight, so it has free times tonight until about 21:00.
     const ammanHour = Number(
       new Intl.DateTimeFormat('en-GB', {
