@@ -163,6 +163,8 @@ function PrivacyCard({ marketingOptIn }: { marketingOptIn: boolean }) {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const [confirming, setConfirming] = useState(false);
+  // The box shows the player's choice at once; it goes back if saving fails.
+  const [optIn, setOptIn] = useState(marketingOptIn);
   const marketing = useMutation({
     mutationFn: (optIn: boolean) => api(updateMe, { body: { marketingOptIn: optIn } }),
     meta: {
@@ -170,6 +172,7 @@ function PrivacyCard({ marketingOptIn }: { marketingOptIn: boolean }) {
         (data as { marketingOptIn: boolean }).marketingOptIn ? t('on') : t('off'),
     },
     onSuccess: (me) => queryClient.setQueryData(['me'], me),
+    onError: (_error, attempted) => setOptIn(!attempted),
   });
   const remove = useMutation({
     mutationFn: () => api(deleteMyAccount, { body: { confirm: true } }),
@@ -197,9 +200,12 @@ function PrivacyCard({ marketingOptIn }: { marketingOptIn: boolean }) {
       </div>
       <CheckboxField
         label={t('marketing')}
-        checked={marketingOptIn}
+        checked={optIn}
         disabled={marketing.isPending}
-        onChange={(e) => marketing.mutate(e.target.checked)}
+        onChange={(e) => {
+          setOptIn(e.target.checked);
+          marketing.mutate(e.target.checked);
+        }}
         name="marketingOptIn"
       />
       {marketing.isError ? <Alert tone="error">{errorMessage(marketing.error)}</Alert> : null}

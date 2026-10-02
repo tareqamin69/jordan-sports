@@ -27,11 +27,11 @@ export function HoldCountdown({
     <span
       data-testid="hold-countdown"
       className={cx(
-        'flex h-12 w-fit shrink-0 items-center gap-2 rounded-full bg-accent-300/60 pe-4 ps-2 text-sm font-medium text-ink tabular-nums',
+        'flex min-h-12 w-fit min-w-0 items-center gap-2 rounded-full bg-accent-300/60 py-1 pe-4 ps-2 text-sm font-medium leading-tight text-ink tabular-nums',
         className,
       )}
     >
-      <svg viewBox="0 0 24 24" className="size-8 -rotate-90" aria-hidden>
+      <svg viewBox="0 0 24 24" className="size-8 shrink-0 -rotate-90" aria-hidden>
         <circle
           cx="12"
           cy="12"
