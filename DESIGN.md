@@ -119,6 +119,7 @@ Motion explains what changed; it never decorates.
   confirmations (selected chip "pop").
 - **Patterns:** transform-only rise on page enter; scroll reveal for sections (once); press scale
   0.96–0.98; a hold-countdown ring; the booking-confirmed moment.
+- **Data:** chart columns grow from their baseline once (`animate-grow`, staggered 45 ms).
 - **Never:** scroll-jacking, parallax on text, infinite loops (except live dots), layout-property
   animation.
 - Everything collapses under `prefers-reduced-motion`.

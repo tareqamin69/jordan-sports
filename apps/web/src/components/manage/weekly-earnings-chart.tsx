@@ -4,6 +4,7 @@ import type { Earning } from '@jordan-sports/contracts';
 import { formatMoney } from '@jordan-sports/money';
 import { cx } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
+import type { CSSProperties } from 'react';
 import { dmy } from '@/lib/format';
 import { addDays } from '@/lib/time';
 
@@ -63,11 +64,16 @@ export function WeeklyEarningsChart({ items, today }: { items: Earning[]; today:
               ) : null}
               <span
                 className={cx(
-                  'w-full max-w-6 rounded-t-[4px] transition-opacity',
+                  'w-full max-w-6 origin-bottom animate-grow rounded-t-[4px] transition-opacity',
                   open ? 'bg-brand-300' : 'bg-primary',
                   'group-hover:opacity-80',
                 )}
-                style={{ height: `${v.amount > 0 ? Math.max(3, (v.amount / max) * 100) : 0}%` }}
+                style={
+                  {
+                    height: `${v.amount > 0 ? Math.max(3, (v.amount / max) * 100) : 0}%`,
+                    '--i': i,
+                  } as CSSProperties
+                }
               />
               <span className="pointer-events-none absolute bottom-full z-10 mb-1 hidden whitespace-nowrap rounded-field bg-night px-2.5 py-1.5 text-xs text-canvas shadow-float group-hover:block">
                 {t('tooltip', { week: dmy(v.week).slice(0, 5), amount: money(v.amount) })}

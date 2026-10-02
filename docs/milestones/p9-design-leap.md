@@ -2,7 +2,7 @@
 
 - **Spec:** [`/DESIGN.md`](../../DESIGN.md) ("Clubhouse": deep green + warm sand, Alexandria display +
   IBM Plex body, one radius family).
-- **Status:** 3a approved by the owner 2026-10-02; 3b and 3c shipped to staging 2026-10-03. 3d–3e next.
+- **Status:** 3a approved by the owner 2026-10-02; 3b–3e shipped to staging 2026-10-03.
 
 ## 3a — Direction (shipped)
 
@@ -40,6 +40,23 @@ screens all switched together. On top of that:
 - Not done (judged low value now): per-day price heat in the day strip (needs 7 availability
   calls), a separate bottom sheet (the booking bar already is one on phones).
 
-## Deferred to 3d–3e
+## 3d — Motion and mobile feel (shipped)
 
-- Motion pass (3d), quality gates (3e: axe/Lighthouse, break-ui, 390/1440 screenshots).
+- Mobile-native baseline: `viewport-fit=cover` (the bars' `env(safe-area-*)` paddings now take
+  effect; header pads the top inset), `interactive-widget=resizes-content`, fields ≥ 16px on
+  touch screens (no iOS zoom), `touch-action: manipulation` + no label selection on controls,
+  card hover lift only with a fine pointer.
+- Motion: earnings columns grow from the baseline (staggered), "free tonight" badge pops, map view
+  fades in. All transform/opacity; all off under reduced motion.
+
+## 3e — Quality gates (results)
+
+- axe: 0 violations on every e2e-checked page (home, venues, venue, booking, legal, account…).
+- Lighthouse mobile (local, simulated slow 4G; this machine is noisy, ±6): accessibility 100 on
+  home, search and venue; performance 80–88 home / 77–88 venue / 74–88 search; best practices 93;
+  SEO 92 (canonical flagged only because staging runs on 127.0.0.1).
+- Fix: Alexandria moved to `/public/fonts` with unicode ranges and preloaded from the layout (the
+  hero headline waited ~3.8 s on it under throttling).
+- Open: the shared client chunk (~97 KB gz) is mostly zod + contract schemas pulled in by the
+  endpoint definitions; splitting route metadata from schemas would lift mobile performance to a
+  steady ≥ 85. Tracked as a follow-up.

@@ -43,7 +43,8 @@ export function SiteHeader() {
   return (
     <header
       className={cx(
-        'z-30',
+        // Clear the status bar / notch when the page paints under it (viewport-fit=cover).
+        'z-30 pt-[env(safe-area-inset-top)]',
         overlay
           ? 'absolute inset-x-0 top-0 text-canvas'
           : // The frosted background lives on a ::before layer, not the header itself: a

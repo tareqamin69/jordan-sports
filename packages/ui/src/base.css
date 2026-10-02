@@ -21,6 +21,30 @@
     line-height: 1.8;
   }
 
+  /* Touch: no 300ms double-tap wait on controls, and holding a button never selects its label.
+     Content text stays selectable. */
+  button,
+  a,
+  summary,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+  button,
+  summary,
+  [role='button'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* iOS zooms into any field under 16px and never zooms back out. */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
+  }
+
   ::selection {
     background-color: var(--color-brand-200);
     color: var(--color-ink);

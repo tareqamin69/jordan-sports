@@ -43,7 +43,7 @@ export function VenueCard({
         />
         {tonight && venue.freeTimes && venue.freeTimes.length > 0 ? (
           <span
-            className="absolute start-4 top-4 flex h-8 items-center gap-1.5 rounded-full bg-lime px-3 text-xs font-bold text-night"
+            className="absolute start-4 top-4 flex h-8 animate-pop items-center gap-1.5 rounded-full bg-lime px-3 text-xs font-bold text-night"
             data-testid="free-tonight"
           >
             <span aria-hidden className="size-1.5 rounded-full bg-night" />

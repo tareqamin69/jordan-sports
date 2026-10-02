@@ -59,7 +59,7 @@ export function ResultsMap({ venues }: { venues: VenueSummary[] }) {
 
   const missing = venues.filter((v) => !v.location).length;
   return (
-    <div className="mt-6" data-testid="results-map">
+    <div className="mt-6 animate-fade" data-testid="results-map">
       <div
         ref={container}
         role="region"

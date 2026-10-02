@@ -26,7 +26,17 @@
   --animate-sheet: sheet-in var(--duration-slow) var(--ease-soft) both;
   --animate-shimmer: shimmer 1.4s linear infinite;
   --animate-draw: draw 520ms var(--ease-out-quart) 120ms both;
+  /* Chart columns rise from their baseline once (transform only); stagger with --i. */
+  --animate-grow: grow-y 560ms var(--ease-out-quart) calc(var(--i, 0) * 45ms) both;
 
+  @keyframes grow-y {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: none;
+    }
+  }
   @keyframes pop {
     0% {
       transform: scale(0.94);
@@ -77,7 +87,7 @@
       box-shadow var(--duration-base) var(--ease-soft),
       border-color var(--duration-fast) var(--ease-soft);
   }
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .lift:hover {
       transform: translateY(-3px);
       box-shadow: var(--shadow-lift);

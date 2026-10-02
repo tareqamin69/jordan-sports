@@ -4,12 +4,9 @@
 //   node tests/e2e/tools/generate-icons.mjs
 import { chromium } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
-const require = createRequire(join(process.cwd(), 'packages/ui/package.json'));
-const fontDir = join(dirname(require.resolve('@fontsource/alexandria/package.json')), 'files');
-const font = readFileSync(join(fontDir, 'alexandria-arabic-800-normal.woff2')).toString('base64');
+const font = readFileSync('apps/web/public/fonts/alexandria-arabic-800.woff2').toString('base64');
 const out = 'apps/web/public';
 
 // `size`: output px; `inset`: share of the canvas the tile covers (maskable icons are full bleed

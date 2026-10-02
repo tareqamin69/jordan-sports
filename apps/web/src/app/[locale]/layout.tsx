@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { preload } from 'react-dom';
 import { Suspense, type ReactNode } from 'react';
 import { InstallPrompt } from '@/components/install-prompt';
 import { Providers } from '@/components/providers';
@@ -28,6 +29,10 @@ export const viewport: Viewport = {
   colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
+  // Paint under the notch/home indicator; the fixed bars pad themselves with env(safe-area-*).
+  viewportFit: 'cover',
+  // Android: the keyboard shrinks the layout, like iOS, so bottom-pinned bars stay above it.
+  interactiveWidget: 'resizes-content',
 };
 
 export async function generateMetadata({ params }: Omit<Props, 'children'>): Promise<Metadata> {
@@ -53,6 +58,14 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
+  // Headings (and the home hero, the largest paint) wait on Alexandria: fetch it with the HTML.
+  for (const weight of [800, 700]) {
+    preload(`/fonts/alexandria-${locale === 'ar' ? 'arabic' : 'latin'}-${weight}.woff2`, {
+      as: 'font',
+      type: 'font/woff2',
+      crossOrigin: 'anonymous',
+    });
+  }
   return (
     <html lang={locale} dir={getDirection(locale)}>
       <body className="flex min-h-dvh flex-col pb-28 antialiased md:pb-0">
