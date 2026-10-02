@@ -1,5 +1,5 @@
 /*
- * Design tokens — "Clubhouse" direction (Tailwind CSS v4 theme variables).
+ * Design tokens — "Clubhouse" direction (Tailwind CSS v4 theme variables). Spec: DESIGN.md.
  *
  * Rules:
  * - Components use semantic tokens (canvas, surface, ink, line, primary, clay…), not raw hex.
@@ -23,20 +23,27 @@
   --color-brand-800: #0a3624;
   --color-brand-900: #072a1c;
 
+  /* Sand: the warm second colour. Fills and tints only (100–300); 700 is text-safe (AA). */
+  --color-sand-50: #faf6ee;
+  --color-sand-100: #f3ead8;
+  --color-sand-200: #e9dbbd;
+  --color-sand-300: #dcc79c;
+  --color-sand-700: #7a5d2a;
+
   /* Accent: clay (small labels, status tints). 500 passes AA on canvas and surface. */
   --color-accent-300: #f3dccf;
   --color-accent-400: #e3a583;
   --color-accent-500: #b4481f;
 
   /* Semantic colours */
-  --color-canvas: #f4f0e6; /* warm ivory page background */
-  --color-canvas-deep: #e9e4d8; /* recessed fills, skeletons */
-  --color-surface: #ffffff; /* cards */
+  --color-canvas: #f6f1e7; /* warm ivory page background */
+  --color-canvas-deep: #ebe4d5; /* recessed fills, skeletons */
+  --color-surface: #fffdf9; /* cards (never pure white) */
   --color-ink: #151712;
   --color-ink-muted: #6a6e64; /* 4.6:1 on canvas, 5.2:1 on surface */
   --color-ink-soft: #a9a596; /* secondary text/icons on ink (night) surfaces only */
-  --color-line: #e6e1d6;
-  --color-line-strong: #d8d2c4; /* outlined chips */
+  --color-line: #e7e0d1;
+  --color-line-strong: #d6cdb9; /* outlined chips */
   --color-primary: #0f4d34;
   --color-primary-hover: #0a3624;
   --color-on-primary: #f4f0e6;
@@ -48,8 +55,8 @@
   --color-danger: #b42318;
   --color-focus: #151712;
 
-  /* Typography: Amiri Bold for display, IBM Plex Sans (Arabic) for body/UI. */
-  --font-display: 'Amiri', 'IBM Plex Sans Arabic', serif;
+  /* Typography: Alexandria for display, IBM Plex Sans (Arabic) for body/UI. */
+  --font-display: 'Alexandria', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-arabic: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
   --font-latin: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-sans: var(--font-latin);
@@ -61,14 +68,15 @@
   --radius-xl: 1.375rem;
   --radius-2xl: 1.75rem;
   --radius-3xl: 2.25rem;
-  --radius-field: 1rem; /* inputs, selects */
-  --radius-tile: 1.375rem; /* 22px: sport tiles, thumbnails */
-  --radius-card: 1.75rem; /* 28px: cards, panels */
-  --radius-hero: 2.25rem; /* 36px: hero bottom corners */
+  --radius-field: 0.875rem; /* 14px: inputs, selects */
+  --radius-tile: 1.125rem; /* 18px: tiles, thumbnails, inner panels */
+  --radius-card: 1.5rem; /* 24px: cards, sheets */
+  --radius-hero: 2rem; /* 32px: hero bottom corners */
 
   /* Elevation (floating elements only) */
-  --shadow-float: 0 18px 40px rgb(21 23 18 / 0.16), 0 2px 6px rgb(21 23 18 / 0.06);
-  --shadow-lift: 0 10px 24px rgb(21 23 18 / 0.1);
+  /* Tinted with the brand green, never pure black. */
+  --shadow-float: 0 20px 44px rgb(7 42 28 / 0.16), 0 2px 6px rgb(7 42 28 / 0.06);
+  --shadow-lift: 0 12px 28px rgb(7 42 28 / 0.1);
 
   /* Motion */
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);

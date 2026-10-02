@@ -20,10 +20,8 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
   return 12_742 * Math.asin(Math.sqrt(h));
 }
 
-const rank = (i: number) => String(i + 1).padStart(2, '0');
-
 /**
- * Featured venues as a swipeable, numbered photo carousel. "Near me" asks for the location once
+ * Featured venues as a swipeable photo carousel. "Near me" asks for the location once
  * and re-sorts in the browser only.
  */
 export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
@@ -70,8 +68,7 @@ export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
     <section aria-labelledby="venues-heading" className="reveal mt-14">
       <SectionHeading
         id="venues-heading"
-        eyebrow={here ? t('nearestTitle') : t('featuredTitle')}
-        title={t('picksTitle')}
+        title={here ? t('nearestTitle') : t('picksTitle')}
         action={
           <div className="flex items-center gap-2">
             <button
@@ -100,7 +97,7 @@ export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
         ref={scroller}
         className="no-scrollbar -mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-4 pt-1 sm:-mx-8 sm:scroll-px-8 sm:px-8"
       >
-        {sorted.map(({ v, d }, i) => (
+        {sorted.map(({ v, d }) => (
           <li
             key={v.id}
             className="w-[82%] shrink-0 snap-start sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)]"
@@ -116,13 +113,7 @@ export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
                   aria-hidden
                   className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/55 to-transparent"
                 />
-                <span
-                  aria-hidden
-                  className="absolute start-4 top-3.5 font-display text-[2.5rem] leading-none text-canvas"
-                >
-                  {rank(i)}
-                </span>
-                <span className="absolute end-3.5 top-3.5 flex gap-1.5">
+                <span className="absolute start-3.5 top-3.5 flex gap-1.5">
                   {v.sports.slice(0, 3).map((s) => (
                     <span
                       key={s.id}

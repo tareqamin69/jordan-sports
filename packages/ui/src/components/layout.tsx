@@ -83,7 +83,7 @@ export function SectionHeading({
     <div className={cx('flex items-end justify-between gap-4', className)}>
       <div className="min-w-0">
         {eyebrow ? <Eyebrow className="mb-1">{eyebrow}</Eyebrow> : null}
-        <h2 id={id} className="font-display text-[1.75rem] leading-[1.25] text-ink">
+        <h2 id={id} className="font-display text-[1.625rem] leading-[1.35] text-ink">
           {title}
         </h2>
       </div>

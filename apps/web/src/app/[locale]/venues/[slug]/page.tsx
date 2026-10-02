@@ -153,7 +153,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
             locale,
           )}
         </span>
-        <h1 className="font-display text-[2.5rem] leading-[1.15] text-balance sm:text-[3.5rem]">
+        <h1 className="pb-1 font-display text-[2.25rem] leading-[1.35] text-balance sm:text-[3.25rem] sm:leading-[1.3]">
           {name}
         </h1>
         <p className="flex items-center gap-1.5 text-sm text-canvas/85">
@@ -169,6 +169,30 @@ export default async function VenuePage({ params, searchParams }: Props) {
         <div className="mt-6 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
           <div className="flex min-w-0 flex-col gap-10">
             <div className="flex flex-col gap-5">
+              <dl className="grid grid-cols-3 gap-2 sm:gap-3" data-testid="venue-facts">
+                {[
+                  {
+                    icon: venue.sports[0]?.icon ?? 'grid',
+                    label: t('facts.courts'),
+                    value: t('facts.courtsValue', { count: venue.resources.length }),
+                  },
+                  {
+                    icon: 'calendar',
+                    label: t('facts.window'),
+                    value: t('facts.windowValue', { days: venue.bookingWindowDays }),
+                  },
+                  { icon: 'card', label: t('facts.payment'), value: t('facts.paymentValue') },
+                ].map((f) => (
+                  <div
+                    key={f.label}
+                    className="flex flex-col gap-2 rounded-tile bg-sand-100 p-3 sm:p-4"
+                  >
+                    <Icon name={f.icon} className="size-5 text-primary" />
+                    <dt className="text-xs text-sand-700">{f.label}</dt>
+                    <dd className="text-sm font-semibold leading-snug">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
               <div className="flex items-end justify-between gap-4 lg:hidden">
                 {priceFrom ? (
                   <p className="flex flex-col">
@@ -237,7 +261,7 @@ export default async function VenuePage({ params, searchParams }: Props) {
             <section className="reveal">
               <SectionHeading title={t('resources')} />
               <ul className="reveal-stagger mt-4 grid gap-3 sm:grid-cols-2">
-                {venue.resources.map((r, i) => (
+                {venue.resources.map((r) => (
                   <li
                     key={r.id}
                     className="flex gap-4 rounded-tile border border-line bg-surface p-4"
@@ -247,7 +271,6 @@ export default async function VenuePage({ params, searchParams }: Props) {
                       <CourtArt icon={venue.sports[0]?.icon} variant="top" />
                     </span>
                     <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
                       <span className="font-bold">{pick(r.name, locale)}</span>
                       <span className="text-sm text-ink-muted">
                         {pick(r.type.name, locale)} ·{' '}

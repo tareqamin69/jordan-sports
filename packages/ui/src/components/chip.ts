@@ -19,13 +19,13 @@ export function chipClass(
   );
 }
 
-/** Sport/option tile (22px radius): selected = green filled, otherwise white with a hairline. */
+/** Sport/option tile (`rounded-tile`): selected = green filled, otherwise a sand fill. */
 export function tileClass(selected: boolean, className?: string) {
   return cx(
     'flex flex-col justify-between rounded-tile border p-4 transition-[background-color,border-color,transform,box-shadow] duration-200 ease-soft active:scale-[0.96]',
     selected
       ? 'border-primary bg-primary text-on-primary'
-      : 'border-line bg-surface text-ink hover:border-line-strong',
+      : 'border-transparent bg-sand-100 text-ink hover:bg-sand-200',
     className,
   );
 }

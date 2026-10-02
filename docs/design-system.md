@@ -1,5 +1,8 @@
 # Design system — "Clubhouse" (direction B)
 
+> **Superseded by [`/DESIGN.md`](../DESIGN.md)** (2026-10-02: Alexandria display type, sand roles,
+> one radius scale). This page keeps the brand-name and app-pattern notes below.
+
 Adopted 2026-09-27 for every screen (player web, venue-owner dashboard, admin). Source of truth is
 `packages/ui` — apps must use its tokens and components, never raw hex values.
 

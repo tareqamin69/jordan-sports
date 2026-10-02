@@ -3,9 +3,9 @@ import type { Locale } from '@jordan-sports/i18n';
 import { SectionHeading, buttonClass } from '@jordan-sports/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties } from 'react';
-import { HeroArt } from '@/components/court-art';
 import { GovernorateChips } from '@/components/governorate-chips';
 import { Icon } from '@/components/icons';
+import { PitchLines } from '@/components/pitch-lines';
 import { SearchBar } from '@/components/search-bar';
 import { SportTile } from '@/components/sport-tile';
 import { VenuePicks } from '@/components/venue-picks';
@@ -40,43 +40,36 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <main className="flex-1">
-      <section className="relative h-[470px] overflow-hidden rounded-b-hero bg-night sm:h-[540px]">
-        <HeroArt className="absolute inset-0" />
+      <section className="relative overflow-hidden rounded-b-hero bg-brand-900 text-canvas">
+        <PitchLines className="absolute inset-0 size-full opacity-60 sm:opacity-100 rtl:-scale-x-100" />
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/70 to-transparent"
+          className="absolute inset-0 bg-[radial-gradient(120%_90%_at_15%_100%,rgb(7_42_28/0.95),transparent_60%)] rtl:bg-[radial-gradient(120%_90%_at_85%_100%,rgb(7_42_28/0.95),transparent_60%)]"
         />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-night/0 from-40% to-night/90"
-        />
-        <div className="absolute inset-x-0 bottom-[92px] sm:bottom-[120px]">
-          <div className="mx-auto flex max-w-6xl animate-rise flex-col gap-2.5 px-6 text-canvas sm:px-8">
-            <span className="text-xs font-medium ltr:tracking-[0.12em] opacity-85">
-              {t('eyebrow')}
-            </span>
-            <h1 className="font-display text-[3rem] leading-[1.12] text-balance sm:max-w-none sm:text-[4.5rem]">
-              {t.rich('title', {
-                br: () => <br />,
-                hl: (chunks) => <span className="text-lime">{chunks}</span>,
-              })}
-            </h1>
-            <p className="hidden max-w-xl text-lg text-canvas/85 sm:block">{t('description')}</p>
-            {catalog.counts.venues > 0 ? (
-              <p
-                className="flex items-center gap-2 text-sm font-semibold text-canvas/90"
-                data-testid="hero-counts"
-              >
-                <span className="relative flex size-2" aria-hidden>
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-lime opacity-60 motion-reduce:hidden" />
-                  <span className="relative inline-flex size-2 rounded-full bg-lime" />
-                </span>
-                <span>{count('venuesCount', catalog.counts.venues)}</span>
-                <span aria-hidden>·</span>
-                <span>{count('sportsCount', catalog.counts.sports)}</span>
-              </p>
-            ) : null}
-          </div>
+        <div className="relative mx-auto flex max-w-6xl animate-rise flex-col gap-4 px-6 pb-28 pt-28 sm:px-8 sm:pb-36 sm:pt-36">
+          <span className="text-sm font-medium text-lime">{t('eyebrow')}</span>
+          <h1 className="max-w-[14ch] font-display text-[2.6rem] font-extrabold leading-[1.3] text-balance sm:text-[4.25rem] sm:leading-[1.25]">
+            {t.rich('title', {
+              br: () => <br />,
+              hl: (chunks) => <span className="text-lime">{chunks}</span>,
+            })}
+          </h1>
+          <p className="max-w-md text-base leading-7 text-canvas/80 sm:text-lg">
+            {t('description')}
+          </p>
+          {catalog.counts.venues > 0 ? (
+            <p
+              className="mt-1 flex items-center gap-3 text-sm font-semibold text-canvas/90"
+              data-testid="hero-counts"
+            >
+              <span className="rounded-full bg-canvas/10 px-3 py-1.5">
+                {count('venuesCount', catalog.counts.venues)}
+              </span>
+              <span className="rounded-full bg-canvas/10 px-3 py-1.5">
+                {count('sportsCount', catalog.counts.sports)}
+              </span>
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -100,9 +93,9 @@ export default async function HomePage({ params }: Props) {
               </Link>
             }
           />
-          <ul className="reveal-stagger mt-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6 sm:gap-3">
+          <ul className="reveal-stagger no-scrollbar -mx-5 mt-5 flex snap-x gap-2.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:gap-3 sm:overflow-visible sm:px-0">
             {tiles.map((sport) => (
-              <li key={sport.id}>
+              <li key={sport.id} className="w-[30%] shrink-0 snap-start sm:w-auto">
                 <SportTile sport={sport} locale={locale} />
               </li>
             ))}
@@ -131,22 +124,27 @@ export default async function HomePage({ params }: Props) {
           </div>
         </section>
 
-        <section className="reveal mb-10 mt-14 flex flex-col gap-3 rounded-card bg-primary px-6 py-7 text-on-primary sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-10">
-          <div className="flex flex-col gap-3">
-            <h2 className="font-display text-[1.875rem] leading-[1.2] sm:text-[2.5rem]">
+        <section className="reveal relative mb-10 mt-14 flex flex-col gap-3 overflow-hidden rounded-card bg-sand-100 px-6 py-8 text-ink sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-10">
+          <svg
+            aria-hidden
+            viewBox="0 0 200 200"
+            className="pointer-events-none absolute -bottom-24 -end-20 size-56 text-sand-200 sm:-bottom-16 sm:-end-10 sm:size-64 sm:text-sand-300"
+          >
+            <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="2" />
+            <line x1="100" y1="0" x2="100" y2="200" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          <div className="relative flex flex-col gap-3">
+            <h2 className="font-display text-[1.75rem] leading-[1.3] text-primary sm:text-[2.25rem]">
               {t('ownerTitle')}
               <br />
               {t('ownerTitle2')}
             </h2>
-            <p className="max-w-md text-sm leading-7 text-on-primary/85 sm:text-base">
-              {t('ownerBody')}
-            </p>
+            <p className="max-w-md text-sm leading-7 text-ink/80 sm:text-base">{t('ownerBody')}</p>
           </div>
           <Link
             href="/manage"
             className={buttonClass({
-              variant: 'inverse',
-              className: 'group mt-1 gap-2 self-start sm:self-auto',
+              className: 'group relative mt-1 gap-2 self-start sm:self-auto',
             })}
           >
             {t('ownerCta')}

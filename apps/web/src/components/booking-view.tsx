@@ -394,7 +394,34 @@ export function BookingView({
               </span>
             </p>
           </div>
-          <details className="group rounded-2xl bg-canvas px-4 py-3 text-sm text-ink-muted">
+          {b.price ? (
+            <div
+              className="flex flex-col gap-2 rounded-tile bg-sand-100 px-4 py-3.5 text-sm"
+              data-testid="checkout-summary"
+            >
+              <dl className="flex flex-col gap-2">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-sand-700">
+                    {resourceName} ·{' '}
+                    <Ltr>
+                      {b.localStart}–{b.localEnd}
+                    </Ltr>
+                  </dt>
+                  <dd>
+                    <Ltr>{formatMoney(b.price, locale)}</Ltr>
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 border-t border-sand-300 pt-2">
+                  <dt className="font-semibold text-ink">{t('total')}</dt>
+                  <dd className="font-display text-xl text-primary">
+                    <Ltr>{formatMoney(b.price, locale)}</Ltr>
+                  </dd>
+                </div>
+              </dl>
+              <p className="text-xs text-sand-700">{t('totalNote')}</p>
+            </div>
+          ) : null}
+          <details className="group rounded-tile bg-canvas px-4 py-3 text-sm text-ink-muted">
             <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-ink [&::-webkit-details-marker]:hidden">
               {t('termsDetails')}
               <Icon

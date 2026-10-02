@@ -44,11 +44,15 @@
 }
 
 @layer components {
-  /* Serif display headline (Amiri Bold). Amiri's tall ascenders need a looser leading in Arabic. */
+  /* Display headline (Alexandria Bold). Latin headings get a slightly tighter tracking; Arabic
+     never does (it breaks letter joining). */
   .font-display {
     font-family: var(--font-display);
     font-weight: 700;
     letter-spacing: 0;
+  }
+  :lang(en) .font-display {
+    letter-spacing: -0.02em;
   }
 
   /* Small clay label above a heading ("eyebrow"). */
