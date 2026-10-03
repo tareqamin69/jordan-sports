@@ -5,12 +5,15 @@ import {
   deleteMyVenueMedia,
   getMyVenueProfile,
   registerVenue,
+  reorderMyVenueMedia,
+  setWeeklyHours,
   submitMyVenue,
   updateMyResource,
   updateMyVenue,
   uploadMyVenueMedia,
   type AdminVenue,
   type Catalog,
+  type VenueImport,
   getPayoutAccount,
   setPayoutAccount,
 } from '@jordan-sports/contracts/web';
@@ -43,6 +46,7 @@ import { VenueMapCard } from '@/components/venue-map-lazy';
 import dynamic from 'next/dynamic';
 import { BookingSuccess } from '../booking-success';
 import { Icon } from '../icons';
+import { MapImport } from './map-import';
 
 // The map library is large and its tiles come from a third party: load it only when asked.
 const LocationPicker = dynamic(() => import('./location-picker').then((m) => m.LocationPicker), {
@@ -127,6 +131,8 @@ export function RegisterWizard({
   const [venue, setVenue] = useState<AdminVenue | null>(null);
   const [step, setStep] = useState<Step>(initialStep);
   const [submitted, setSubmitted] = useState(false);
+  // What a Google Maps link filled in (kept for later steps: pin, address, opening hours).
+  const [imported, setImported] = useState<VenueImport | null>(null);
   // A new step starts at the top of the page (the previous one may have been scrolled far down).
   const firstStep = useRef(true);
   useEffect(() => {
@@ -181,6 +187,7 @@ export function RegisterWizard({
           <InfoStep
             venue={venue}
             catalog={catalog.data}
+            onImported={setImported}
             onNext={(v) => {
               onCreated(v);
               setStep('location');
@@ -191,6 +198,7 @@ export function RegisterWizard({
           <LocationStep
             venue={venue}
             catalog={catalog.data}
+            imported={imported}
             onBack={() => setStep('info')}
             onNext={(v) => {
               setVenue(v);
@@ -212,6 +220,7 @@ export function RegisterWizard({
           <CourtsStep
             venue={venue}
             catalog={catalog.data}
+            weeklyHours={imported?.weeklyHours ?? null}
             onBack={() => setStep('photos')}
             onNext={(v) => {
               setVenue(v);
@@ -274,10 +283,12 @@ function StepActions({
 function InfoStep({
   venue,
   catalog,
+  onImported,
   onNext,
 }: {
   venue: AdminVenue | null;
   catalog: Catalog;
+  onImported: (data: VenueImport) => void;
   onNext: (venue: AdminVenue) => void;
 }) {
   const t = useTranslations('web.manage.register');
@@ -320,8 +331,26 @@ function InfoStep({
   const fieldError = fieldErrors(create.error);
   const knownFields = ['name', 'governorateId', 'areaId', 'contactPhone'] as const;
 
+  // Pre-fill from a Google Maps link; the owner reviews everything before "Next".
+  const applyImport = (data: VenueImport) => {
+    setF((s) => ({
+      ...s,
+      nameAr: data.name ?? s.nameAr,
+      governorateId: data.governorateId ?? s.governorateId,
+      areaId: data.governorateId ? (data.areaId ?? '') : s.areaId,
+      contactPhone: data.phone ? displayPhone(data.phone) : s.contactPhone,
+    }));
+    onImported(data);
+  };
+
   return (
     <Card>
+      {/* Only for a new venue: an existing draft already has its details. */}
+      {venue ? null : (
+        <div className="mb-4">
+          <MapImport onImported={applyImport} />
+        </div>
+      )}
       <form
         className="grid gap-4 sm:grid-cols-2"
         onSubmit={(e: FormEvent) => {
@@ -399,11 +428,13 @@ function InfoStep({
 function LocationStep({
   venue,
   catalog,
+  imported,
   onBack,
   onNext,
 }: {
   venue: AdminVenue;
   catalog: Catalog;
+  imported: VenueImport | null;
   onBack: () => void;
   onNext: (venue: AdminVenue) => void;
 }) {
@@ -415,10 +446,10 @@ function LocationStep({
   const [f, setF] = useState({
     descriptionAr: venue.description.ar ?? '',
     descriptionEn: venue.description.en ?? '',
-    addressAr: venue.address.ar ?? '',
+    addressAr: venue.address.ar ?? imported?.address ?? '',
     addressEn: venue.address.en ?? '',
   });
-  const [location, setLocation] = useState(venue.location);
+  const [location, setLocation] = useState(venue.location ?? imported?.location ?? null);
   const [mapOpen, setMapOpen] = useState(false);
   const set = (key: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((s) => ({ ...s, [key]: e.target.value }));
@@ -543,8 +574,17 @@ function PhotosStep({
   const inputId = useId();
   const tt = useTranslations('common.toast');
   const [current, setCurrent] = useState(venue);
+  const tp = useTranslations('web.manage.profile');
+  // Several photos at once, uploaded one after the other (each keeps the latest venue state).
   const upload = useMutation({
-    mutationFn: (file: File) => api(uploadMyVenueMedia, { params: { venueId: venue.id }, file }),
+    mutationFn: async (files: File[]) => {
+      let latest = current;
+      for (const file of files) {
+        latest = await api(uploadMyVenueMedia, { params: { venueId: venue.id }, file });
+        setCurrent(latest);
+      }
+      return latest;
+    },
     meta: { toast: tt('uploaded') },
     onSuccess: setCurrent,
   });
@@ -553,7 +593,19 @@ function PhotosStep({
     meta: { toast: tt('removed') },
     onSuccess: setCurrent,
   });
-  const error = upload.error ?? remove.error;
+  const reorder = useMutation({
+    mutationFn: (mediaIds: string[]) =>
+      api(reorderMyVenueMedia, { params: { venueId: venue.id }, body: { mediaIds } }),
+    onSuccess: setCurrent,
+  });
+  const error = upload.error ?? remove.error ?? reorder.error;
+  const ids = current.media.map((m) => m.id);
+  const move = (index: number, by: -1 | 1) => {
+    const next = [...ids];
+    const [item] = next.splice(index, 1);
+    next.splice(index + by, 0, item!);
+    reorder.mutate(next);
+  };
 
   return (
     <Card>
@@ -564,25 +616,58 @@ function PhotosStep({
         </Alert>
       ) : null}
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {current.media.map((m) => (
+        {current.media.map((m, i) => (
           <figure key={m.id} className="flex flex-col gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element -- owner preview of a private, unapproved photo */}
-            <img
-              src={`/api/v1/manage/media/${m.id}`}
-              alt={pick(current.name, locale)}
-              width={m.width}
-              height={m.height}
-              className="aspect-video w-full rounded-tile object-cover"
-            />
-            <Button
-              size="sm"
-              variant="ghost"
-              type="button"
-              onClick={() => remove.mutate(m.id)}
-              busy={remove.isPending && remove.variables === m.id}
-            >
-              {t('deletePhoto')}
-            </Button>
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element -- owner preview of a private, unapproved photo */}
+              <img
+                src={`/api/v1/manage/media/${m.id}`}
+                alt={pick(current.name, locale)}
+                width={m.width}
+                height={m.height}
+                className="aspect-video w-full rounded-tile object-cover"
+              />
+              {i === 0 ? (
+                <span className="absolute start-2 top-2 rounded-full bg-night px-2 py-0.5 text-xs text-canvas">
+                  {tp('cover')}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {ids.length > 1 ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    type="button"
+                    disabled={i === 0 || reorder.isPending}
+                    onClick={() => move(i, -1)}
+                    aria-label={tp('moveEarlier')}
+                  >
+                    {tp('earlier')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    type="button"
+                    disabled={i === ids.length - 1 || reorder.isPending}
+                    onClick={() => move(i, 1)}
+                    aria-label={tp('moveLater')}
+                  >
+                    {tp('later')}
+                  </Button>
+                </>
+              ) : null}
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => remove.mutate(m.id)}
+                busy={remove.isPending && remove.variables === m.id}
+              >
+                {t('deletePhoto')}
+              </Button>
+            </div>
           </figure>
         ))}
       </div>
@@ -592,11 +677,12 @@ function PhotosStep({
           id={inputId}
           accept="image/jpeg,image/png,image/webp"
           name="photo"
+          multiple
           className="sr-only"
           disabled={upload.isPending}
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) upload.mutate(file);
+            const files = Array.from(e.target.files ?? []);
+            if (files.length > 0) upload.mutate(files);
             e.target.value = '';
           }}
         />
@@ -626,11 +712,14 @@ function PhotosStep({
 function CourtsStep({
   venue,
   catalog,
+  weeklyHours,
   onBack,
   onNext,
 }: {
   venue: AdminVenue;
   catalog: Catalog;
+  /** Opening hours read from Google Maps, applied to each new court (best effort). */
+  weeklyHours: VenueImport['weeklyHours'];
   onBack: () => void;
   onNext: (venue: AdminVenue) => void;
 }) {
@@ -655,8 +744,9 @@ function CourtsStep({
   const courts = current.resources.filter((r) => r.status !== 'archived');
 
   const add = useMutation({
-    mutationFn: () =>
-      api(createMyResource, {
+    mutationFn: async () => {
+      const before = new Set(current.resources.map((r) => r.id));
+      const updated = await api(createMyResource, {
         params: { venueId: venue.id },
         body: {
           name: localized(nameAr, nameEn) ?? {},
@@ -665,7 +755,17 @@ function CourtsStep({
           sportFormatIds: formatIds,
           attributes: {},
         },
-      }),
+      });
+      const added = updated.resources.find((r) => !before.has(r.id));
+      if (added && weeklyHours && weeklyHours.length > 0) {
+        // Never blocks adding the court: the hours can be set by hand later.
+        await api(setWeeklyHours, {
+          params: { resourceId: added.id },
+          body: { windows: weeklyHours },
+        }).catch(() => undefined);
+      }
+      return updated;
+    },
     meta: { toast: tt('added') },
     onSuccess: (v) => {
       setCurrent(v);
@@ -687,6 +787,11 @@ function CourtsStep({
   return (
     <Card>
       <p className="text-ink-muted">{t('courtsIntro')}</p>
+      {weeklyHours && weeklyHours.length > 0 ? (
+        <p className="mt-1 text-sm text-ink-muted" data-testid="hours-from-map">
+          {t('hoursFromMap')}
+        </p>
+      ) : null}
       {courts.length === 0 ? (
         <p className="mt-2 text-sm text-ink-muted">{t('noCourts')}</p>
       ) : (

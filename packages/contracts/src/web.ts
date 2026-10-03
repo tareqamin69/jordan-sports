@@ -11,6 +11,7 @@ export { ApiError, buildPath, createApiClient } from './client.js';
 export type { ApiClient, ApiClientOptions } from './client.js';
 export { errorCodes, LEGAL_TEXTS_VERSION, mediaWidths, venueRatingTags } from './constants.js';
 export { freeStarts } from './free-starts.js';
+export { GOVERNORATE_GEO, geoDistanceKm, governorateForPoint } from './geo.js';
 
 export const addVenueTeamMember = {
   method: 'POST',
@@ -152,6 +153,11 @@ export const adminGetVenueStats = {
   path: '/v1/admin/venues/:venueId/stats',
   auth: 'admin',
 } as unknown as typeof C.adminGetVenueStats;
+export const adminImportVenueFromMap = {
+  method: 'POST',
+  path: '/v1/admin/venue-import',
+  auth: 'admin',
+} as unknown as typeof C.adminImportVenueFromMap;
 export const adminInviteStaff = {
   method: 'POST',
   path: '/v1/admin/team/invitations',
@@ -483,6 +489,11 @@ export const getVenueStats = {
   path: '/v1/manage/venues/:venueId/stats',
   auth: 'user',
 } as unknown as typeof C.getVenueStats;
+export const importMyVenueFromMap = {
+  method: 'POST',
+  path: '/v1/manage/venue-import',
+  auth: 'user',
+} as unknown as typeof C.importMyVenueFromMap;
 export const inspectAccountSetup = {
   method: 'POST',
   path: '/v1/admin/setup/inspect',

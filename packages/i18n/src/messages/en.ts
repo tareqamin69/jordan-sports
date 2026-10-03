@@ -99,6 +99,8 @@ export const en = {
       NOTHING_TO_PAY_OUT: 'Nothing is due to this venue right now.',
       ACCOUNT_HAS_UPCOMING_BOOKINGS:
         'You have upcoming bookings. Cancel them or wait until they are over, then delete your account.',
+      MAP_LINK_UNREADABLE:
+        "We couldn't read that link. Make sure it's a place link from Google Maps, or just fill in the details yourself.",
       ACCOUNT_RUNS_VENUE:
         'You own a venue on Jorena. Hand it over or archive it first, then delete your account.',
     },
@@ -413,9 +415,23 @@ export const en = {
         changeLocation: 'Change location',
         locationOutsideGovernorate:
           'The pin looks far from the governorate you picked in the info step. Double-check the location.',
-        photosIntro: 'Upload clear photos of the venue. The first photo becomes the cover photo.',
-        uploadPhoto: 'Upload photo',
-        uploadHint: 'JPEG, PNG or WebP, up to 10 MB.',
+        photosIntro:
+          'Upload your own clear photos of the venue, from different angles. The first photo becomes the cover, and you can reorder them.',
+        uploadPhoto: 'Upload photos',
+        uploadHint: 'You can pick several photos at once. JPEG, PNG or WebP, up to 10 MB each.',
+        mapLink: 'Paste your venue’s Google Maps link (optional)',
+        mapLinkHint:
+          'Open your venue on Google Maps, tap Share and copy the link. We fill in what we can, and you review and change anything.',
+        mapLinkRead: 'Read link',
+        mapLinkDone:
+          'We filled in the name and location from the map. Review them before you continue.',
+        mapLinkDonePlaces:
+          'We filled in the name, location, phone, address and opening hours from Google. Review them before you continue.',
+        mapLinkPhotos: 'We never copy photos from Google: upload your own in the photos step.',
+        mapLinkFailed:
+          "We couldn't read the link right now. Fill in the details yourself; nothing is lost.",
+        hoursFromMap:
+          'The opening hours from Google Maps will be applied to every court you add. You can change them later from the venue dashboard.',
         deletePhoto: 'Delete photo',
         courtsIntro: 'Add at least one court before submitting for review.',
         addCourt: 'Add a court',
@@ -1252,6 +1268,13 @@ export const en = {
       title: 'Venues',
       create: 'New venue',
       createTitle: 'Create a venue',
+      mapLink: 'Google Maps link of the venue (optional)',
+      mapLinkHint:
+        'Fills in the name, governorate, area and pin (plus phone and address when the Google key is set).',
+      mapLinkRead: 'Read link',
+      mapLinkDone:
+        'Filled in from the link. Review before creating; photos are never copied from Google.',
+      mapLinkFailed: "We couldn't read the link right now. Fill in the details by hand.",
       empty: 'This organization has no venues yet.',
       resourceCount: 'Courts: {count}',
       pendingTitle: 'Review queue',

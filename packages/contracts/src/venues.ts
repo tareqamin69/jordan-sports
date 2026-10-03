@@ -498,3 +498,58 @@ export const deleteMyVenueMedia = endpoint({
   params: z.object({ mediaId: uuidSchema }),
   response: adminVenueSchema,
 });
+
+// ---------------------------------------------------------------------------------------------
+// Import from a Google Maps link (registration wizard, admin "new venue")
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * What a Google Maps link gave us, for the owner to review. Link only (free): name, pin,
+ * governorate and nearest area. With the optional Google Places key: also phone, website,
+ * address and weekly opening hours. Never photos (Google's terms and the photographers' rights).
+ * Every field may be null: the form simply stays empty there.
+ */
+export const venueImportSchema = z.object({
+  source: z.enum(['link', 'places']),
+  name: z.string().nullable(),
+  location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
+  governorateId: uuidSchema.nullable(),
+  areaId: uuidSchema.nullable(),
+  placeId: z.string().nullable(),
+  /** International form when it is a valid Jordanian number, else null. */
+  phone: z.string().nullable(),
+  website: z.string().nullable(),
+  address: z.string().nullable(),
+  /** Venue-local opening windows (ISO weekday 1 = Monday), for every court. */
+  weeklyHours: z
+    .array(
+      z.object({
+        dayOfWeek: z.number().int().min(1).max(7),
+        startMinute: z.number().int().min(0).max(1439),
+        durationMinutes: z.number().int().min(15).max(1440),
+      }),
+    )
+    .nullable(),
+});
+export type VenueImport = z.infer<typeof venueImportSchema>;
+
+const venueImportBody = z.object({ url: z.string().trim().min(8).max(2000) });
+
+export const importMyVenueFromMap = endpoint({
+  method: 'POST',
+  path: '/v1/manage/venue-import',
+  summary: 'Read a Google Maps link to pre-fill a new venue (never fails hard: unknown → 422)',
+  auth: 'user',
+  body: venueImportBody,
+  response: venueImportSchema,
+});
+
+export const adminImportVenueFromMap = endpoint({
+  method: 'POST',
+  path: '/v1/admin/venue-import',
+  summary: 'Read a Google Maps link to pre-fill a new venue (admin console)',
+  auth: 'admin',
+  permission: 'venues.edit',
+  body: venueImportBody,
+  response: venueImportSchema,
+});

@@ -74,6 +74,11 @@ const envSchema = z.object({
     .refine((v) => /^smtps?:\/\/.+/.test(v), 'must be an smtp:// or smtps:// URL')
     .optional(),
   EMAIL_FROM: z.string().trim().min(3).default('Jorena <no-reply@jorena.app>'),
+  // Optional: Google Places API (New) for richer venue imports (docs/google-places-setup.md).
+  // Without it, imports read the map link only (free).
+  GOOGLE_PLACES_API_KEY: z.string().trim().min(20).optional(),
+  // Hard daily cap on Places requests, to stay inside Google's free monthly usage.
+  GOOGLE_PLACES_DAILY_CAP: z.coerce.number().int().min(0).max(1000).default(30),
 });
 
 export type NodeEnv = 'development' | 'test' | 'production';
@@ -113,6 +118,8 @@ export interface AppConfig {
   readonly adminBaseUrl: string;
   /** Outgoing email; `smtpUrl` null means emails are logged instead (development). */
   readonly email: { readonly smtpUrl: string | null; readonly from: string };
+  /** Google Places (New) for venue imports; `apiKey` null = map link only. */
+  readonly googlePlaces: { readonly apiKey: string | null; readonly dailyCap: number };
 }
 
 export class ConfigError extends Error {
@@ -164,6 +171,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     webBaseUrl: e.WEB_ORIGINS[0] ?? 'http://localhost:3000',
     adminBaseUrl: e.ADMIN_ORIGINS[0] ?? 'http://localhost:3001',
     email: { smtpUrl: e.SMTP_URL ?? null, from: e.EMAIL_FROM },
+    googlePlaces: { apiKey: e.GOOGLE_PLACES_API_KEY ?? null, dailyCap: e.GOOGLE_PLACES_DAILY_CAP },
   };
   assertProductionSafe(config);
   return config;

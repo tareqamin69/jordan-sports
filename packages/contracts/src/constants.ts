@@ -54,6 +54,8 @@ export const errorCodes = [
   'NOTHING_TO_PAY_OUT',
   'ACCOUNT_HAS_UPCOMING_BOOKINGS',
   'ACCOUNT_RUNS_VENUE',
+  // import from a map link
+  'MAP_LINK_UNREADABLE',
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];
 

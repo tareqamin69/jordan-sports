@@ -19,3 +19,4 @@ export * from './complaints.js';
 export * from './reports.js';
 export * from './venue-team.js';
 export * from './free-starts.js';
+export * from './geo.js';

@@ -35,7 +35,9 @@ describe('parseConfig', () => {
       trustProxy: ['127.0.0.1', '::1'],
       paymentGateway: 'mock',
       webBaseUrl: 'http://localhost:3000',
+      adminBaseUrl: 'http://localhost:3001',
       email: { smtpUrl: null, from: 'Jorena <no-reply@jorena.app>' },
+      googlePlaces: { apiKey: null, dailyCap: 30 },
     });
   });
 

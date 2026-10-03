@@ -34,7 +34,11 @@ const VENUE_ROLES: MembershipRole[] = ['owner', 'manager', 'staff'];
 /** Admin endpoints open to any signed-in staff member (no permission by design). */
 const ANY_STAFF = new Set(['GET /v1/admin/me', 'POST /v1/admin/auth/reauth']);
 /** Venue-side endpoints not scoped to one organization (they act on the caller's own data). */
-const NOT_ORG_SCOPED = new Set(['GET /v1/manage/venues', 'POST /v1/manage/venues']);
+const NOT_ORG_SCOPED = new Set([
+  'GET /v1/manage/venues',
+  'POST /v1/manage/venues',
+  'POST /v1/manage/venue-import',
+]);
 
 const key = (e: Endpoint) => `${e.method} ${e.path}`;
 

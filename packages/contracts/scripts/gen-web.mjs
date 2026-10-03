@@ -29,6 +29,7 @@ const lines = [
   "export type { ApiClient, ApiClientOptions } from './client.js';",
   "export { errorCodes, LEGAL_TEXTS_VERSION, mediaWidths, venueRatingTags } from './constants.js';",
   "export { freeStarts } from './free-starts.js';",
+  "export { GOVERNORATE_GEO, geoDistanceKm, governorateForPoint } from './geo.js';",
   '',
 ];
 for (const [name, e] of routes) {

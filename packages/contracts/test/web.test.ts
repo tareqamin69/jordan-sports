@@ -27,10 +27,10 @@ describe('contracts/web', () => {
   });
 
   it('pulls in no zod at runtime', () => {
-    for (const file of ['web.ts', 'client.ts', 'constants.ts', 'free-starts.ts']) {
+    for (const file of ['web.ts', 'client.ts', 'constants.ts', 'free-starts.ts', 'geo.ts']) {
       const src = readFileSync(join(__dirname, '../src', file), 'utf8');
       expect(src, file).not.toMatch(
-        /^import (?!type)[^;]*from '(zod|\.\/(?!client|constants|free-starts)[^']+)'/m,
+        /^import (?!type)[^;]*from '(zod|\.\/(?!client|constants|free-starts|geo)[^']+)'/m,
       );
     }
   });

@@ -17,6 +17,7 @@ recorded with every sign-up consent).
 | Privacy policy: data, purpose, legal basis, sharing (venue / SMS / gateway / hosting / maps), retention, rights, breach notice, children, contact | ✅ ⚖️ | `/privacy` |
 | Player terms (16+ to sign up, 18+ to pay) | ✅ ⚖️ | `/terms` |
 | Venue-owner terms: commission, weekly payouts, cancellations, **photo rights** | ✅ ⚖️ | `/venue-terms` (`#photos`) |
+| Google Maps import: only the pasted link (and, with a Places key, a name search near the pin) goes to Google; no personal data; Google photos never copied; results cached 30 days | ✅ | `venue-import` module, `docs/google-places-setup.md` |
 | Refund & cancellation policy, matching `refundAmount()` in `payments/domain/payment-rules.ts` | ✅ ⚖️ | `/refunds` |
 | Cookie policy (essential cookies only, listed by name) | ✅ ⚖️ | `/cookies` |
 | How it works + FAQ | ✅ | `/how-it-works` |
