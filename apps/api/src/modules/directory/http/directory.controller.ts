@@ -55,6 +55,7 @@ export class DirectoryController {
       ...(q.sport ? { sport: q.sport } : {}),
       ...(q.governorate ? { governorate: q.governorate } : {}),
       ...(q.area ? { area: q.area } : {}),
+      ...(q.located ? { located: true } : {}),
       ...(q.date ? { date: q.date } : {}),
       ...(q.time ? { time: q.time } : {}),
     });

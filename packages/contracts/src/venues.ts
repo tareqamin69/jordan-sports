@@ -109,6 +109,11 @@ export const listVenues = endpoint({
     sport: z.string().max(40).optional(),
     governorate: z.string().max(40).optional(),
     area: z.string().max(40).optional(),
+    /**
+     * `1`: only venues placed on the map ("nearest to you" sorts them on the player's device; the
+     * player's position is never sent).
+     */
+    located: z.literal('1').optional(),
     /** Only venues with a free, priced time on this business date (YYYY-MM-DD). */
     date: z
       .string()

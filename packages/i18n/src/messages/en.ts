@@ -174,6 +174,20 @@ export const en = {
       contactPage: 'Or write to us from the contact page.',
     },
     home: {
+      near: {
+        askTitle: 'Want to see the venues nearest to you?',
+        askBody: 'We use your location on your device only, to sort venues. We never store it.',
+        useLocation: 'Yes, use my location',
+        later: 'Later',
+        pickGovernorate: 'Pick your governorate and we will show its venues first:',
+        denied:
+          'We could not get your location. Pick your governorate and we will show its venues first:',
+        nearest: 'Nearest to you',
+        inGovernorate: 'Venues in {name}',
+        change: 'Change',
+        loading: 'Finding venues…',
+        none: 'No venues here yet. Try another governorate.',
+      },
       eyebrow: 'From Aqaba to Irbid',
       title: 'Your game. Your time.<br></br><hl>Your court.</hl>',
       description:

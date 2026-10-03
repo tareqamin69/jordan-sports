@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import { GovernorateChips } from '@/components/governorate-chips';
 import { Icon } from '@/components/icons';
+import { NearbyVenues } from '@/components/nearby-venues';
 import { PitchLines } from '@/components/pitch-lines';
 import { SearchBar } from '@/components/search-bar';
 import { SportTile } from '@/components/sport-tile';
@@ -74,6 +75,7 @@ export default async function HomePage({ params }: Props) {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+        <NearbyVenues catalog={catalog} />
         {tiles.length > 0 ? (
           <section aria-labelledby="sports-heading" className="reveal mt-10">
             <SectionHeading

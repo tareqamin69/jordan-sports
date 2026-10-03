@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useApi } from '@/lib/api';
+import { distanceKm, usePlace } from '@/lib/place';
 import { useErrorMessage } from '@/lib/use-error-message';
 import { Icon } from './icons';
 import { VenueCard } from './venue-card';
@@ -20,14 +21,6 @@ const ResultsMap = dynamic(() => import('./results-map').then((m) => m.ResultsMa
 
 type Filters = { sport?: string; governorate?: string; area?: string };
 type Sort = 'recommended' | 'price' | 'nearest';
-
-function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const h =
-    Math.sin(rad(b.lat - a.lat) / 2) ** 2 +
-    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
-  return 12_742 * Math.asin(Math.sqrt(h));
-}
 
 /**
  * The venues list with sorting (recommended, cheapest, nearest), a list/map switch and "show
@@ -65,10 +58,15 @@ function ResultsList({
   const [cursor, setCursor] = useState(nextCursor);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sort, setSort] = useState<Sort>('recommended');
+  const [chosenSort, setSort] = useState<Sort | null>(null);
   const [view, setView] = useState<'list' | 'map'>('list');
-  const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating] = useState<'idle' | 'busy' | 'denied'>('idle');
+  // Shared with the home page: the player's remembered choice (position or governorate), kept on
+  // this device only. With a position, the list starts nearest first.
+  const place = usePlace();
+  const here = place.position;
+  const sort: Sort = chosenSort ?? (here ? 'nearest' : 'recommended');
+  const locating =
+    place.status === 'locating' ? 'busy' : place.status === 'denied' ? 'denied' : 'idle';
 
   async function more() {
     if (!cursor) return;
@@ -87,23 +85,21 @@ function ResultsList({
 
   const chooseSort = (next: Sort) => {
     setSort(next);
-    if (next !== 'nearest' || here) return;
-    if (!('geolocation' in navigator)) return setLocating('denied');
-    setLocating('busy');
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setHere({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setLocating('idle');
-      },
-      () => setLocating('denied'),
-      { timeout: 10_000, maximumAge: 300_000 },
-    );
+    // "Nearest" asks for the position here (a tap), and remembers the choice like the home card.
+    if (next === 'nearest' && !here) void place.shareLocation();
   };
 
   const withDistance = items.map((v) => ({
     v,
     d: here && v.location ? distanceKm(here, v.location) : undefined,
   }));
+  // "Recommended" puts the remembered governorate first, keeping the server's order within each.
+  const recommended = place.governorate
+    ? [
+        ...withDistance.filter((x) => x.v.governorate.key === place.governorate),
+        ...withDistance.filter((x) => x.v.governorate.key !== place.governorate),
+      ]
+    : withDistance;
   const sorted =
     sort === 'price'
       ? [...withDistance].sort(
@@ -111,7 +107,7 @@ function ResultsList({
         )
       : sort === 'nearest' && here
         ? [...withDistance].sort((a, b) => (a.d ?? Infinity) - (b.d ?? Infinity))
-        : withDistance;
+        : recommended;
 
   const segment = (active: boolean) =>
     cx(

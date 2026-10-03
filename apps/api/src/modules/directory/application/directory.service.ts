@@ -33,6 +33,7 @@ export class DirectoryService {
     sport?: string;
     governorate?: string;
     area?: string;
+    located?: boolean;
     date?: string;
     time?: string;
     cursor?: string;
@@ -62,7 +63,12 @@ export class DirectoryService {
   }
 
   /** Approved, not archived venues matching the place and sport filters. */
-  private approved(filters: { sport?: string; governorate?: string; area?: string }) {
+  private approved(filters: {
+    sport?: string;
+    governorate?: string;
+    area?: string;
+    located?: boolean;
+  }) {
     let query = this.db
       .selectFrom('venue.venues as v')
       .innerJoin('catalog.cities as g', 'g.id', 'v.city_id')
@@ -71,6 +77,7 @@ export class DirectoryService {
       .where('v.archived_at', 'is', null);
     if (filters.governorate) query = query.where('g.key', '=', filters.governorate);
     if (filters.area) query = query.where('a.key', '=', filters.area);
+    if (filters.located) query = query.where('v.location', 'is not', null);
     if (filters.sport) {
       const sport = filters.sport;
       query = query.where((eb) =>
@@ -98,6 +105,7 @@ export class DirectoryService {
     sport?: string;
     governorate?: string;
     area?: string;
+    located?: boolean;
     date: string;
     time?: string;
     limit: number;

@@ -75,6 +75,7 @@ recorded with every sign-up consent).
 | No session replay / heatmaps / analytics | ✅ | none installed |
 | Fonts, icons, scripts self-hosted | ✅ | `@fontsource` packages, inline SVG icons, no CDN |
 | Third-party requests on page load | ✅ none | e2e `privacy.spec.ts` asserts zero non-local requests on home, venue and help pages |
+| Location used on the device only | ✅ | asked through an in-page card first (the browser prompt only after "Yes, use my location"); coordinates stay in memory for sorting; the server only gets `located=1` ("venues on the map"); the device remembers the choice (geo / governorate / later), never the coordinates |
 | Map loads on click only | ✅ | venue page, registration wizard (`open-location-map`), wizard review step, admin review (OSM embed). Admin venue editor loads it only when a venue is opened for editing (staff-only) |
 | Third parties when the map is opened | ℹ️ | `tiles.openfreemap.org` (vector), `tile.openstreetmap.org` (fallback), `www.openstreetmap.org` (admin embed) |
 | Outbound links (user-initiated) | ℹ️ | `wa.me`, Google Maps directions, Google Calendar |

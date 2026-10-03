@@ -352,7 +352,7 @@ export const legalDocs: Record<LegalDocId, Record<'ar' | 'en', LegalDoc>> = {
             'حجوزاتك وبلاغاتك: عشان نعرضها إلك ونتابعها.',
             'معلومات الدفع: نوع البطاقة وآخر 4 أرقام منها وحالة الدفع والاسترجاع. رقم البطاقة كامل ورمز الأمان بيدخلوا على صفحة مزوّد الدفع مباشرة، وإحنا ما بنشوفهم ولا بنخزنهم.',
             'موافقاتك: نسخة الشروط اللي وافقت عليها ووقتها، واختيارك لرسائل العروض. بنحتفظ فيها كإثبات.',
-            'موقعك: بس إذا ضغطت «قريب مني» ووافقت عليه بالمتصفح، وبنستخدمه لحظتها عشان نرتّب الملاعب حسب القرب. ما بنخزّنه.',
+            'موقعك: بس إذا ضغطت «آه، استخدم موقعي» ووافقت عليه بالمتصفح. بنستخدمه على جهازك بس عشان نرتّب الملاعب حسب القرب: ما بيوصلنا وما بنخزّنه. بنتذكّر على جهازك إنك اخترت هالشي (أو المحافظة اللي اخترتها بداله) عشان ما نسألك كل مرة، وبتقدر تغيّره من «غيّر» بالصفحة الرئيسية.',
             'معلومات تقنية بسيطة (عنوان الاتصال IP ونوع المتصفح) بسجلات الأمان: لحماية المنصة من الاحتيال والهجمات.',
             'ما بنستخدم أدوات تتبّع إعلانية، ولا تسجيل لحركتك عالصفحة، ولا خرائط حرارية.',
           ],
@@ -442,7 +442,7 @@ export const legalDocs: Record<LegalDocId, Record<'ar' | 'en', LegalDoc>> = {
             'Your bookings and reports: to show them to you and follow up.',
             'Payment details: your card brand, its last 4 digits and the payment and refund status. Your full card number and security code are entered directly on the payment provider’s page; we never see or store them.',
             'Your consents: the version of the terms you accepted and when, and your choice about offers. We keep these as proof.',
-            'Your location: only if you tap “Near me” and allow it in your browser. We use it at that moment to sort venues by distance and do not store it.',
+            'Your location: only if you tap “Yes, use my location” and allow it in your browser. It is used on your device only, to sort venues by distance: it never reaches us and we do not store it. Your device remembers that choice (or the governorate you picked instead) so we do not ask every visit; change it with “Change” on the home page.',
             'Basic technical data (IP address and browser type) in security logs, to protect the platform against fraud and attacks.',
             'We use no advertising trackers, no session recording and no heatmaps.',
           ],
@@ -608,7 +608,7 @@ export const legalDocs: Record<LegalDocId, Record<'ar' | 'en', LegalDoc>> = {
         {
           heading: 'تخزين على جهازك',
           paragraphs: [
-            'بنحفظ على جهازك (localStorage) إذا سكّرت اقتراح «ثبّت التطبيق» وعدد زياراتك، عشان ما نزعجك فيه. ما بيوصلنا إشي منه.',
+            'بنحفظ على جهازك (localStorage): إذا سكّرت اقتراح «ثبّت التطبيق» وعدد زياراتك، واختيارك لترتيب الملاعب (موقعك أو محافظة، بدون الإحداثيات). ما بيوصلنا إشي منه.',
           ],
         },
         {
@@ -635,7 +635,7 @@ export const legalDocs: Record<LegalDocId, Record<'ar' | 'en', LegalDoc>> = {
         {
           heading: 'Storage on your device',
           paragraphs: [
-            'We store on your device (localStorage) whether you closed the “Install the app” suggestion and your visit count, so we do not nag you. None of it is sent to us.',
+            'We store on your device (localStorage): whether you closed the “Install the app” suggestion and your visit count, and how you want venues sorted (your location or a governorate, never the coordinates). None of it is sent to us.',
           ],
         },
         {

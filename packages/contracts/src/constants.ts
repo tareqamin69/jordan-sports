@@ -75,4 +75,4 @@ export const venueRatingTags = [
  * Version of the published legal texts (terms, privacy, refunds, cookies). Recorded with every
  * sign-up consent; bump it whenever those texts change (docs/legal/README.md).
  */
-export const LEGAL_TEXTS_VERSION = '2026-10-02';
+export const LEGAL_TEXTS_VERSION = '2026-10-03';

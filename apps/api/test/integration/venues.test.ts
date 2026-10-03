@@ -110,6 +110,20 @@ describe('catalog, venues and resources', () => {
     expect(all.total).toBeGreaterThanOrEqual(all.items.length);
     if (all.total > 1) expect(page1.nextCursor).not.toBeNull();
 
+    // `located=1`: only venues on the map ("nearest to you" sorts them on the device).
+    const slugsOf = async (url: string) =>
+      (
+        (await call(t.app, { method: 'GET', url })).json() as { items: Array<{ slug: string }> }
+      ).items.map((v) => v.slug);
+    expect(await slugsOf('/v1/venues?sport=padel&located=1&limit=100')).not.toContain(slug);
+    await call(t.app, {
+      method: 'PATCH',
+      url: `/v1/admin/venues/${venueId}`,
+      cookie: admin,
+      body: { location: { lat: 31.95, lng: 35.91 } },
+    });
+    expect(await slugsOf('/v1/venues?sport=padel&located=1&limit=100')).toContain(slug);
+
     // Invalid transition.
     const bad = await setStatus('draft');
     expect(bad.statusCode).toBe(409);

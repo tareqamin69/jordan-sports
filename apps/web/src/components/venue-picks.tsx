@@ -4,52 +4,23 @@ import type { VenueSummary } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { SectionHeading, cx } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Link } from '@/i18n/navigation';
 import { joinList, pick } from '@/lib/localized';
 import { Icon } from './icons';
 import { venuePlace } from './venue-card';
 import { VenuePhoto } from './venue-photo';
 
-function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const dLat = rad(b.lat - a.lat);
-  const dLng = rad(b.lng - a.lng);
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
-  return 12_742 * Math.asin(Math.sqrt(h));
-}
-
 /**
- * Featured venues as a swipeable photo carousel. "Near me" asks for the location once
- * and re-sorts in the browser only.
+ * Featured venues as a swipeable photo carousel (the nearest ones have their own section above).
  */
 export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
   const t = useTranslations('web.home');
   const tv = useTranslations('web.venues');
   const locale = useLocale();
-  const [here, setHere] = useState<{ lat: number; lng: number } | null>(null);
-  const [state, setState] = useState<'idle' | 'locating' | 'denied'>('idle');
   const scroller = useRef<HTMLOListElement>(null);
 
-  const locate = () => {
-    if (!('geolocation' in navigator)) return setState('denied');
-    setState('locating');
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setHere({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setState('idle');
-      },
-      () => setState('denied'),
-      { timeout: 10_000, maximumAge: 300_000 },
-    );
-  };
-
-  const sorted = here
-    ? venues
-        .map((v) => ({ v, d: v.location ? distanceKm(here, v.location) : undefined }))
-        .sort((a, b) => (a.d ?? Infinity) - (b.d ?? Infinity))
-    : venues.map((v) => ({ v, d: undefined }));
+  const sorted = venues.map((v) => ({ v, d: undefined as number | undefined }));
   const meta = (v: VenueSummary, d: number | undefined) =>
     [venuePlace(v, locale), d !== undefined ? tv('distance', { km: d.toFixed(1) }) : '']
       .filter(Boolean)
@@ -68,18 +39,9 @@ export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
     <section aria-labelledby="venues-heading" className="reveal mt-14">
       <SectionHeading
         id="venues-heading"
-        title={here ? t('nearestTitle') : t('picksTitle')}
+        title={t('picksTitle')}
         action={
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={locate}
-              disabled={state === 'locating'}
-              className="pressable flex h-11 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-[13px] font-medium text-ink transition-colors hover:bg-surface disabled:opacity-60"
-            >
-              <Icon name="pin" className="size-4" />
-              {state === 'locating' ? t('locating') : t('nearMe')}
-            </button>
             {sorted.length > 2 ? (
               <span className="hidden gap-1.5 sm:flex">
                 <ArrowButton label={t('previous')} onClick={() => page(-1)} back />
@@ -89,9 +51,6 @@ export function VenuePicks({ venues }: { venues: VenueSummary[] }) {
           </div>
         }
       />
-      {state === 'denied' ? (
-        <p className="mt-2 text-sm text-ink-muted">{t('locationDenied')}</p>
-      ) : null}
 
       <ol
         ref={scroller}
