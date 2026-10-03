@@ -1,6 +1,10 @@
 'use client';
 
-import { adminListPayouts, adminMarkPayoutPaid, type DuePayout } from '@jordan-sports/contracts';
+import {
+  adminListPayouts,
+  adminMarkPayoutPaid,
+  type DuePayout,
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

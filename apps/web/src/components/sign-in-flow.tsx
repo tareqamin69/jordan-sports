@@ -5,7 +5,7 @@ import {
   requestOtp,
   verifyOtp,
   type PreferredMode,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, CheckboxField, Ltr, TextField, cx } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

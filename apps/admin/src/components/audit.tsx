@@ -1,6 +1,6 @@
 'use client';
 
-import { adminListAuditLogs } from '@jordan-sports/contracts';
+import { adminListAuditLogs } from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,

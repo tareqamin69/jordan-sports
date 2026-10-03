@@ -1,6 +1,6 @@
 'use client';
 
-import { adminCreateVenue, adminListVenues } from '@jordan-sports/contracts';
+import { adminCreateVenue, adminListVenues } from '@jordan-sports/contracts/web';
 import { Alert, Badge, Button, Card, EmptyState, SelectField, TextField } from '@jordan-sports/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

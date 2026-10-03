@@ -1,6 +1,6 @@
 'use client';
 
-import { archiveOwnVenue, getVenueStats, type VenueSchedule } from '@jordan-sports/contracts';
+import { archiveOwnVenue, getVenueStats, type VenueSchedule } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

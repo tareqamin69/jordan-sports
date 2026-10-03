@@ -1,4 +1,4 @@
-import { getCatalog, listVenues } from '@jordan-sports/contracts';
+import { getCatalog, listVenues } from '@jordan-sports/contracts/web';
 import type { Locale } from '@jordan-sports/i18n';
 import { SectionHeading, buttonClass } from '@jordan-sports/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';

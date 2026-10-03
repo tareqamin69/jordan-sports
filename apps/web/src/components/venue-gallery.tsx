@@ -1,6 +1,6 @@
 'use client';
 
-import type { PublicVenue } from '@jordan-sports/contracts';
+import type { PublicVenue } from '@jordan-sports/contracts/web';
 import { cx } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';

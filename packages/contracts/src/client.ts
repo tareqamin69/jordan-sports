@@ -1,5 +1,21 @@
+// Runtime imports here must stay zod-free: this file ships to the browser via ./web.ts.
+import type { ProblemDetails } from './common.js';
+import { errorCodes } from './constants.js';
 import type { Endpoint, EndpointInput, EndpointOutput } from './endpoint.js';
-import { problemDetailsSchema, type ProblemDetails } from './common.js';
+
+/** Same rule as `problemDetailsSchema`, without zod. */
+function isProblemDetails(value: unknown): value is ProblemDetails {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.type === 'string' &&
+    typeof v.title === 'string' &&
+    typeof v.status === 'number' &&
+    Number.isInteger(v.status) &&
+    (errorCodes as readonly unknown[]).includes(v.code) &&
+    (v.detail === undefined || typeof v.detail === 'string')
+  );
+}
 
 export class ApiError extends Error {
   override readonly name = 'ApiError';
@@ -65,10 +81,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     const text = await response.text();
     const json: unknown = text ? JSON.parse(text) : null;
     if (!response.ok) {
-      const parsed = problemDetailsSchema.safeParse(json);
       throw new ApiError(
-        parsed.success
-          ? parsed.data
+        isProblemDetails(json)
+          ? json
           : {
               type: 'about:blank',
               title: 'INTERNAL_ERROR',
@@ -77,6 +92,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
             },
       );
     }
-    return endpoint.response.parse(json) as EndpointOutput<typeof endpoint>;
+    // Full contracts (server side, tests) check the response; the browser's lightweight routes
+    // (./web.ts) carry no schema, and the API already sends validated responses.
+    const schema = (endpoint as Partial<Endpoint>).response;
+    return (schema ? schema.parse(json) : json) as EndpointOutput<typeof endpoint>;
   };
 }

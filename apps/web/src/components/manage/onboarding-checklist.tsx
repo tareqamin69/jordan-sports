@@ -1,6 +1,10 @@
 'use client';
 
-import { getMyVenueProfile, getVenuePricing, type VenueSchedule } from '@jordan-sports/contracts';
+import {
+  getMyVenueProfile,
+  getVenuePricing,
+  type VenueSchedule,
+} from '@jordan-sports/contracts/web';
 import { Card, chipClass } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';

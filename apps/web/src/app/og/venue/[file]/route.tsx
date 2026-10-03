@@ -1,4 +1,4 @@
-import { getVenue } from '@jordan-sports/contracts';
+import { getVenue } from '@jordan-sports/contracts/web';
 import { BRAND_NAME_LATIN } from '@jordan-sports/brand';
 import { formatMoney } from '@jordan-sports/money';
 import { ImageResponse } from 'next/og';

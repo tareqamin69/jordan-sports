@@ -7,7 +7,7 @@ import {
   reportVenueProblem,
   type Complaint,
   type ComplaintCategory,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

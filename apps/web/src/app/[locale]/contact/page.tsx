@@ -2,7 +2,7 @@ import type { Locale } from '@jordan-sports/i18n';
 import { Card, Ltr, PageHeader, buttonClass } from '@jordan-sports/ui';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { getCatalog } from '@jordan-sports/contracts';
+import { getCatalog } from '@jordan-sports/contracts/web';
 import { Icon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
 import { serverApi } from '@/lib/server-api';

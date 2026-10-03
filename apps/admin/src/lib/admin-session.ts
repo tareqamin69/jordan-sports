@@ -1,6 +1,6 @@
 'use client';
 
-import { getAdminMe, type PlatformPermission } from '@jordan-sports/contracts';
+import { getAdminMe, type PlatformPermission } from '@jordan-sports/contracts/web';
 import { useQuery } from '@tanstack/react-query';
 import { isApiError, useApi } from './api';
 

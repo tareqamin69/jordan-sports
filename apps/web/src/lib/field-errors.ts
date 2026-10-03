@@ -1,4 +1,4 @@
-import { ApiError } from '@jordan-sports/contracts';
+import { ApiError } from '@jordan-sports/contracts/web';
 
 interface FieldIssue {
   path: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { ApiError, createApiClient, type ApiClient } from '@jordan-sports/contracts';
+import { ApiError, createApiClient, type ApiClient } from '@jordan-sports/contracts/web';
 import { useLocale } from 'next-intl';
 import { useMemo } from 'react';
 

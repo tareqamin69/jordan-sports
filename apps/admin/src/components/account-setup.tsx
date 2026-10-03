@@ -1,6 +1,6 @@
 'use client';
 
-import { completeAccountSetup, inspectAccountSetup } from '@jordan-sports/contracts';
+import { completeAccountSetup, inspectAccountSetup } from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, FormSkeleton, Ltr, TextField } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormatter, useTranslations } from 'next-intl';

@@ -1,6 +1,6 @@
 'use client';
 
-import { adminReportsOverview, type ReportPeriod } from '@jordan-sports/contracts';
+import { adminReportsOverview, type ReportPeriod } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

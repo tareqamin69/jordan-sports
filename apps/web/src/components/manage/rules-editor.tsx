@@ -1,6 +1,10 @@
 'use client';
 
-import { setBookingPolicy, type BookingPolicy, type VenueSchedule } from '@jordan-sports/contracts';
+import {
+  setBookingPolicy,
+  type BookingPolicy,
+  type VenueSchedule,
+} from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, CheckboxField, SelectField } from '@jordan-sports/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

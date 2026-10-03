@@ -8,7 +8,7 @@ import {
   adminRevokeInvitation,
   type StaffRole,
   type TeamMember,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

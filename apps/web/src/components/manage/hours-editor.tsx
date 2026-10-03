@@ -1,6 +1,10 @@
 'use client';
 
-import { setWeeklyHours, type VenueSchedule, type WeeklyWindow } from '@jordan-sports/contracts';
+import {
+  setWeeklyHours,
+  type VenueSchedule,
+  type WeeklyWindow,
+} from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, CheckboxField, SelectField } from '@jordan-sports/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';

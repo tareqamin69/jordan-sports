@@ -8,7 +8,7 @@ import {
   replacePriceRule,
   type PriceRuleView,
   type VenueSchedule,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { formatMoney, parseMajor, toMajorString } from '@jordan-sports/money';
 import {
   Alert,

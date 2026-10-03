@@ -4,7 +4,7 @@ import {
   adminGetSettings,
   adminUpdateSettings,
   type PlatformSettings,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,

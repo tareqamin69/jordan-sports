@@ -66,6 +66,19 @@ export default tseslint.config(
           allowedStrings: ['·', '-', '—', '–', '/', ':', '(', ')', '×'],
         },
       ],
+      // The apps use the browser entry of the contracts: routes without zod schemas (a ~97 KB
+      // gzipped saving per page). See packages/contracts/scripts/gen-web.mjs.
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@jordan-sports/contracts',
+              message: "Import from '@jordan-sports/contracts/web' in the apps.",
+            },
+          ],
+        },
+      ],
     },
   },
 );

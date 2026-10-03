@@ -1,6 +1,6 @@
 'use client';
 
-import { createManualBooking, type VenueSchedule } from '@jordan-sports/contracts';
+import { createManualBooking, type VenueSchedule } from '@jordan-sports/contracts/web';
 import { Alert, Button, SelectField, TextField } from '@jordan-sports/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

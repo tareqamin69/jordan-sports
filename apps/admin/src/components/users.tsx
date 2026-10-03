@@ -6,7 +6,7 @@ import {
   adminListUsers,
   adminSetUserStatus,
   type AdminUser,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

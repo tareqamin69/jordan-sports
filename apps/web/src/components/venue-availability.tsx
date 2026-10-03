@@ -5,7 +5,7 @@ import {
   getVenueAvailability,
   type PricedAvailability,
   type PublicResource,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { Alert, Button, Skeleton, SkeletonGroup, chipClass, cx, useToast } from '@jordan-sports/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

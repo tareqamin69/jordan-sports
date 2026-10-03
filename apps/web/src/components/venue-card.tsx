@@ -1,4 +1,4 @@
-import type { VenueSummary } from '@jordan-sports/contracts';
+import type { VenueSummary } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';

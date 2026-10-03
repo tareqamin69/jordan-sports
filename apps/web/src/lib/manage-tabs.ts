@@ -1,4 +1,4 @@
-import type { OrgPermission } from '@jordan-sports/contracts';
+import type { OrgPermission } from '@jordan-sports/contracts/web';
 
 export const tabs = [
   'today',

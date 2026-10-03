@@ -7,7 +7,7 @@ import {
   type BlockReason,
   type CalendarEntry,
   type VenueSchedule,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,

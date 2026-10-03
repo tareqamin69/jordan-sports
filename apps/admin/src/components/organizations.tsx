@@ -6,7 +6,7 @@ import {
   adminGetOrganization,
   adminListOrganizations,
   type MembershipRole,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

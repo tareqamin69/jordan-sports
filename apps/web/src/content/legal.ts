@@ -10,7 +10,7 @@
  * `{appName}` is replaced with the brand name when rendered.
  */
 
-import { LEGAL_TEXTS_VERSION } from '@jordan-sports/contracts';
+import { LEGAL_TEXTS_VERSION } from '@jordan-sports/contracts/web';
 
 export type LegalDocId = 'terms' | 'venueTerms' | 'privacy' | 'refunds' | 'cookies' | 'howItWorks';
 

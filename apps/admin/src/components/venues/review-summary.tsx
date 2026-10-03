@@ -4,7 +4,7 @@ import {
   adminGetVenueReviewSummary,
   type AdminVenue,
   type VenueReviewSummary,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { Alert, Button, Card, Ltr, SkeletonGroup, SkeletonText } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';

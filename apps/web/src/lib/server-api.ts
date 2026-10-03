@@ -1,5 +1,5 @@
 import 'server-only';
-import { ApiError, createApiClient } from '@jordan-sports/contracts';
+import { ApiError, createApiClient } from '@jordan-sports/contracts/web';
 
 /** Server-side API client (public endpoints) used by server components. */
 export const serverApi = createApiClient({

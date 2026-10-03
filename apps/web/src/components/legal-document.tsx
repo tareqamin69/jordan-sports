@@ -2,7 +2,7 @@ import type { Locale } from '@jordan-sports/i18n';
 import { PageHeader } from '@jordan-sports/ui';
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { getCatalog, type Catalog } from '@jordan-sports/contracts';
+import { getCatalog, type Catalog } from '@jordan-sports/contracts/web';
 import { LEGAL_UPDATED_AT, legalDocs, type LegalDocId } from '@/content/legal';
 import { Link } from '@/i18n/navigation';
 import { displayPhone } from '@/lib/format';

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Catalog } from '@jordan-sports/contracts';
+import type { Catalog } from '@jordan-sports/contracts/web';
 import { cx } from '@jordan-sports/ui';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useId, useState, type ReactNode } from 'react';

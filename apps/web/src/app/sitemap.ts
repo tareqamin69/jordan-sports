@@ -1,4 +1,4 @@
-import { listVenues } from '@jordan-sports/contracts';
+import { listVenues } from '@jordan-sports/contracts/web';
 import type { MetadataRoute } from 'next';
 import { serverApi, siteUrl } from '@/lib/server-api';
 

@@ -1,4 +1,4 @@
-import type { Sport } from '@jordan-sports/contracts';
+import type { Sport } from '@jordan-sports/contracts/web';
 import { tileClass } from '@jordan-sports/ui';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/lib/localized';

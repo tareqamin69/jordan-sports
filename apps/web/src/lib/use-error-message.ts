@@ -1,6 +1,6 @@
 'use client';
 
-import { ApiError, errorCodes } from '@jordan-sports/contracts';
+import { ApiError, errorCodes } from '@jordan-sports/contracts/web';
 import { useTranslations } from 'next-intl';
 
 /** Maps any thrown error to a translated, user-safe message. */

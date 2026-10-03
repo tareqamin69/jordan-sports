@@ -5,7 +5,7 @@ import {
   deleteOverride,
   updateScheduleSettings,
   type VenueSchedule,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, CheckboxField, SelectField, TextField } from '@jordan-sports/ui';
 import { useMutation } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

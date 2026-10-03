@@ -6,7 +6,7 @@ import {
   markNoShow,
   type VenueBooking,
   type VenueSchedule,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { Alert, Badge, Button, Card, EmptyState, ListSkeleton, Ltr, cx } from '@jordan-sports/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

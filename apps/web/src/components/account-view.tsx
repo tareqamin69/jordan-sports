@@ -1,6 +1,6 @@
 'use client';
 
-import { deleteMyAccount, signOut, updateMe } from '@jordan-sports/contracts';
+import { deleteMyAccount, signOut, updateMe } from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,

@@ -7,7 +7,7 @@ import {
   adminUpdateComplaint,
   type AdminComplaint,
   type ComplaintStatus,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

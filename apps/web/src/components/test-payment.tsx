@@ -5,7 +5,7 @@ import {
   getMockCheckout,
   payMockCheckout,
   type MockCheckout,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { Alert, Button, Card, FormSkeleton, TextField } from '@jordan-sports/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';

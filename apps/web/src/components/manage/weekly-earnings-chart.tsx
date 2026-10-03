@@ -1,6 +1,6 @@
 'use client';
 
-import type { Earning } from '@jordan-sports/contracts';
+import type { Earning } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { cx } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';

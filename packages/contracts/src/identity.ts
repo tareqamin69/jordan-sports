@@ -40,11 +40,7 @@ export const meSchema = z.object({
 });
 export type Me = z.infer<typeof meSchema>;
 
-/**
- * Version of the published legal texts (terms, privacy, refunds, cookies). Recorded with every
- * sign-up consent; bump it whenever those texts change (docs/legal/README.md).
- */
-export const LEGAL_TEXTS_VERSION = '2026-10-02';
+export { LEGAL_TEXTS_VERSION } from './constants.js';
 
 const signedIn = z.object({ status: z.literal('signed_in'), user: meSchema });
 

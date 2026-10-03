@@ -1,6 +1,6 @@
 'use client';
 
-import { listMyBookings } from '@jordan-sports/contracts';
+import { listMyBookings } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

@@ -1,6 +1,6 @@
 'use client';
 
-import { getMyVenueProfile } from '@jordan-sports/contracts';
+import { getMyVenueProfile } from '@jordan-sports/contracts/web';
 import {
   Alert,
   ListSkeleton,

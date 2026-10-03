@@ -4,7 +4,7 @@ import {
   adminListTransactions,
   adminRetryRefund,
   type Transaction,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

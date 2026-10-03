@@ -1,6 +1,6 @@
 'use client';
 
-import { listVenues, type VenueSummary } from '@jordan-sports/contracts';
+import { listVenues, type VenueSummary } from '@jordan-sports/contracts/web';
 import { Button, cx } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';

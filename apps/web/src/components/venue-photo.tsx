@@ -1,4 +1,4 @@
-import type { VenueSummary } from '@jordan-sports/contracts';
+import type { VenueSummary } from '@jordan-sports/contracts/web';
 import { CourtArt } from './court-art';
 import { Photo } from './photo';
 

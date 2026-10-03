@@ -1,6 +1,10 @@
 'use client';
 
-import { adminCancelBooking, adminGetBooking, adminListBookings } from '@jordan-sports/contracts';
+import {
+  adminCancelBooking,
+  adminGetBooking,
+  adminListBookings,
+} from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import {
   Alert,

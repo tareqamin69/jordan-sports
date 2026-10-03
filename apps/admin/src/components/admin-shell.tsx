@@ -1,6 +1,6 @@
 'use client';
 
-import { adminSignOut, type PlatformPermission } from '@jordan-sports/contracts';
+import { adminSignOut, type PlatformPermission } from '@jordan-sports/contracts/web';
 import { Alert, Button, DetailSkeleton, cx } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';

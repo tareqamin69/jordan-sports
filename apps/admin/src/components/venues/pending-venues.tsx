@@ -1,6 +1,6 @@
 'use client';
 
-import { adminListPendingVenues, type VenueStatus } from '@jordan-sports/contracts';
+import { adminListPendingVenues, type VenueStatus } from '@jordan-sports/contracts/web';
 import { Alert, Badge, Card, ListSkeleton, Ltr, PageHeader, SelectField } from '@jordan-sports/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';

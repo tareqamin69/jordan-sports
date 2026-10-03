@@ -30,8 +30,7 @@ export const mediaSchema = z.object({
 });
 export type Media = z.infer<typeof mediaSchema>;
 
-/** Photo URLs accept `?w=` with one of these widths (smaller WebP copies, created once). */
-export const mediaWidths = [320, 640, 960, 1600] as const;
+export { mediaWidths } from './constants.js';
 
 const namedRef = z.object({ id: uuidSchema, key: z.string(), name: localizedSchema });
 

@@ -5,7 +5,7 @@ import {
   getVenueSchedule,
   listManagedVenues,
   type VenueSchedule,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApi } from './api';
 

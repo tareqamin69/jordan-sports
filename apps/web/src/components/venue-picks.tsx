@@ -1,6 +1,6 @@
 'use client';
 
-import type { VenueSummary } from '@jordan-sports/contracts';
+import type { VenueSummary } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { SectionHeading, cx } from '@jordan-sports/ui';
 import { useLocale, useTranslations } from 'next-intl';

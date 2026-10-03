@@ -12,7 +12,7 @@ import {
   type AdminVenue,
   type Catalog,
   type VenueStatus,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Badge,

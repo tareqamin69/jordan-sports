@@ -1,6 +1,6 @@
 'use client';
 
-import { getCatalog } from '@jordan-sports/contracts';
+import { getCatalog } from '@jordan-sports/contracts/web';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from './api';
 

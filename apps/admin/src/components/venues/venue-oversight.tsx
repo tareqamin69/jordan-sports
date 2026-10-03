@@ -9,7 +9,7 @@ import {
   venueRatingTags,
   type AdminVenue,
   type VenueRatingTag,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,

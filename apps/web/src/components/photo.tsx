@@ -1,6 +1,6 @@
 'use client';
 
-import { mediaWidths } from '@jordan-sports/contracts';
+import { mediaWidths } from '@jordan-sports/contracts/web';
 import { cx } from '@jordan-sports/ui';
 import { useState } from 'react';
 

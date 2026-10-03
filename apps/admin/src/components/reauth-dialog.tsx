@@ -1,6 +1,6 @@
 'use client';
 
-import { adminReauth } from '@jordan-sports/contracts';
+import { adminReauth } from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, TextField } from '@jordan-sports/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState, type FormEvent } from 'react';

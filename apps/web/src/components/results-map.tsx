@@ -1,7 +1,7 @@
 'use client';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { VenueSummary } from '@jordan-sports/contracts';
+import type { VenueSummary } from '@jordan-sports/contracts/web';
 import { formatMoney } from '@jordan-sports/money';
 import { LngLatBounds, Map as MapLibreMap, Marker, NavigationControl, Popup } from 'maplibre-gl';
 import { useLocale, useTranslations } from 'next-intl';

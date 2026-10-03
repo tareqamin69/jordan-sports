@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { okSchema, uuidSchema } from './common.js';
 import { endpoint } from './endpoint.js';
 import { moneySchema } from './pricing.js';
+import { venueRatingTags } from './constants.js';
 
 const venueParams = z.object({ venueId: uuidSchema });
 
@@ -9,15 +10,7 @@ const venueParams = z.object({ venueId: uuidSchema });
 // The owner's private rating and notes per venue (docs/rbac-plan.md §7.3). Never public.
 // ---------------------------------------------------------------------------------------------
 
-export const venueRatingTags = [
-  'reliable',
-  'slow_to_reply',
-  'complaints',
-  'cancels_often',
-  'great_facilities',
-  'pricing_issues',
-  'recommended',
-] as const;
+export { venueRatingTags };
 export const venueRatingTagSchema = z.enum(venueRatingTags);
 export type VenueRatingTag = z.infer<typeof venueRatingTagSchema>;
 

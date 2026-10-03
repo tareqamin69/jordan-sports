@@ -1,6 +1,6 @@
 'use client';
 
-import { adminSignIn } from '@jordan-sports/contracts';
+import { adminSignIn } from '@jordan-sports/contracts/web';
 import { Alert, Button, Card, TextField } from '@jordan-sports/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';

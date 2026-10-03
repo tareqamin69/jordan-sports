@@ -13,7 +13,7 @@ import {
   type Catalog,
   getPayoutAccount,
   setPayoutAccount,
-} from '@jordan-sports/contracts';
+} from '@jordan-sports/contracts/web';
 import {
   Alert,
   Button,
