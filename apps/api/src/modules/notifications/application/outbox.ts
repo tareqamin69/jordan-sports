@@ -14,6 +14,9 @@ export type OutboxEvent =
   | { type: 'refund.due'; payload: { bookingId: string; paymentId: string } }
   | { type: 'balance.low'; payload: { organizationId: string; balance: number } }
   | { type: 'balance.empty'; payload: { organizationId: string; balance: number } }
+  // A venue entered the review queue (new submission, or a published venue's owner edits):
+  // the platform owner is told at once by email and SMS, with a link to the review page.
+  | { type: 'venue.submitted'; payload: { venueId: string; cause: 'new' | 'owner_edit' } }
   // Staff security alert (docs/rbac-plan.md §6): every owner sign-in, and any staff sign-in from
   // a new device, is emailed to the account's address.
   | {

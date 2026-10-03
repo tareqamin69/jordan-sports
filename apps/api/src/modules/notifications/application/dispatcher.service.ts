@@ -10,6 +10,8 @@ import {
   type BookingMessageFacts,
   type TemplateName,
 } from '../domain/templates.js';
+import type { AppConfig } from '../../../platform/config/config.js';
+import { APP_CONFIG } from '../../../platform/config/config.module.js';
 import { EMAIL_SENDER, type EmailSender } from '../../../platform/email/email-sender.js';
 import { NOTIFICATION_CHANNEL, type NotificationChannel } from './channels.js';
 import type { OutboxEvent } from './outbox.js';
@@ -40,6 +42,7 @@ export class OutboxDispatcher {
     @Inject(DATABASE) private readonly db: Db,
     @Inject(NOTIFICATION_CHANNEL) private readonly channel: NotificationChannel,
     @Inject(EMAIL_SENDER) private readonly email: EmailSender,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
   /** Processes one batch; returns how many events were handled. */
@@ -107,6 +110,8 @@ export class OutboxDispatcher {
         return;
       case 'staff.signed_in':
         return this.staffSignedIn(tx, eventId, event);
+      case 'venue.submitted':
+        return this.venueSubmitted(tx, eventId, event);
       default:
         throw new Error(`Unknown event type ${(event as { type: string }).type}`);
     }
@@ -256,5 +261,122 @@ export class OutboxDispatcher {
       })
       .onConflict((oc) => oc.columns(['event_id', 'recipient', 'template']).doNothing())
       .execute();
+  }
+
+  /**
+   * A venue is waiting for review: email the platform owner(s) and the support address, and text
+   * the support WhatsApp number (owner settings), each with a direct link to the review page and,
+   * in the email, a WhatsApp link to the venue owner. Each recipient gets it once.
+   */
+  private async venueSubmitted(
+    tx: Tx,
+    eventId: string,
+    event: Extract<OutboxEvent, { type: 'venue.submitted' }>,
+  ): Promise<void> {
+    await bypassTenant(tx);
+    const venue = await tx
+      .selectFrom('venue.venues as v')
+      .innerJoin('catalog.cities as g', 'g.id', 'v.city_id')
+      .select(['v.id', 'v.name', 'v.organization_id', 'g.name as governorate'])
+      .where('v.id', '=', event.payload.venueId)
+      .executeTakeFirst();
+    if (!venue) return;
+    const owner = await tx
+      .selectFrom('tenancy.memberships as m')
+      .innerJoin('identity.users as u', 'u.id', 'm.user_id')
+      .select(['u.display_name', 'u.phone'])
+      .where('m.organization_id', '=', venue.organization_id)
+      .where('m.role', '=', 'owner')
+      .orderBy('m.created_at')
+      .executeTakeFirst();
+    const settings = await tx
+      .selectFrom('platform.settings')
+      .select(['support_email', 'support_whatsapp'])
+      .executeTakeFirst();
+    const staff = await tx
+      .selectFrom('identity.users')
+      .select('email')
+      .where('platform_role', '=', 'owner')
+      .where('status', '=', 'active')
+      .where('email', 'is not', null)
+      .execute();
+
+    const name =
+      (venue.name as { ar?: string; en?: string }).ar ?? (venue.name as { en?: string }).en ?? '';
+    const place = (venue.governorate as { ar?: string }).ar ?? '';
+    const link = `${this.config.adminBaseUrl}/ar/venues/${venue.id}`;
+    const edit = event.payload.cause === 'owner_edit';
+    const whatsapp = owner?.phone ? `https://wa.me/${owner.phone.replace(/[^0-9]/g, '')}` : null;
+
+    const deliver = async (
+      channel: 'email' | 'sms' | 'whatsapp' | 'console',
+      recipient: string,
+      body: string,
+      send: () => Promise<void>,
+    ) => {
+      const template = channel === 'email' ? 'venueSubmittedEmail' : 'venueSubmittedText';
+      const already = await tx
+        .selectFrom('notification.deliveries')
+        .select('id')
+        .where('event_id', '=', eventId)
+        .where('recipient', '=', recipient)
+        .where('template', '=', template)
+        .executeTakeFirst();
+      if (already) return;
+      await send();
+      await tx
+        .insertInto('notification.deliveries')
+        .values({
+          id: uuidv7(),
+          event_id: eventId,
+          channel,
+          recipient,
+          template,
+          locale: 'ar',
+          body,
+          status: 'sent',
+        })
+        .onConflict((oc) => oc.columns(['event_id', 'recipient', 'template']).doNothing())
+        .execute();
+    };
+
+    const subject = edit
+      ? `Jorena: تعديل ملعب بانتظار مراجعتك (${name})`
+      : `Jorena: ملعب جديد بانتظار مراجعتك (${name})`;
+    const text = [
+      edit
+        ? `صاحب «${name}» (${place}) عدّل الاسم أو الصور، والملعب مخفي لحد ما توافق.`
+        : `في ملعب جديد بانتظار مراجعتك: «${name}» (${place}). ما بيظهر للاعبين لحد ما توافق.`,
+      '',
+      `راجعه هون: ${link}`,
+      owner
+        ? `صاحب الملعب: ${owner.display_name ?? '-'}${whatsapp ? `، واتساب: ${whatsapp}` : ''}`
+        : '',
+      '',
+      edit
+        ? `A published venue was edited and is hidden until you approve it: ${name}.`
+        : `A new venue is waiting for your review: ${name}.`,
+      `Review: ${link}`,
+    ]
+      .filter((line, i, all) => line !== '' || all[i - 1] !== '')
+      .join('\n');
+    const emails = new Set([
+      ...staff.map((s) => s.email!),
+      ...(settings?.support_email ? [settings.support_email] : []),
+    ]);
+    for (const to of emails) {
+      await deliver('email', to, text, () => this.email.send({ to, subject, text }));
+    }
+    if (settings?.support_whatsapp) {
+      const sms = edit
+        ? `Jorena: تعديل على «${name}» بانتظار مراجعتك: ${link}`
+        : `Jorena: ملعب جديد «${name}» بانتظار مراجعتك: ${link}`;
+      await deliver(
+        this.channel.name === 'email' ? 'sms' : this.channel.name,
+        settings.support_whatsapp,
+        sms,
+        () => this.channel.send(settings.support_whatsapp!, sms),
+      );
+    }
   }
 }

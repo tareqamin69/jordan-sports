@@ -109,6 +109,8 @@ export interface AppConfig {
   readonly paymentGateway: 'mock';
   /** The player-facing site, for the payment page's return address (first of WEB_ORIGINS). */
   readonly webBaseUrl: string;
+  /** The admin panel (first of ADMIN_ORIGINS), for links in staff notifications. */
+  readonly adminBaseUrl: string;
   /** Outgoing email; `smtpUrl` null means emails are logged instead (development). */
   readonly email: { readonly smtpUrl: string | null; readonly from: string };
 }
@@ -160,6 +162,7 @@ export function parseConfig(env: Record<string, string | undefined>): AppConfig 
     trustProxy: e.TRUST_PROXY,
     paymentGateway: e.PAYMENT_GATEWAY,
     webBaseUrl: e.WEB_ORIGINS[0] ?? 'http://localhost:3000',
+    adminBaseUrl: e.ADMIN_ORIGINS[0] ?? 'http://localhost:3001',
     email: { smtpUrl: e.SMTP_URL ?? null, from: e.EMAIL_FROM },
   };
   assertProductionSafe(config);

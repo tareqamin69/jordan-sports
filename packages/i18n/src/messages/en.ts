@@ -943,6 +943,8 @@ export const en = {
       label: 'Administration',
       dashboard: 'Dashboard',
       venues: 'Venues',
+      pendingReview:
+        '{count, plural, one {1 venue waiting for review} other {# venues waiting for review}}',
       organizations: 'Organizations',
       users: 'Users',
       geography: 'Geography & sports',
@@ -968,9 +970,11 @@ export const en = {
       venueEditsHint:
         'When the owner of a published venue changes its name or photos. Default: no.',
       whatsapp: 'Support WhatsApp',
-      whatsappHint: 'Shown to players and venues. Empty: not shown.',
+      whatsappHint:
+        'Shown to players and venues; gets a text whenever a venue is sent for review. Empty: not shown.',
       supportEmail: 'Support email',
-      supportEmailHint: 'Shown on the contact page. Empty: not shown (until we have a domain).',
+      supportEmailHint:
+        'Shown on the contact page; gets an email whenever a venue is sent for review. Empty: not shown (until we have a domain).',
       company: {
         title: 'Company details',
         hint: 'Shown in the footer, legal pages and receipts exactly as written here. Empty fields are not shown.',

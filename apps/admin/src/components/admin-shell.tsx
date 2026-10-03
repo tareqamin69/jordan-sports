@@ -1,8 +1,12 @@
 'use client';
 
-import { adminSignOut, type PlatformPermission } from '@jordan-sports/contracts/web';
+import {
+  adminListPendingVenues,
+  adminSignOut,
+  type PlatformPermission,
+} from '@jordan-sports/contracts/web';
 import { Alert, Button, DetailSkeleton, cx } from '@jordan-sports/ui';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useEffect, type ReactNode } from 'react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
@@ -44,6 +48,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const navList = useActiveInView<HTMLUListElement>(`${pathname}:${Boolean(me.data)}`);
+  // Venues waiting for review: a count on "Venues" (refreshed every minute).
+  const canReview = me.data?.permissions.includes('venues.read') ?? false;
+  const pending = useQuery({
+    queryKey: ['pending-venues-count'],
+    queryFn: () => api(adminListPendingVenues, { query: { status: 'submitted' } }),
+    enabled: canReview,
+    refetchInterval: 60_000,
+  });
+  const pendingCount = pending.data?.items.length ?? 0;
 
   useEffect(() => {
     if (me.data === null) router.replace('/sign-in');
@@ -93,6 +106,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     )}
                   >
                     {t(s.key as Parameters<typeof t>[0])}
+                    {s.key === 'venues' && pendingCount > 0 ? (
+                      <span
+                        className={cx(
+                          'ms-2 grid min-w-5 place-items-center rounded-full px-1.5 text-xs font-bold tabular-nums',
+                          active ? 'bg-lime text-night' : 'bg-primary text-on-primary',
+                        )}
+                        aria-label={t('pendingReview', { count: pendingCount })}
+                        data-testid="pending-venues-badge"
+                      >
+                        {pendingCount}
+                      </span>
+                    ) : null}
                   </Link>
                 </li>
               );

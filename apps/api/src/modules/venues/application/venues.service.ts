@@ -11,6 +11,7 @@ import { AuditService } from '../../audit/index.js';
 import { CatalogService } from '../../catalog/index.js';
 import { normalizePhone } from '../../identity/index.js';
 import { canTransition } from '../domain/venue-status.js';
+import { enqueue } from '../../notifications/index.js';
 
 type Localized = { ar?: string; en?: string };
 
@@ -334,6 +335,10 @@ export class VenuesService {
         .set({ status, status_reason: reason || null })
         .where('id', '=', venueId)
         .execute();
+      // An owner sending a venue for review notifies the platform owner (staff moves do not).
+      if (status === 'submitted' && actor.type === 'user') {
+        await enqueue(tx, { type: 'venue.submitted', payload: { venueId, cause: 'new' } });
+      }
       await this.audit.record(
         {
           actorType: actor.type,
@@ -373,6 +378,7 @@ export class VenuesService {
         .set({ status: 'submitted', status_reason: reason })
         .where('id', '=', venueId)
         .execute();
+      await enqueue(tx, { type: 'venue.submitted', payload: { venueId, cause: 'owner_edit' } });
       await this.audit.record(
         {
           actorType: actor.type,
