@@ -1,4 +1,4 @@
-import { uuidv7 } from '../database/ids.js';
+import { randomBytes } from 'node:crypto';
 
 /**
  * URL slug from a (possibly Arabic-only) name plus a short random suffix for uniqueness —
@@ -12,5 +12,7 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 40);
-  return `${base || 'venue'}-${uuidv7().slice(0, 8)}`;
+  // Random, not a UUIDv7 prefix: those first characters are the clock, so two Arabic-only names
+  // registered within the same minute used to get the same slug.
+  return `${base || 'venue'}-${randomBytes(4).toString('hex')}`;
 }

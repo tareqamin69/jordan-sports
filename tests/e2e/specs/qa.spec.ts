@@ -25,13 +25,17 @@ test.describe('QA fixes', () => {
       sports: Array<{ id: string; key: string }>;
       offeredSportIds: string[];
     };
-    // Home shows six (sports with venues first); /sports shows every one.
+    // Home shows only sports with an approved venue; /sports shows every one (the empty ones as
+    // muted "register your venue" tiles).
     await page.goto(`${WEB}/en`);
     await expect(
       page.locator('section[aria-labelledby="sports-heading"] a[href*="sport="]'),
-    ).toHaveCount(Math.min(6, catalog.sports.length));
+    ).toHaveCount(catalog.offeredSportIds.length);
     await page.goto(`${WEB}/en/sports`);
-    await expect(page.locator('main ul a[href*="sport="]')).toHaveCount(catalog.sports.length);
+    await expect(page.getByTestId('sport-tile')).toHaveCount(catalog.offeredSportIds.length);
+    await expect(page.getByTestId('sport-tile-empty')).toHaveCount(
+      catalog.sports.length - catalog.offeredSportIds.length,
+    );
 
     const empty = catalog.sports.find((s) => !catalog.offeredSportIds.includes(s.id));
     if (empty) {

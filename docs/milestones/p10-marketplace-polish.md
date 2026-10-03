@@ -49,6 +49,13 @@
   earlier/later reordering (first = cover).
 - Owner guide (Arabic): [`docs/google-places-setup.md`](../google-places-setup.md).
 
+## Fixed along the way
+
+- Self-registration slugs used the first 8 characters of a UUIDv7 as the "random" suffix; those are
+  the clock, so two Arabic-only venue names registered in the same minute collided ("web address
+  already in use"). Now 4 random bytes.
+- `qa.spec.ts` updated to the N2 rules (home = sports with venues; `/sports` muted tiles).
+
 ## Deferred / open
 
 - `place_id` is returned to the client but not yet stored on the venue (no column); add one if we
