@@ -14,7 +14,7 @@ const fonts = Promise.all([
 /**
  * Share image (1200×630) for a venue without photos: `/og/venue/<slug>.png`. Latin text only,
  * because the image renderer cannot shape Arabic yet; the Arabic page title still travels with
- * the link. Pitch markings and the lime ball, as on the home hero (DESIGN.md).
+ * the link. Court lines and the lime ball, as on the home hero (DESIGN.md).
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params;
@@ -61,8 +61,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
           <rect x="40" y="40" width="1120" height="550" rx="8" />
           <line x1="600" y1="40" x2="600" y2="590" />
           <circle cx="600" cy="315" r="96" />
-          <rect x="1010" y="165" width="150" height="300" />
-          <rect x="40" y="165" width="150" height="300" />
         </g>
         <circle cx="880" cy="210" r="16" fill="#e7f06a" />
       </svg>

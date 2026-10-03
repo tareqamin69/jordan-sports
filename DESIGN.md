@@ -138,8 +138,9 @@ Motion explains what changed; it never decorates.
   stock "people playing" shots pretending to be the venue.
 - **Until a venue has photos:** the illustrated court (`court-art.tsx`), chosen by the sport icon.
   It's honest and recognisable, and never presented as a photo.
-- **Home hero:** the pitch, drawn as thin ivory markings on deep green with the lime ball. It's
-  pure geometry, works for every sport, and has no fake product screenshot.
+- **Home hero:** a court seen from above (outline, centre line, centre circle) in thin ivory
+  lines on deep green with the lime ball. No sport-specific markings, so it works for every sport;
+  the copy is sport-neutral too ("لعبتك، وقتك، ملعبك.").
 - Photos get a dark scrim only where text sits on them, and are never filtered or tinted.
 - Maps stay neutral and load on click (privacy and speed).
 

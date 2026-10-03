@@ -111,8 +111,8 @@ export class CatalogService {
             .on('v.status', '=', 'approved')
             .on('v.archived_at', 'is', null),
         )
-        .select('sf.sport_id')
-        .distinct()
+        .select((eb) => ['sf.sport_id', eb.fn.count<string>('v.id').distinct().as('venues')])
+        .groupBy('sf.sport_id')
         .execute(),
       this.db
         .selectFrom('venue.venues')
@@ -157,8 +157,13 @@ export class CatalogService {
           .filter((a) => a.city_id === g.id)
           .map((a) => ({ id: a.id, key: a.key, name: a.name as Localized })),
       })),
-      offeredSportIds: [...new Set(offered.map((o) => o.sport_id))],
-      counts: { venues: Number(venueCount.n), sports: sports.length },
+      // Most venues first: the order the home page shows them in.
+      offeredSportIds: [...offered]
+        .sort((a, b) => Number(b.venues) - Number(a.venues))
+        .map((o) => o.sport_id),
+      sportVenueCounts: Object.fromEntries(offered.map((o) => [o.sport_id, Number(o.venues)])),
+      // Only sports someone can actually book (no "17 sports" when 5 have venues).
+      counts: { venues: Number(venueCount.n), sports: offered.length },
     };
     this.cached = { at: Date.now(), value };
     return value;

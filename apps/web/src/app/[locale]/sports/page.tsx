@@ -28,17 +28,22 @@ export default async function SportsPage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations('web.sports');
   const catalog = await serverApi(getCatalog);
-  // Every active sport, even one without venues yet (its page explains and invites venues).
-  const offeredSports = catalog.sports;
+  // Every active sport: those with venues first (most venues first), then the rest muted with an
+  // invitation to register the first venue.
+  const count = (id: string) => catalog.sportVenueCounts[id] ?? 0;
+  const sports = [
+    ...catalog.offeredSportIds.flatMap((id) => catalog.sports.filter((s) => s.id === id)),
+    ...catalog.sports.filter((s) => count(s.id) === 0),
+  ];
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-10 pt-8 sm:px-8 sm:pt-12">
       <PageHeader title={t('title')} description={t('description')} />
 
       <ul className="reveal-stagger grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
-        {offeredSports.map((sport) => (
+        {sports.map((sport) => (
           <li key={sport.id}>
-            <SportTile sport={sport} locale={locale} />
+            <SportTile sport={sport} locale={locale} venues={count(sport.id)} />
           </li>
         ))}
       </ul>

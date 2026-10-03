@@ -241,5 +241,10 @@ describe('geography and sports catalog (admin)', () => {
       offeredSportIds: string[];
     };
     expect(after.offeredSportIds).toContain(tennis.id);
+    expect(
+      (after as unknown as { sportVenueCounts: Record<string, number> }).sportVenueCounts[
+        tennis.id
+      ],
+    ).toBe(1);
   });
 });

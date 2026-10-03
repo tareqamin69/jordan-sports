@@ -57,8 +57,13 @@ export const catalogSchema = z.object({
       areas: z.array(z.object({ id: uuidSchema, key: z.string(), name: localizedSchema })),
     }),
   ),
-  /** Sports with at least one active resource at an approved venue — what players should see. */
+  /**
+   * Sports with at least one active resource at an approved venue (what players should see),
+   * most venues first. A sport appears here as soon as its first venue is approved.
+   */
   offeredSportIds: z.array(uuidSchema),
+  /** Approved venues per offered sport id. */
+  sportVenueCounts: z.record(uuidSchema, z.number().int()),
   /** Live figures for the home page ("X ملعب · Y رياضة"). */
   counts: z.object({ venues: z.number().int(), sports: z.number().int() }),
   /** Platform support contact (owner settings); null when not set. */

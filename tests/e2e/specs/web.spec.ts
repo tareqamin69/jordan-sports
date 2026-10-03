@@ -40,7 +40,7 @@ test.describe('web (marketplace) skeleton', () => {
     await page.goto(`${WEB}/en`);
     await expectDocumentLocale(page, 'en');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      /Bring the ball\.\s*We’ve got the rest\./,
+      /Your game\. Your time\.\s*Your court\./,
     );
     await expectHeaderDirection(page, 'ltr');
   });

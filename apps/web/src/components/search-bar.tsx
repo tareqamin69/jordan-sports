@@ -75,8 +75,11 @@ function SearchForm({
   const [governorateKey, setGovernorateKey] = useState(values.governorate ?? '');
   const governorate = catalog.governorates.find((g) => g.key === governorateKey);
   const areas = governorate?.areas ?? [];
-  // Every active sport can be chosen, even before it has venues.
-  const offeredSports = catalog.sports;
+  // Only sports with at least one approved venue, most venues first (searching the others finds
+  // nothing; /sports invites owners to add them).
+  const offeredSports = catalog.offeredSportIds.flatMap((id) =>
+    catalog.sports.filter((s) => s.id === id),
+  );
   const today = businessToday('Asia/Amman', 360);
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i));
   const dayLabel = (d: string, i: number) =>

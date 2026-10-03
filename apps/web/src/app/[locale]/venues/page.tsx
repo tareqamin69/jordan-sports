@@ -70,7 +70,9 @@ export default async function VenuesPage({ params, searchParams }: Props) {
   ]);
   const sportName = catalog.sports.find((s) => s.key === sport)?.name;
 
-  const offeredSports = catalog.sports;
+  const offeredSports = catalog.offeredSportIds.flatMap((id) =>
+    catalog.sports.filter((s) => s.id === id),
+  );
   const sportHasVenues = sport
     ? catalog.offeredSportIds.includes(catalog.sports.find((x) => x.key === sport)?.id ?? '')
     : true;

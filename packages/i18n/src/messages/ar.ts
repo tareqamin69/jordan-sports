@@ -170,8 +170,9 @@ export const ar = {
     },
     home: {
       eyebrow: 'من العقبة لإربد',
-      title: 'جيب الطابة،<br></br>والباقي <hl>علينا</hl>.',
-      description: 'كرة قدم، بادل، تنس وأكثر. شوف الأوقات الفاضية، احجز وادفع بالبطاقة بثواني.',
+      title: 'لعبتك، وقتك،<br></br><hl>ملعبك</hl>.',
+      description:
+        'كرة قدم، بادل، تنس، وكل رياضة بتحبها. شوف الأوقات الفاضية، احجز وادفع أونلاين بثواني.',
       sportsTitle: 'اختار لعبتك',
       moreSports: 'والمزيد',
       picksTitle: 'ملاعب مختارة',
@@ -273,6 +274,8 @@ export const ar = {
       distance: '{km} كم',
     },
     sports: {
+      registerFirst: 'عندك ملعب {sport}؟ سجّله',
+      venueCount: '{count, plural, one {ملعب واحد} two {ملعبين} few {# ملاعب} other {# ملعب}}',
       title: 'كل الرياضات',
       description: 'كل الرياضات اللي بتقدر تلعبها بالأردن. اختار رياضة وشوف ملاعبها.',
     },

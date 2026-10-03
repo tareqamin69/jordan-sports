@@ -25,13 +25,9 @@ export default async function HomePage({ params }: Props) {
     serverApi(getCatalog),
     serverApi(listVenues, { query: { limit: 6 } }),
   ]);
-  // Six tiles (two rows on a phone, one on desktop): sports with venues first, in catalog order;
-  // the rest are one tap away on /sports.
-  const offered = new Set(catalog.offeredSportIds);
-  const tiles = [
-    ...catalog.sports.filter((s) => offered.has(s.id)),
-    ...catalog.sports.filter((s) => !offered.has(s.id)),
-  ].slice(0, 6);
+  // Only sports someone can book, most venues first; a sport appears here as soon as its first
+  // venue is approved (catalog.offeredSportIds). The rest are on /sports.
+  const tiles = catalog.offeredSportIds.flatMap((id) => catalog.sports.filter((s) => s.id === id));
   const count = (key: 'venuesCount' | 'sportsCount', n: number) =>
     t.rich(key, {
       count: n,
@@ -78,29 +74,35 @@ export default async function HomePage({ params }: Props) {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        <section aria-labelledby="sports-heading" className="reveal mt-10">
-          <SectionHeading
-            id="sports-heading"
-            title={t('sportsTitle')}
-            className="px-1"
-            action={
-              <Link
-                href="/sports"
-                className="flex min-h-11 items-center gap-1 text-primary hover:text-primary-hover"
-              >
-                {tc('allSports')}
-                <Icon name="arrow" className="size-4 rtl:rotate-180" />
-              </Link>
-            }
-          />
-          <ul className="reveal-stagger no-scrollbar -mx-5 mt-5 flex snap-x gap-2.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:gap-3 sm:overflow-visible sm:px-0">
-            {tiles.map((sport) => (
-              <li key={sport.id} className="w-[30%] shrink-0 snap-start sm:w-auto">
-                <SportTile sport={sport} locale={locale} />
-              </li>
-            ))}
-          </ul>
-        </section>
+        {tiles.length > 0 ? (
+          <section aria-labelledby="sports-heading" className="reveal mt-10">
+            <SectionHeading
+              id="sports-heading"
+              title={t('sportsTitle')}
+              className="px-1"
+              action={
+                <Link
+                  href="/sports"
+                  className="flex min-h-11 items-center gap-1 text-primary hover:text-primary-hover"
+                >
+                  {tc('allSports')}
+                  <Icon name="arrow" className="size-4 rtl:rotate-180" />
+                </Link>
+              }
+            />
+            <ul className="reveal-stagger no-scrollbar -mx-5 mt-5 flex snap-x gap-2.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:gap-3 sm:overflow-visible sm:px-0">
+              {tiles.map((sport) => (
+                <li key={sport.id} className="w-[30%] shrink-0 snap-start sm:w-auto">
+                  <SportTile
+                    sport={sport}
+                    locale={locale}
+                    venues={catalog.sportVenueCounts[sport.id] ?? 0}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <VenuePicks venues={venues.items} />
 

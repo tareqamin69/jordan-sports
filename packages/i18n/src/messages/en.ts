@@ -175,9 +175,9 @@ export const en = {
     },
     home: {
       eyebrow: 'From Aqaba to Irbid',
-      title: 'Bring the ball.<br></br>We’ve got <hl>the rest</hl>.',
+      title: 'Your game. Your time.<br></br><hl>Your court.</hl>',
       description:
-        'Football, padel, tennis and more. Find a free time, book it and pay by card in seconds.',
+        'Football, padel, tennis and every sport you love. See free slots, book and pay online in seconds.',
       sportsTitle: 'Pick your game',
       moreSports: 'And more',
       picksTitle: 'Featured venues',
@@ -277,6 +277,8 @@ export const en = {
       distance: '{km} km',
     },
     sports: {
+      registerFirst: 'Have a {sport} venue? Register it',
+      venueCount: '{count, plural, one {1 venue} other {# venues}}',
       title: 'All sports',
       description: 'Every sport you can play in Jordan. Pick one to see its venues.',
     },

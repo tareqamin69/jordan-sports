@@ -79,23 +79,28 @@ test.describe('venues: admin onboarding → public page', () => {
     await expect(page.locator(`a[href="/en/venues/${slug}"]`)).toHaveCount(0);
   });
 
-  test('the home page lists sports from the catalog', async ({ page }) => {
+  test('the home page lists only sports with venues, most venues first', async ({ page }) => {
     await page.goto(`${WEB}/ar`);
-    for (const name of ['كرة القدم', 'بادل', 'تنس']) {
-      await expect(page.getByRole('link', { name, exact: true })).toBeVisible();
-    }
-    await page.getByRole('link', { name: 'بادل', exact: true }).click();
+    const tiles = page.getByTestId('sport-tile');
+    await expect(tiles.filter({ hasText: 'بادل' })).toBeVisible();
+    await expect(page.getByTestId('sport-tile-empty')).toHaveCount(0);
+    // Each tile states how many venues offer it, in descending order.
+    const counts = (await tiles.allTextContents()).map((t) => Number(/(\d+)/.exec(t)?.[1] ?? 1));
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+    await tiles.filter({ hasText: 'بادل' }).click();
     await expect(page).toHaveURL(`${WEB}/ar/venues?sport=padel`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('ملاعب بادل');
   });
 
-  test('the "all sports" page lists every offered sport and links to its venues', async ({
+  test('the "all sports" page lists every sport and invites venues for the empty ones', async ({
     page,
   }) => {
     await page.goto(`${WEB}/ar/sports`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('كل الرياضات');
-    await expect(page.getByRole('link', { name: 'بادل', exact: true })).toBeVisible();
-    await page.getByRole('link', { name: 'بادل', exact: true }).click();
+    const empty = page.getByTestId('sport-tile-empty').first();
+    await expect(empty).toContainText('عندك ملعب');
+    await expect(empty).toHaveAttribute('href', '/ar/manage/register');
+    await page.getByTestId('sport-tile').filter({ hasText: 'بادل' }).click();
     await expect(page).toHaveURL(`${WEB}/ar/venues?sport=padel`);
   });
 
