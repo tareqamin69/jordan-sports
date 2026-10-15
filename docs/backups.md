@@ -63,7 +63,8 @@ scripts were tested; needs `pg_dump`, `pg_restore`, `psql`, `age`, `rclone`).
 
 The scripts never overwrite the live database, on purpose. To recover a lost or damaged server:
 
-1. Create a new server (same steps as `docs/staging.md`), let it start empty.
+1. Create a new server with the launch-day steps in `docs/production.md` (same cloud-config), let it
+   start empty.
 2. `restore.sh` into a new database (as above), with `--media-dir` set to the media volume path.
 3. Stop `api`, `worker`, `web`, `admin`; in `psql`: `ALTER DATABASE jordan_sports RENAME TO
    jordan_sports_old; ALTER DATABASE jorena_restored RENAME TO jordan_sports;`; start them again.

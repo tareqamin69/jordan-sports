@@ -70,6 +70,9 @@ jobs:
       - name: Repository checks (RTL, sport-agnostic core)
         run: pnpm check:repo
 
+      - name: Server setup scripts (env files for the launch-day build)
+        run: bash infra/production/test-envfile.sh && bash infra/production/test-launch-env.sh
+
       - name: Lint
         run: pnpm lint
 

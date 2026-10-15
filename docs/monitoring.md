@@ -16,7 +16,6 @@ it stops answering. The free plan covers what we need: 50 monitors, 5-minute che
 | Jorena staff console | HTTP(s) | `https://admin.jorena.app/ar/sign-in` | the admin panel |
 | Jorena SSL | the website monitor's **SSL expiry** option (Advanced settings) | – | warns 30 days before the certificate expires |
 
-   Until the domain is switched on, use the current staging addresses instead.
 3. Interval 5 minutes; alert contacts: your email, plus the UptimeRobot mobile app for push
    notifications.
 4. Optional: **Status pages → Add**: a public page (e.g. `status.jorena.app`) listing the website and
@@ -26,5 +25,5 @@ it stops answering. The free plan covers what we need: 50 monitors, 5-minute che
 
 - The backup's dead-man's switch (docs/backups.md, `BACKUP_PING_URL`): UptimeRobot "Heartbeat"
   monitors are paid; healthchecks.io offers the same for free.
-- When an alert arrives: check `https://<site>/_staging/update.log` (staging) or the server's
+- When an alert arrives: check `https://<site>/_staging/update.log` or the server's
   `/var/log/jordan-sports/update.log`; a failing deploy is the most common cause.

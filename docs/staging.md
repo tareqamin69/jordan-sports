@@ -1,5 +1,9 @@
 # Staging (test) deployment
 
+> **Deleted 2026-10-15** to stop costs until launch. Development and testing are local
+> (`docs/development.md`) and in CI (`staging-smoke`). For launch, build production directly:
+> [production.md](./production.md). The steps below remain valid for a throwaway test server.
+
 A single small cloud server runs the whole product with demo data so the owner and testers can use
 it from any browser or phone. It is **not** production: sign-in codes are shown on screen (no SMS
 provider yet), so anyone with the link can sign in as any phone number. Never put real customer

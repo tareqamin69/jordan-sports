@@ -56,6 +56,15 @@
   already in use"). Now 4 random bytes.
 - `qa.spec.ts` updated to the N2 rules (home = sports with venues; `/sports` muted tiles).
 
+## Infrastructure (2026-10-15)
+
+- Staging server deleted to stop costs; development and testing are local and in CI.
+- Launch-day build from scratch: `infra/production/cloud-config.template.yaml` +
+  `infra/production/bootstrap.sh` (settings check, DNS wait, generated secrets, production env,
+  backups, `production` branch); settings logic tested by `infra/production/test-launch-env.sh`.
+  Recipe and the list of secrets the owner provides: `docs/production.md`.
+- Blocking launch: the real card gateway (production refuses the mock).
+
 ## Deferred / open
 
 - `place_id` is returned to the client but not yet stored on the venue (no column); add one if we

@@ -1,0 +1,35 @@
+#cloud-config
+# PRODUCTION server, built from scratch in one go (docs/production.md).
+# Paste into Hetzner "Cloud config" when creating the server, after replacing every CHANGE-ME.
+# Never commit or send a filled-in copy: keep it in your password manager.
+write_files:
+  - path: /opt/jordan-sports/launch.env
+    permissions: '0600'
+    content: |
+      # The domain, bare (no https://). Its DNS records must already point at this server's IP.
+      DOMAIN=jorena.app
+      # Releans SMS (sign-in codes and booking messages). Sender ID only if not the default Jorena.
+      RELEANS_API_KEY=CHANGE-ME
+      RELEANS_SENDER_ID=
+      # Outgoing email for staff security alerts, e.g. smtps://user:password@smtp.host:465
+      SMTP_URL=CHANGE-ME
+      EMAIL_FROM=Jorena <no-reply@jorena.app>
+      # Card payments: the real gateway's name and keys (not built yet; docs/production.md).
+      PAYMENT_GATEWAY=
+      # Backups: the PUBLIC key from `age-keygen` (starts with age1...), and the rclone remote.
+      BACKUP_AGE_RECIPIENT=CHANGE-ME
+      BACKUP_REMOTE=offsite:jorena-backups
+      # Optional: healthchecks.io ping URL (alert when the daily backup stops).
+      BACKUP_PING_URL=
+      # Optional: Google Places key for richer "import from Google Maps" (docs/google-places-setup.md).
+      GOOGLE_PLACES_API_KEY=
+  - path: /opt/jordan-sports/rclone.conf
+    permissions: '0600'
+    content: |
+      # Paste the [offsite] section printed by `rclone config show offsite` on your own computer.
+      CHANGE-ME
+runcmd:
+  - mkdir -p /var/log/jordan-sports
+  - apt-get update -q && apt-get install -y -q git curl openssl
+  - git clone --branch production https://github.com/tareqamin69/jordan-sports.git /opt/jordan-sports/app
+  - bash /opt/jordan-sports/app/infra/production/bootstrap.sh > /var/log/jordan-sports/bootstrap.log 2>&1

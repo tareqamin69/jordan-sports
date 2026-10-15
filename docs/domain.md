@@ -1,4 +1,8 @@
-# Moving to the real domain (jorena.app)
+# The real domain (jorena.app)
+
+> **Launch-day build:** the production server takes the domain from its cloud-config (`DOMAIN`,
+> [production.md](./production.md)), so only sections 1 and 2 below apply. Section 3 and
+> `domain.env` are for moving an existing staging server from `sslip.io` to the domain.
 
 The server already obtains HTTPS certificates automatically (Caddy + Let's Encrypt). Moving from
 the temporary `*.sslip.io` address to `jorena.app` needs three things from the owner and one
@@ -18,8 +22,7 @@ commit from us. No server login is needed.
 ## 2. Point the domain at the server (owner)
 
 In the registrar's DNS settings, add these records (use the server's public IPv4 address, shown in
-the Hetzner console; it is also the number inside the current staging address, with dots instead
-of dashes):
+the Hetzner console; for a new server, create a Primary IP first so you know it in advance):
 
 | Type | Name | Value | TTL |
 |---|---|---|---|
@@ -50,13 +53,8 @@ Search engines stay out (`noindex`) until launch; flipping that is one more line
 
 ## Before real customers use it
 
-The server is still in **staging mode** (`STAGING=true`): sign-in codes are shown on screen, so
-anyone with the link can sign in as any phone number, and it carries demo venues. Before inviting
-real players or venue owners:
-
-1. connect an SMS provider for sign-in codes and turn staging mode off;
-2. remove the demo data;
-3. set up database backups.
+A staging server (`STAGING=true`) shows sign-in codes on screen and carries demo venues; never
+invite real players to one. The production build has neither ([production.md](./production.md)).
 
 ## How it works (for developers)
 

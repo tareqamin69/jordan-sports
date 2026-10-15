@@ -27,9 +27,11 @@ specific task.
   messages, comments and docs in English; technical terms may appear in English in brackets.
 - Branch: `claude/inspect-repo-environment-c0iptd`. Push there; never push to a different branch
   without explicit permission. Don't open a PR unless asked.
-- Staging deployment auto-updates from this branch every 5 minutes (`infra/staging/update.sh`).
-  Keep it green: don't push code that fails `pnpm build`/`pnpm typecheck`/`pnpm lint` or breaks the
-  staging smoke test.
+- **No server exists** (staging deleted 2026-10-15 until launch). Develop and test locally only;
+  don't try to deploy or reach a staging URL. Keep the branch green anyway: don't push code that
+  fails `pnpm build`/`pnpm typecheck`/`pnpm lint` or CI's staging smoke test (it builds the Docker
+  stack). Launch-day rebuild: `docs/production.md`; keep it and `infra/production/` current when
+  config, env vars or setup steps change.
 - Money: integer minor units (fils) only, never floats. See ADR-0006.
 - Multi-tenancy / authorization: organization membership via `VenueAccessService`/
   `MembershipsService`, never inferred from UI mode. See ADR-0008.
